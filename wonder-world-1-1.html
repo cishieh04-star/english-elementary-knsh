@@ -154,6 +154,9 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
 .fall{display:inline-block;animation:fall 1.4s ease-in infinite}
 @keyframes fall{0%{transform:translateY(-20px) rotate(0)}80%,100%{transform:translateY(30px) rotate(90deg)}}
 
+.talking{animation:talk .45s ease-in-out infinite alternate;box-shadow:0 0 0 5px var(--accent2)}
+@keyframes talk{to{transform:scale(1.07)}}
+.qmark{display:inline-block;min-width:1.2em;text-align:center;border-bottom:4px solid currentColor}
 /* L7 candle spelling */
 .spellCake{width:clamp(180px,52vmin,320px)}
 .slots{display:flex;gap:6px;justify-content:center;margin-top:4px}
@@ -302,7 +305,7 @@ function say(items,done){
     it.on&&it.on();
     const u=new SpeechSynthesisUtterance(it.t);
     u.lang=(it.zh||it.mean)?'zh-TW':'en-US';
-    u.rate=Math.max(.45,Math.min(1.6,((it.zh||it.mean)?1:.78)*SP.rate));
+    u.rate=Math.max(.4,Math.min(1.6,((it.zh||it.mean)?1:.78)*(it.r||1)*SP.rate));
     let fired=false;
     const fin=()=>{if(fired)return;fired=true;clearTimeout(tm);it.off&&it.off();setTimeout(next,(it.gap??500)/SP.rate)};
     u.onend=fin;u.onerror=fin;
@@ -553,10 +556,16 @@ const LV=[
 /* 6 */ {name:'你幾歲',icon:'🧒',gen:()=>shuffle(KIDS).slice(0,5).map((k,i)=>({k,n:rnd(AGES),v:i%2,long:Math.random()<.5})),show(q){
    const [nm,face]=q.k,say1=n=>q.long?`I'm ${NUMW[n]} years old.`:`I'm ${NUMW[n]}.`,ans=say1(q.n);
    if(q.v===0){
-     P().innerHTML=`<div class="comic"><div class="side"><div class="speech">How old are you, ${nm}?</div><div class="who">${monster('happy')}</div></div><div class="side"><div class="speech me" id="k6">…</div><div class="kid">${face}</div><span class="name">${nm}</span></div></div>`;
+     const hide=q.long?`I'm <b class="qmark">?</b> years old.`:`I'm <b class="qmark">?</b>.`;
+     P().innerHTML=`<div class="comic"><div class="side"><div class="speech" id="q6">How old are you, ${nm}?</div><div class="who">${monster('happy')}</div></div><div class="side"><div class="speech me" id="k6">${hide}</div><div class="kid">${face}</div><span class="name">${nm}</span></div></div>`;
+     const tk=s=>{$$('.talking').forEach(e=>e.classList.remove('talking'));if(s&&$(s))$(s).classList.add('talking')};
      F().innerHTML=`<div class="opts">${optBtns(shuffle([q.n,...otherAges(q.n)]).map(n=>({h:n,ok:n===q.n})),'num')}</div>`;
-     $$('#field .opt').forEach(b=>b.onclick=()=>{if(!b.dataset.ok){bad(b);return}if(G.locked)return;$('#k6').textContent=ans;good(b,null,1500)});
-     begin([instrItem('L6a','聽一聽，他幾歲？點一下對的數字。','他幾歲？點對的數字。')],[{t:`How old are you, ${nm}?`,gap:500},{t:ans,gap:900},{t:ans}]);
+     $$('#field .opt').forEach(b=>b.onclick=()=>{if(!b.dataset.ok){bad(b);return}if(G.locked)return;tk();$('#k6').textContent=ans;good(b,null,1500)});
+     begin([instrItem('L6a','聽一聽，他幾歲？點一下對的數字。','他幾歲？點對的數字。')],[
+       {t:`How old are you, ${nm}?`,gap:700,on:()=>tk('#q6'),off:()=>tk()},
+       {t:ans,r:.75,gap:600,on:()=>tk('#k6'),off:()=>tk()},
+       {t:NUMW[q.n],r:.7,gap:1100,on:()=>tk('#k6'),off:()=>tk()},
+       {t:ans,r:.75,gap:400,on:()=>tk('#k6'),off:()=>tk()}]);
    }else{
      P().innerHTML=`<div class="comic"><div class="side"><div class="speech">How old are you?</div><div class="who">${monster('happy')}</div></div><div class="side"><div class="speech me" id="k6">…</div><div class="kid">${face}</div><div style="width:clamp(70px,18vmin,110px)">${cake({digit:q.n,lit:1})}</div></div></div>`;
      F().innerHTML=`<div class="opts">${optBtns(shuffle([q.n,...otherAges(q.n)]).map(n=>({h:say1(n),s:say1(n),ok:n===q.n})),'sent')}</div>`;
