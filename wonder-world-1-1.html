@@ -266,8 +266,9 @@ const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).tri
 /* ================= SPEECH ================= */
 const synth=window.speechSynthesis;
 const SP={rate:1,voice:true,homeVoice:true,tok:0};
-const LNAME={a:'ay'};
-const LN=c=>LNAME[c.toLowerCase()]||c.toUpperCase();
+/* 一律用小寫唸，避免手機唸出 capital；a、f 用拼音字避免怪音 */
+const LNAME={a:'ay',f:'eff'};
+const LN=c=>LNAME[c.toLowerCase()]||c.toLowerCase();
 function unlock(){ac();try{if(synth){const u=new SpeechSynthesisUtterance(' ');u.volume=0;synth.speak(u)}}catch(e){}}
 function say(items,done){
   if(!synth){if(done)setTimeout(done,400);return}
