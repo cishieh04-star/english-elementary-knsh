@@ -189,6 +189,21 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
 .rank{display:flex;flex-direction:column;gap:6px;margin:10px 0}
 .rank div{font-weight:900;font-size:20px;padding:8px;border-radius:12px;border:3px solid var(--ink);color:#222}
 
+/* 先認識單字 */
+.learn{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.lcount{font-weight:900;font-size:16px}
+.lcard{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--card);color:var(--ink);border:5px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);padding:14px 24px;min-width:min(78vw,320px);max-width:100%;animation:lin .35s}
+@keyframes lin{from{transform:translateY(14px) scale(.95);opacity:0}}
+.lpic{font-size:clamp(60px,18vmin,110px);line-height:1;display:grid;place-items:center}
+.lpic svg{width:clamp(90px,24vmin,150px);height:auto}
+.lnum{font:700 clamp(70px,20vmin,120px)/1 var(--en);color:var(--accent2)}
+.len{font:700 clamp(38px,11vmin,70px)/1.1 var(--en);color:var(--accent);text-align:center}
+.len.small{font-size:clamp(24px,7vmin,42px)}
+.lsub{font:700 clamp(22px,6vmin,32px)/1 var(--en)}
+.lzh{font-weight:900;font-size:clamp(22px,6vmin,34px)}
+.lnav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.tb[disabled]{opacity:.35}
+
 @media (prefers-reduced-motion:reduce){
   .flag,.balloon,.flame,#deco span,.listen,.slot.next,.fall{animation:none!important}
 }
@@ -211,6 +226,11 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
     <span class="lbl">語音說明</span>
     <button class="chip on" id="vOn">要</button>
     <button class="chip" id="vOff">不要</button>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="lbl">先認識單字</span>
+    <button class="chip on" id="lOn">要</button>
+    <button class="chip" id="lOff">不要</button>
   </div>
   <div id="lineTip" class="lineTip" hidden>在 LINE 裡面可能聽不到聲音。<a id="lineLink" href="#" target="_blank" rel="noopener">請按這裡，用瀏覽器打開</a></div>
   <div class="mapBox"><span class="mapTitle" id="mapTitle"></span><svg id="mapSvg"></svg><div id="map"></div></div>
@@ -281,12 +301,12 @@ function say(items,done){
     if(it.zh&&!SP.voice){next();return}
     it.on&&it.on();
     const u=new SpeechSynthesisUtterance(it.t);
-    u.lang=it.zh?'zh-TW':'en-US';
-    u.rate=Math.max(.45,Math.min(1.6,(it.zh?1:.78)*SP.rate));
+    u.lang=(it.zh||it.mean)?'zh-TW':'en-US';
+    u.rate=Math.max(.45,Math.min(1.6,((it.zh||it.mean)?1:.78)*SP.rate));
     let fired=false;
     const fin=()=>{if(fired)return;fired=true;clearTimeout(tm);it.off&&it.off();setTimeout(next,(it.gap??500)/SP.rate)};
     u.onend=fin;u.onerror=fin;
-    const tm=setTimeout(fin,(1300+it.t.length*(it.zh?340:130))/SP.rate);
+    const tm=setTimeout(fin,(1300+it.t.length*((it.zh||it.mean)?340:130))/SP.rate);
     try{synth.speak(u)}catch(e){fin()}
   };
   setTimeout(next,90);
@@ -623,6 +643,56 @@ function cardQ(q,onRight){
   begin(lead,[...(q.lead?[q.lead]:[]),...(q.say||[]),...(q.read?readOpts(bs):[])]);
 }
 
+/* ================= 先認識單字（每關開始前） ================= */
+SP.learnOn=true;
+const LEARNED=new Set();
+function runIntro(cards,then){
+  const seen=new Set(),list=(cards||[]).filter(c=>c&&!LEARNED.has(c.en)&&!seen.has(c.en)&&seen.add(c.en));
+  if(!SP.learnOn||!list.length){then();return}
+  let i=0,step=0,alive=true;$('#dots').innerHTML='';
+  const finish=()=>{if(!alive)return;alive=false;G.onReplay=null;hush();then()};
+  const go=()=>{if(!alive)return;if(i<list.length-1){i++;card()}else{alive=false;G.onReplay=null;say([{t:'開始玩囉！',zh:1}]);later(()=>{hush();then()},1300)}};
+  const card=()=>{
+    const c=list[i],my=++step;LEARNED.add(c.en);
+    $('#instr').textContent='先認識這些英文';P().innerHTML='';
+    const big=c.big||c.en;
+    F().innerHTML=`<div class="learn"><div class="lcount">${i+1} / ${list.length}</div><button class="lcard" id="lcard">${c.pic?`<span class="lpic">${c.pic}</span>`:''}<span class="len ${big.length>9?'small':''}">${big}</span>${c.sub?`<span class="lsub">${c.sub}</span>`:''}<span class="lzh">${c.zh}</span></button><div class="lnav"><button class="tb" id="lPrev" ${i?'':'disabled'}>上一個</button><button class="tb" id="lNext">下一個</button><button class="bigBtn" id="lGo">開始玩</button></div></div>`;
+    const items=c.items||[{t:c.en,gap:700},{t:c.zh,mean:1,gap:700},{t:c.en,gap:900}];
+    G.promptItems=items;
+    const play=(lead=[])=>{const m=++step;say([...lead,...items],()=>later(()=>{if(m===step&&alive)go()},800))};
+    G.onReplay=()=>{hush();play()};
+    play(i===0?[{t:'先認識這些英文',zh:1,gap:400}]:[]);
+    $('#lcard').onclick=()=>{hush();play()};
+    $('#lPrev').onclick=()=>{if(i){hush();i--;card()}};
+    $('#lNext').onclick=()=>{hush();go()};
+    $('#lGo').onclick=finish;
+    fitCheck();
+  };
+  card();
+}
+
+/* 第一課的單字卡資料 */
+const ZH1={fish:'魚',fan:'電風扇',goat:'山羊',hat:'帽子',ham:'火腿',ink:'墨水',igloo:'冰屋',jam:'果醬',jet:'噴射機',apple:'蘋果',bed:'床',dog:'狗',egg:'蛋'};
+const NUMZH=['零','一','二','三','四','五','六','七','八','九','十'];
+const LEXL={a:['apple','🍎'],b:['bed','🛏️'],d:['dog','🐶'],e:['egg','🥚'],f:['fish'],g:['goat'],h:['hat'],i:['ink'],j:['jam']};
+const wordCard=w=>({en:w,pic:pic(w),zh:ZH1[w]});
+const numCard=n=>({en:NUMW[n],pic:`<span class="lnum">${n}</span>`,zh:NUMZH[n]});
+const letterCard=l=>{l=l.toLowerCase();const x=LEXL[l];if(!x)return null;const [w,e]=x;return {en:'letter-'+l,big:l.toUpperCase()+' '+l,pic:e?`<span>${e}</span>`:pic(w),sub:w,zh:ZH1[w],items:[{t:LN(l),gap:700},{t:LN(l),gap:900},{t:w,gap:600},{t:ZH1[w],mean:1,gap:900}]}};
+const SZH={'How old are you?':'你幾歲？',"I'm nine.":'我九歲。',"I'm nine years old.":'我九歲。','Happy birthday!':'生日快樂！','This is for you.':'這是給你的。','Thank you.':'謝謝你。',"You're welcome.":'不客氣。','Yum!':'好好吃！','Oh, no!':'糟糕！'};
+const SPIC={'How old are you?':'🎂','I\'m nine.':'<span class="lnum">9</span>',"I'm nine years old.":'<span class="lnum">9</span>','Happy birthday!':'🎂','This is for you.':'🎁','Thank you.':'🙏',"You're welcome.":'😊','Yum!':'😋','Oh, no!':'😱'};
+const sentCard=s=>({en:s,zh:SZH[s]||'',pic:SPIC[s]||''});
+const LEARN=[
+  qs=>qs.map(q=>letterCard(q.a)),
+  qs=>qs.map(q=>numCard(q.n)),
+  qs=>qs.map(q=>numCard(q.n)),
+  qs=>qs.map(q=>wordCard(q.w)),
+  qs=>qs.map(q=>wordCard(q.w)),
+  ()=>['How old are you?',"I'm nine.","I'm nine years old."].map(sentCard),
+  qs=>qs.map(q=>numCard(NUMW.indexOf(q.w))),
+  qs=>qs.flatMap(q=>q.line?[q.line,q.ok]:[q.ok]).map(sentCard),
+  qs=>qs[0].nums.map(numCard),
+  null];
+
 /* ================= FLOW ================= */
 function show(id){$$('.screen').forEach(s=>s.hidden=s.id!==id);$('#ov').hidden=true;fitCheck()}
 function updVoice(){$('#bVoice').textContent=SP.voice?'不要語音說明':'要語音說明';$('#vOn').classList.toggle('on',SP.homeVoice);$('#vOff').classList.toggle('on',!SP.homeVoice)}
@@ -630,10 +700,10 @@ function startLevel(i){
   G.run++;hush();G.mode='solo';G.lv=i;G.qs=LV[i].gen();G.qi=0;SP.voice=SP.homeVoice;updVoice();
   $('#board').hidden=true;$('#dots').hidden=false;
   $('#lvTitle').textContent=`第 ${i+1} 關　${LV[i].icon} ${LV[i].name}`;
-  show('game');nextQ();
+  show('game');runIntro(LEARN[i]?LEARN[i](G.qs):[],nextQ);
 }
 function nextQ(){
-  G.locked=false;G.wrong=0;
+  G.locked=false;G.wrong=0;G.onReplay=null;
   if(G.qi>=G.qs.length){G.mode==='group'?groupEnd():levelClear();return}
   $('#dots').innerHTML=G.mode==='group'?'':G.qs.map((_,i)=>`<i class="${i<G.qi?'d':i===G.qi?'c':''}"></i>`).join('');
   P().innerHTML='';F().innerHTML='';
@@ -723,7 +793,7 @@ $('#vOn').onclick=()=>{SP.homeVoice=SP.voice=true;updVoice();unlock();say([{t:'�
 $('#vOff').onclick=()=>{SP.homeVoice=SP.voice=false;updVoice();hush()};
 $('#bHome').onclick=goHome;
 $('#bVoice').onclick=()=>{SP.voice=!SP.voice;updVoice();if(!SP.voice){hush()}else say([{t:$('#instr').textContent,zh:1,gap:300},...G.promptItems])};
-const replay=()=>{hush();say(G.promptItems)};
+const replay=()=>{hush();if(G.onReplay)G.onReplay();else say(G.promptItems)};
 $('#bAgain').onclick=replay;
 $('#bSlow').onclick=()=>{SP.rate=Math.max(.55,+(SP.rate-.15).toFixed(2));replay()};
 $('#bFast').onclick=()=>{SP.rate=Math.min(1.45,+(SP.rate+.15).toFixed(2));replay()};
@@ -731,5 +801,7 @@ if(/\bLine\//i.test(navigator.userAgent)){
   const u=new URL(location.href);u.searchParams.set('openExternalBrowser','1');
   $('#lineLink').href=u.toString();$('#lineTip').hidden=false;
 }
+$('#lOn').onclick=()=>{SP.learnOn=true;$('#lOn').classList.add('on');$('#lOff').classList.remove('on')};
+$('#lOff').onclick=()=>{SP.learnOn=false;$('#lOff').classList.add('on');$('#lOn').classList.remove('on')};
 applyTheme(theme);updVoice();show('home');requestAnimationFrame(drawPath);
 </script>

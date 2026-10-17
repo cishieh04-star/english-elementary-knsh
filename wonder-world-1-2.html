@@ -192,6 +192,21 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
 .rank{display:flex;flex-direction:column;gap:6px;margin:10px 0}
 .rank div{font-weight:900;font-size:20px;padding:8px;border-radius:12px;border:3px solid var(--ink);color:#222}
 
+/* 先認識單字 */
+.learn{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.lcount{font-weight:900;font-size:16px}
+.lcard{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--card);color:var(--ink);border:5px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);padding:14px 24px;min-width:min(78vw,320px);max-width:100%;animation:lin .35s}
+@keyframes lin{from{transform:translateY(14px) scale(.95);opacity:0}}
+.lpic{font-size:clamp(60px,18vmin,110px);line-height:1;display:grid;place-items:center}
+.lpic svg{width:clamp(90px,24vmin,150px);height:auto}
+.lnum{font:700 clamp(70px,20vmin,120px)/1 var(--en);color:var(--accent2)}
+.len{font:700 clamp(38px,11vmin,70px)/1.1 var(--en);color:var(--accent);text-align:center}
+.len.small{font-size:clamp(24px,7vmin,42px)}
+.lsub{font:700 clamp(22px,6vmin,32px)/1 var(--en)}
+.lzh{font-weight:900;font-size:clamp(22px,6vmin,34px)}
+.lnav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.tb[disabled]{opacity:.35}
+
 @media (prefers-reduced-motion:reduce){
   .wheel,.gon,.bubble,.fish,#deco span,.listen,.car.next{animation:none!important}
 }
@@ -215,6 +230,11 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
     <span class="lbl">語音說明</span>
     <button class="chip on" id="vOn">要</button>
     <button class="chip" id="vOff">不要</button>
+  </div>
+  <div class="row" style="margin-top:6px">
+    <span class="lbl">先認識單字</span>
+    <button class="chip on" id="lOn">要</button>
+    <button class="chip" id="lOff">不要</button>
   </div>
   <div id="lineTip" class="lineTip" hidden>在 LINE 裡面可能聽不到聲音。<a id="lineLink" href="#" target="_blank" rel="noopener">請按這裡，用瀏覽器打開</a></div>
   <div class="mapBox"><span class="mapTitle" id="mapTitle">闖關地圖（點一關也可以直接玩）</span><svg id="mapSvg"></svg><div id="map"></div></div>
@@ -287,12 +307,12 @@ function say(items,done){
     if(it.zh&&!SP.voice){next();return}
     it.on&&it.on();
     const u=new SpeechSynthesisUtterance(it.t);
-    u.lang=it.zh?'zh-TW':'en-US';
-    u.rate=Math.max(.45,Math.min(1.6,(it.zh?1:.78)*SP.rate));
+    u.lang=(it.zh||it.mean)?'zh-TW':'en-US';
+    u.rate=Math.max(.45,Math.min(1.6,((it.zh||it.mean)?1:.78)*SP.rate));
     let fired=false;
     const fin=()=>{if(fired)return;fired=true;clearTimeout(tm);it.off&&it.off();setTimeout(next,(it.gap??500)/SP.rate)};
     u.onend=fin;u.onerror=fin;
-    const tm=setTimeout(fin,(1300+it.t.length*(it.zh?340:130))/SP.rate);
+    const tm=setTimeout(fin,(1300+it.t.length*((it.zh||it.mean)?340:130))/SP.rate);
     try{synth.speak(u)}catch(e){fin()}
   };
   setTimeout(next,90);
@@ -611,6 +631,59 @@ function cardQ(q,onRight){
   begin(lead,items);
 }
 
+/* ================= 先認識單字（每關開始前） ================= */
+SP.learnOn=true;
+const LEARNED=new Set();
+function runIntro(cards,then){
+  const seen=new Set(),list=(cards||[]).filter(c=>c&&!LEARNED.has(c.en)&&!seen.has(c.en)&&seen.add(c.en));
+  if(!SP.learnOn||!list.length){then();return}
+  let i=0,step=0,alive=true;$('#dots').innerHTML='';
+  const finish=()=>{if(!alive)return;alive=false;G.onReplay=null;hush();then()};
+  const go=()=>{if(!alive)return;if(i<list.length-1){i++;card()}else{alive=false;G.onReplay=null;say([{t:'開始玩囉！',zh:1}]);later(()=>{hush();then()},1300)}};
+  const card=()=>{
+    const c=list[i],my=++step;LEARNED.add(c.en);
+    $('#instr').textContent='先認識這些英文';P().innerHTML='';
+    const big=c.big||c.en;
+    F().innerHTML=`<div class="learn"><div class="lcount">${i+1} / ${list.length}</div><button class="lcard" id="lcard">${c.pic?`<span class="lpic">${c.pic}</span>`:''}<span class="len ${big.length>9?'small':''}">${big}</span>${c.sub?`<span class="lsub">${c.sub}</span>`:''}<span class="lzh">${c.zh}</span></button><div class="lnav"><button class="tb" id="lPrev" ${i?'':'disabled'}>上一個</button><button class="tb" id="lNext">下一個</button><button class="bigBtn" id="lGo">開始玩</button></div></div>`;
+    const items=c.items||[{t:c.en,gap:700},{t:c.zh,mean:1,gap:700},{t:c.en,gap:900}];
+    G.promptItems=items;
+    const play=(lead=[])=>{const m=++step;say([...lead,...items],()=>later(()=>{if(m===step&&alive)go()},800))};
+    G.onReplay=()=>{hush();play()};
+    play(i===0?[{t:'先認識這些英文',zh:1,gap:400}]:[]);
+    $('#lcard').onclick=()=>{hush();play()};
+    $('#lPrev').onclick=()=>{if(i){hush();i--;card()}};
+    $('#lNext').onclick=()=>{hush();go()};
+    $('#lGo').onclick=finish;
+    fitCheck();
+  };
+  card();
+}
+
+/* 第二課的單字卡資料 */
+const ZH2={key:'鑰匙',lion:'獅子',monkey:'猴子',net:'網子',octopus:'章魚',ox:'公牛',kid:'小孩',leg:'腿',hat:'帽子',jam:'果醬',bed:'床',apple:'蘋果',hop:'跳',jet:'噴射機',man:'男人',hen:'母雞',dad:'爸爸',mop:'拖把'};
+const PIC2={};[...START_Q,...BLANK_Q].forEach(q=>PIC2[q.w]=q.e);
+const LEXL={k:'key',l:'lion',m:'monkey',n:'net',o:'octopus',h:'hat',b:'bed',j:'jam',a:'apple'};
+const FZH={happy:'快樂的',sad:'難過的',angry:'生氣的',hungry:'肚子餓的',thirsty:'口渴的'};
+const FZH2={happy:'快樂',sad:'難過',angry:'生氣',hungry:'肚子餓',thirsty:'口渴'};
+const wordCard=w=>({en:w,pic:PIC2[w],zh:ZH2[w]});
+const feelCard=f=>({en:f,pic:monster(f),zh:FZH[f]});
+const letterCard=l=>{l=l.toLowerCase();const w=LEXL[l];if(!w)return null;return {en:'letter-'+l,big:l.toUpperCase()+' '+l,pic:PIC2[w],sub:w,zh:ZH2[w],items:[{t:LN(l),gap:700},{t:LN(l),gap:900},{t:w,gap:600},{t:ZH2[w],mean:1,gap:900}]}};
+const SZH={"I'm hungry.":'我肚子餓。',"I'm thirsty.":'我口渴。',"I'm sad.":'我很難過。',"I'm not thirsty. I'm hungry.":'我不渴，我肚子餓。',"I'm not hungry. I'm thirsty.":'我不餓，我口渴。','Here you are.':'給你。','Thank you.':'謝謝你。',"You're welcome.":'不客氣。','Yes, I am.':'是的，我是。',"No, I'm not.":'不，我不是。','Are you OK?':'你還好嗎？',"What's your name?":'你叫什麼名字？','How old are you?':'你幾歲？','My name is Mandy.':'我的名字是 Mandy。',"I'm eight years old.":'我八歲。'};
+const SPIC={'Here you are.':'🤲','Thank you.':'🙏',"You're welcome.":'😊','Yes, I am.':'👍',"No, I'm not.":'🙅','Are you OK?':'🤕',"What's your name?":'👋','How old are you?':'🎂','My name is Mandy.':'👧',"I'm eight years old.":'🎂'};
+const sentCard=s=>{const fm=s.match(/(happy|sad|angry|hungry|thirsty)[.?]$/),aq=s.match(/^Are you (happy|sad|angry|hungry|thirsty)\?$/);
+  return {en:s,zh:SZH[s]||(aq?`你${FZH2[aq[1]]}嗎？`:''),pic:SPIC[s]||(fm?monster(fm[1]):'')}};
+const LEARN=[
+  qs=>qs.map(q=>letterCard(q.a)),
+  qs=>qs.map(q=>wordCard(q.w)),
+  qs=>qs.map(q=>wordCard(q.w)),
+  qs=>qs.map(q=>feelCard(q.f)),
+  qs=>qs.map(q=>feelCard(q.f)),
+  qs=>qs.map(q=>feelCard(q.w)),
+  qs=>[...qs.map(q=>q.line),'Here you are.','Thank you.'].map(sentCard),
+  qs=>[`Are you ${qs[0].ask}?`,'Yes, I am.',"No, I'm not."].map(sentCard),
+  qs=>qs.flatMap(q=>[q.line,q.ok]).map(sentCard),
+  null];
+
 /* ================= FLOW ================= */
 function show(id){$$('.screen').forEach(s=>s.hidden=s.id!==id);$('#ov').hidden=true;fitCheck()}
 function updVoice(){$('#bVoice').textContent=SP.voice?'不要語音說明':'要語音說明';$('#vOn').classList.toggle('on',SP.homeVoice);$('#vOff').classList.toggle('on',!SP.homeVoice)}
@@ -618,10 +691,10 @@ function startLevel(i){
   G.run++;hush();G.mode='solo';G.lv=i;G.qs=LV[i].gen();G.qi=0;SP.voice=SP.homeVoice;updVoice();
   $('#board').hidden=true;$('#dots').hidden=false;
   $('#lvTitle').textContent=`第 ${i+1} 關　${LV[i].icon} ${LV[i].name}`;
-  show('game');nextQ();
+  show('game');runIntro(LEARN[i]?LEARN[i](G.qs):[],nextQ);
 }
 function nextQ(){
-  G.locked=false;G.wrong=0;
+  G.locked=false;G.wrong=0;G.onReplay=null;
   if(G.qi>=G.qs.length){G.mode==='group'?groupEnd():levelClear();return}
   $('#dots').innerHTML=G.mode==='group'?'':G.qs.map((_,i)=>`<i class="${i<G.qi?'d':i===G.qi?'c':''}"></i>`).join('');
   P().innerHTML='';F().innerHTML='';
@@ -710,7 +783,7 @@ $('#vOn').onclick=()=>{SP.homeVoice=SP.voice=true;updVoice();unlock();say([{t:'�
 $('#vOff').onclick=()=>{SP.homeVoice=SP.voice=false;updVoice();hush()};
 $('#bHome').onclick=goHome;
 $('#bVoice').onclick=()=>{SP.voice=!SP.voice;updVoice();if(!SP.voice){hush()}else say([{t:$('#instr').textContent,zh:1,gap:300},...G.promptItems])};
-const replay=()=>{hush();say(G.promptItems)};
+const replay=()=>{hush();if(G.onReplay)G.onReplay();else say(G.promptItems)};
 $('#bAgain').onclick=replay;
 $('#bSlow').onclick=()=>{SP.rate=Math.max(.55,+(SP.rate-.15).toFixed(2));replay()};
 $('#bFast').onclick=()=>{SP.rate=Math.min(1.45,+(SP.rate+.15).toFixed(2));replay()};
@@ -719,5 +792,7 @@ if(/\bLine\//i.test(navigator.userAgent)){
   const u=new URL(location.href);u.searchParams.set('openExternalBrowser','1');
   $('#lineLink').href=u.toString();$('#lineTip').hidden=false;
 }
+$('#lOn').onclick=()=>{SP.learnOn=true;$('#lOn').classList.add('on');$('#lOff').classList.remove('on')};
+$('#lOff').onclick=()=>{SP.learnOn=false;$('#lOff').classList.add('on');$('#lOn').classList.remove('on')};
 applyTheme(theme);updVoice();show('home');requestAnimationFrame(drawPath);
 </script>
