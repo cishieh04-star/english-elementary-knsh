@@ -6,6 +6,7 @@
 <title>小龍彩虹畫室</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap">
 <style>
 /* Layout: one-screen paint-studio app — control bar on top, a wooden-palette level map, paint-blob answer buttons; no scrolling */
@@ -204,14 +205,49 @@ button:focus-visible,.opt:focus-visible,.drop:focus-visible{outline:4px solid va
 .podium div{display:flex;justify-content:space-between;border:3px solid var(--ink);border-radius:14px;padding:6px 12px;font-weight:900;font-size:clamp(17px,4.4vmin,24px)}
 #pauseOv{z-index:40}#pauseOv .ovt{color:var(--blue)}
 
-#praise{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:15;pointer-events:none;font-family:var(--f-en);font-weight:700;font-size:clamp(40px,12vmin,96px);color:var(--yellow);-webkit-text-stroke:3px var(--ink);text-shadow:0 6px 0 var(--ink);opacity:0;white-space:nowrap}
+#praise{pointer-events:none;position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:15;pointer-events:none;font-family:var(--f-en);font-weight:700;font-size:clamp(40px,12vmin,96px);color:var(--yellow);-webkit-text-stroke:3px var(--ink);text-shadow:0 6px 0 var(--ink);opacity:0;white-space:nowrap}
 #praise.show{animation:praise 1.1s ease-out}
 @keyframes praise{0%{opacity:0;transform:translate(-50%,-30%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:14}
-#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:900;padding:8px 18px;border-radius:999px;z-index:30;opacity:0;transition:opacity .3s;font-size:16px}
+#toast{pointer-events:none;position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:900;padding:8px 18px;border-radius:999px;z-index:30;opacity:0;transition:opacity .3s;font-size:16px}
 #toast.show{opacity:1}
 #fitHint{position:fixed;right:max(10px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:25;background:var(--red);color:#fff;font-weight:900;border:3px solid var(--ink);border-radius:14px;padding:6px 12px;font-size:16px;animation:bob 1.2s infinite}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition-duration:.01s!important}}
+.lcard .word.cs{display:flex;gap:.45em;justify-content:center;align-items:flex-start}
+.lcard .word.cs span{display:inline-flex;flex-direction:column;align-items:center;transition:transform .2s,color .2s}
+.lcard .word.cs small{display:block;font-size:.34em;color:var(--ink);line-height:1.2}
+
+/* ===== 認識字母：大寫卡＋小寫卡＋單字卡（唸到哪張，哪張發亮） ===== */
+.lset{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,2vmin,16px);width:100%}
+.lhead{background:#fff;color:#1f2a44;border:4px solid #1f2a44;border-radius:20px;padding:6px 18px;font:900 clamp(20px,5vmin,32px)/1.2 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;box-shadow:0 4px 0 #1f2a44}
+.lhead b{font:700 1.25em/1 "Andika","Comic Sans MS",sans-serif;margin:0 .15em}
+.lhead .hb{color:#ef5b4c}.lhead .hs{color:#3b7be0}
+.lrow{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:clamp(8px,2.2vmin,18px);width:min(100%,820px);align-items:stretch}
+.lc{position:relative;background:#fff;color:#1f2a44;border:5px solid #1f2a44;border-radius:26px;box-shadow:0 6px 0 #1f2a44;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px 8px;min-width:0;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}
+.lc .lt{font:700 clamp(70px,20vmin,170px)/1 "Andika","Comic Sans MS",sans-serif}
+.lc.big .lt{color:#ef5b4c}.lc.small .lt{color:#3b7be0}
+.lc .lb{font:900 clamp(17px,4.4vmin,28px)/1.2 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;white-space:nowrap}
+.lc .lb i{font:700 1.05em/1 "Andika","Comic Sans MS",sans-serif;font-style:normal}
+.lc.big .lb i{color:#ef5b4c}.lc.small .lb i{color:#3b7be0}
+.lc.word{background:#fffbea}
+.lc .lp{font-size:clamp(56px,15vmin,120px);line-height:1;display:grid;place-items:center}
+.lc .lp svg,.lc .lp .pic{width:clamp(70px,17vmin,140px);height:auto}
+.lc .lw2{font:700 clamp(30px,7.5vmin,58px)/1.1 "Andika","Comic Sans MS",sans-serif;letter-spacing:1px}
+.lc .lw2 .fl{color:#ef5b4c}
+.lc .lw2 span{display:inline-block;transition:transform .15s}
+.lc .lw2 span.hl{color:#3b7be0;transform:translateY(-6px) scale(1.2)}
+.lc .lz{font:900 clamp(18px,4.6vmin,30px)/1.2 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+.lc.on,.lc.hl{transform:translateY(-6px) scale(1.05);box-shadow:0 0 0 7px #ffd43b,0 10px 0 #1f2a44;background:#fff7cc}
+@media (max-height:520px){ .lset{gap:4px} .lhead{display:none} .lc{padding:4px 6px;border-width:4px} .lc .lt{font-size:17vh} .lc .lb{font-size:4.6vh} .lc .lp{font-size:12vh} .lc .lp svg,.lc .lp .pic{width:14vh} .lc .lw2{font-size:7vh} .lc .lz{font-size:4.6vh} .learn .lcount{display:none} }
+@media (max-aspect-ratio:1/1){ .lrow{grid-template-columns:1fr 1fr} .lc.word{grid-column:1/-1;flex-direction:row;gap:14px;flex-wrap:wrap} .lc .lt{font-size:clamp(64px,22vw,130px)} }
+
+.lc.shake2{animation:lcshake .45s}
+@keyframes lcshake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.lc.ask{animation:lcpulse 1s ease-in-out infinite}
+@keyframes lcpulse{50%{box-shadow:0 0 0 9px #ffd43b,0 6px 0 #1f2a44;transform:scale(1.04)}}
+.lc.good{background:#dff7e6;box-shadow:0 0 0 7px #2bb673,0 6px 0 #1f2a44}
+.lc .lw2 span.hl{color:#3b7be0;transform:translateY(-8px) scale(1.35)}
+.lhead.askh{background:#fff7cc;animation:lcpulse 1.2s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -345,7 +381,8 @@ const T={tok:0,rate:0.85};
 const E=(t,o)=>Object.assign({t,l:'en'},o||{});
 const Z=(t,o)=>Object.assign({t,l:'zh'},o||{});
 const W=ms=>({p:ms});
-const LT=ch=>ch.toUpperCase()+'.';
+const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
+const LT=ch=>LNM[ch.toUpperCase()]||ch;
 const spell=w=>{const out=[];w.replace(/-/g,'').split('').forEach(c=>{out.push(E(LT(c)));out.push(W(260))});return out};
 let hlEl=null;
 function clearHL(){if(hlEl){hlEl.classList.remove('hl');hlEl=null}}
@@ -642,17 +679,44 @@ function showCard(){
   const left=c.emo?`<span style="font-size:clamp(70px,20vmin,150px);line-height:1">${c.emo}</span>`:c.art;
   const colStyle=C[c.w]?` style="color:${C[c.w]};-webkit-text-stroke:1.5px #2B2340"`:'';
   const right=c.phrase?`<div class="word" id="cw" style="font-size:clamp(30px,8.5vmin,70px)">${c.phrase}</div>`
-    :`${c.letter?`<div class="word" style="color:var(--purple)">${c.letter} ${c.letter.toLowerCase()}</div>`:''}<div class="word" id="cw"${colStyle}>${c.w.split('').map((ch,i)=>`<span data-i="${i}">${ch}</span>`).join('')}</div>`;
+    :`${c.letter?`<div class="word cs" style="color:var(--purple)"><span id="cB">${c.letter}<small>big</small></span> <span id="cS">${c.letter.toLowerCase()}<small>small</small></span></div>`:''}<div class="word" id="cw"${colStyle}>${c.w.split('').map((ch,i)=>`<span data-i="${i}">${ch}</span>`).join('')}</div>`;
+  if(c.letter){const L=c.letter,l=L.toLowerCase(),bf=Math.random()<.5;
+    $('#gins').textContent='聽一聽：大寫、小寫，還有單字';
+    $('#gdisp').innerHTML=`<div class="lset"><div class="lhead">認識字母 <b class="hb">${L}</b> 和 <b class="hs">${l}</b></div><div class="lrow"><div class="lc big" id="cB" style="order:${bf?0:1}"><span class="lt">${L}</span><span class="lb">大寫 <i>big</i></span></div><div class="lc small" id="cS" style="order:${bf?1:0}"><span class="lt">${l}</span><span class="lb">小寫 <i>small</i></span></div><div class="lc word" id="cWc" style="order:2"><span class="lp">${left}</span><span class="lw2" id="cw">${c.w.split('').map((ch,i)=>`<span data-i="${i}" class="${ch===l?'fl':''}">${ch}</span>`).join('')}</span><span class="lz" id="cz">${c.zh}</span></div></div></div>`;
+    $('#cB').onclick=()=>talk([E('big',{hl:()=>$('#cB')}),E(LT(L),{hl:()=>$('#cB')})]);
+    $('#cS').onclick=()=>talk([E('small',{hl:()=>$('#cS')}),E(LT(L),{hl:()=>$('#cS')})]);
+    $('#cWc').onclick=()=>{const sq=[E(c.w,{hl:()=>$('#cWc')}),W(250),Z(c.zh,{hl:()=>$('#cWc')}),W(400)];c.w.split('').forEach((ch,i)=>{if(ch==='-')return;sq.push(E(LT(ch),{hl:()=>document.querySelector('#cw span[data-i="'+i+'"]')}),W(250))});sq.push(W(300),E(c.w,{hl:()=>$('#cWc')}));talk(sq)};
+    $('#again').onclick=()=>playCard();
+  }else
   $('#gdisp').innerHTML=`<div class="lcard">${left}<div class="lw">${right}<div class="zhmean">${c.zh}</div></div></div>`;
   checkFit();playCard();
+}
+/* 學完以後「摸一摸」：小朋友自己點出大寫或小寫，點對了才進下一個 */
+function caseCheck(c,ci){
+  const L=c.letter,l=L.toLowerCase(),ln=LT(L),wantB=Math.random()<.5;
+  const tgt=$(wantB?'#cB':'#cS'),oth=$(wantB?'#cS':'#cB');if(!tgt)return;
+  const kind=wantB?'大寫':'小寫',okind=wantB?'小寫':'大寫',enB=wantB?'big':'small',en=ln;
+  $('#gins').textContent=`摸一摸：${kind} ${wantB?L:l}`;{const h=$('.lhead');if(h){h.classList.add('askh');h.innerHTML=`👆 摸一摸 <b class="${wantB?'hb':'hs'}">${wantB?L:l}</b>（${kind}）`}}
+  let wrong=0,done=false,nag=0;
+  const ask=()=>talk([Z('用手指，摸一摸'+kind),W(150),E(enB),E(en)]);
+  $('#again').onclick=ask;ask();
+  const remind=()=>{clearTimeout(S.autoT);S.autoT=setTimeout(()=>{if(done||!S.inCards||S.ci!==ci)return;if(++nag>=2)tgt.classList.add('ask');ask();remind()},7000)};remind();
+  tgt.onclick=()=>{if(done||S.ci!==ci)return;done=true;stopTalk();clearTimeout(S.autoT);tgt.classList.remove('ask');tgt.classList.add('good');if(!wrong){S.stars++;updStars()}cheer();
+    S.autoT=setTimeout(()=>{if(S.inCards&&S.ci===ci){S.ci++;showCard()}},1700)};
+  oth.onclick=()=>{if(done||S.ci!==ci)return;wrong++;stopTalk();SFX.no();oth.classList.add('shake2');setTimeout(()=>oth.classList.remove('shake2'),450);
+    talk([Z('這是'+okind),W(150),Z('要摸'+kind),W(150),E(enB),E(en)]);if(wrong>=2)tgt.classList.add('ask');remind()};
 }
 function playCard(){
   const c=S.cards[S.ci];if(!c)return;const ci=S.ci;let seq=[];
   if(c.phrase){seq=[E(c.phrase,{hl:()=>$('#cw')}),W(400),Z(c.zh),W(400),E(c.phrase,{hl:()=>$('#cw')})]}
   else{
-    if(c.letter)seq.push(E(LT(c.letter)),W(400));
+    if(c.letter){const ln=LT(c.letter);
+      seq=[Z('這是字母'),E(ln),W(300),Z('大寫',{hl:()=>$('#cB')}),E('big',{hl:()=>$('#cB')}),E(ln,{hl:()=>$('#cB')}),W(500),Z('小寫',{hl:()=>$('#cS')}),E('small',{hl:()=>$('#cS')}),E(ln,{hl:()=>$('#cS')}),W(600),E(c.w,{hl:()=>$('#cWc')}),W(250),Z(c.zh,{hl:()=>$('#cWc')}),W(400)];
+      c.w.split('').forEach((ch,i)=>{if(ch==='-')return;seq.push(E(LT(ch),{hl:()=>document.querySelector('#cw span[data-i="'+i+'"]')}),W(250))});
+      seq.push(W(300),E(c.w,{hl:()=>$('#cWc')}));
+      clearTimeout(S.autoT);talk(seq,()=>{if(S.inCards&&S.ci===ci)caseCheck(c,ci)});return;}
     c.w.split('').forEach((ch,i)=>{if(ch==='-')return;seq.push(E(LT(ch),{hl:()=>document.querySelector('#cw span[data-i="'+i+'"]')}),W(250))});
-    seq.push(W(200),E(c.w,{hl:()=>$('#cw')}),W(300),Z(c.zh));
+    seq.push(W(200),E(c.w,{hl:()=>$('#cWc')||$('#cw')}),W(300),Z(c.zh,{hl:()=>$('#cWc')}));
   }
   clearTimeout(S.autoT);
   talk(seq,()=>{S.autoT=setTimeout(()=>{if(S.inCards&&S.ci===ci&&!S.paused){S.ci++;showCard()}},1600)});

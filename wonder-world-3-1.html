@@ -172,6 +172,10 @@ body.paused #app *{animation-play-state:paused!important}
 .bq{display:flex;align-items:center;gap:10px;flex:none}
 .balcell{display:flex;flex-direction:column;align-items:center;gap:6px}
 .bword{font-family:var(--f-en);font-weight:700;font-size:calc(var(--sz)*.2);color:#1d3557;text-shadow:0 0 6px #fff,0 0 3px #fff;position:relative;z-index:3}
+.askbar{background:var(--panel);color:var(--panelInk);border:4px solid var(--accent);border-radius:22px;padding:8px 22px;font-weight:700;font-size:clamp(22px,5vmin,36px);animation:pulse 1.4s ease-in-out infinite}
+.askbar b{font-family:var(--f-en);color:var(--accent);font-size:1.3em}
+.bigpick{padding:10px}
+.bigpick .wx{width:min(36vw,30vh,230px);height:min(36vw,30vh,230px)}
 .listenbig{font-size:clamp(26px,6vmin,44px);padding:16px 36px}
 .bal.popped{animation:popout .45s forwards}
 .bal.hint .bin{animation:glow 1s ease-in-out infinite}
@@ -316,7 +320,7 @@ const SKINS={sky:{n:'天空熱氣球',thing:'氣球'},sea:{n:'海底泡泡',thin
 const TEAMS=[{n:'藍隊',c:'#2b7bd8'},{n:'紅隊',c:'#e5484d'},{n:'綠隊',c:'#1f9d55'},{n:'橘隊',c:'#f08c00'}];
 
 /* ========== 狀態（星星每次打開都從 0 開始） ========== */
-const state={stars:0,best:{},cleared:{},seen:{},buddy:0,name:'',skin:store.get('skin','sky'),voiceOn:true,speed:1};
+const state={stars:0,best:{},cleared:{},seen:{},buddy:0,name:'',skin:'sky',voiceOn:true,speed:1};
 /* 可暫停的計時器：按「暫停」時全部停住，按「繼續玩」從剩下的時間接著走 */
 let cleanups=[],curTalk=null;
 const TM={list:new Set(),paused:false};
@@ -331,6 +335,7 @@ function resetScreen(){TM.paused=false;document.body.classList.remove('paused');
 
 /* ========== 語音 ========== */
 const SPEEDS=[{r:.55,l:'很慢'},{r:.7,l:'慢'},{r:.85,l:'中'},{r:1,l:'快'}];
+const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
 const LN={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'gee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'el',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'are',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zee'};
 const enRate=()=>SPEEDS[state.speed].r;
 const zhRate=()=>Math.min(1.1,SPEEDS[state.speed].r+.2);
@@ -353,7 +358,7 @@ const Speech={
       if('zhI' in it){if(!state.voiceOn||!it.zhI)continue;await this.one(it.zhI,'zh-TW',zhRate(),my);}
       else if('zh' in it)await this.one(it.zh,'zh-TW',zhRate(),my);
       else if('en' in it)await this.one(it.en,'en-US',enRate(),my);
-      else if('letter' in it)await this.one(LN[it.letter]||it.letter,'en-US',enRate(),my);
+      else if('letter' in it)await this.one(LNM[it.letter.toUpperCase()]||it.letter,'en-US',enRate(),my);
       if(my!==this.tok)return false;
       await sleep(('letter' in it)?380/enRate():260);
     }
@@ -474,7 +479,6 @@ function showHome(){resetScreen();setTitle('天氣闖關大冒險',true);
     <div><div class="lab">選一個好朋友</div><div class="buddies">${BUDDIES.map((b,i)=>`<button class="bd ${i===state.buddy?'sel':''}" data-i="${i}"><span>${b.e}</span>${b.n}</button>`).join('')}</div></div>
     <input id="nameIn" maxlength="8" placeholder="寫你的名字（可以不寫）" value="${state.name.replace(/"/g,'')}">
     <div class="bigbtns"><button class="b1" id="goMap">開始闖關</button><button class="b2" id="goBattle">小組競賽</button></div>
-    <div class="skins"><span class="lab">選介面：</span>${Object.entries(SKINS).map(([k,v])=>`<button class="sk ${k===state.skin?'sel':''}" data-s="${k}">${v.n}</button>`).join('')}</div>
   </div>`);
   st.appendChild(h);
   $$('.bd',h).forEach(b=>b.onclick=()=>{state.buddy=+b.dataset.i;$$('.bd',h).forEach(x=>x.classList.toggle('sel',x===b));SFX.tick();});
@@ -565,7 +569,22 @@ function stLearn(id){runStage(id,'聽一聽、看一看，認識天氣的英文'
     <button class="sentb" id="sb">${disp(sent)}</button></div></div>`));
   play.appendChild(el(`<div class="ctrl"><button class="b2 again" id="ag">再聽一次</button></div>`));
   // 唸完以後自動換下一個，不用按
-  let adv=false;const go=()=>{if(adv)return;adv=true;later(()=>{Speech.stop();api.correct($('.lword')||play,true);},2600);};
+  /* 唸完以後「摸一摸」：聽到單字，自己點出對的圖，點對了才進下一個 */
+  let adv=false;const go=()=>{if(adv)return;adv=true;later(check,1200);};
+  const check=()=>{
+    const other=pickOne(WORDS.filter(o=>o!==w)),opts=shuffle([w,other]),ok=opts.indexOf(w);
+    play.innerHTML='';
+    play.appendChild(el(`<div class="askbar">👆 摸一摸：<b>${w.w}</b></div>`));
+    const row=el(`<div class="opts">${opts.map(o=>`<button class="card bigpick" aria-label="${o.w}">${pic(o.w)}</button>`).join('')}</div>`);
+    play.appendChild(row);
+    play.appendChild(el(`<div class="ctrl"><button class="b2 again" id="ag2">再聽一次</button></div>`));
+    const ask=curTalk=()=>say({zhI:'哪一個是'},{en:w.w},{zhI:'用手指，摸一摸。'});
+    $('#ag2').onclick=ask;ask();
+    const stopIdle=idleRepeat(()=>say({en:w.w}),8000,2);
+    choice($$('.bigpick',row),ok,(b,first)=>{stopIdle();api.correct(b,first);},
+      (b)=>{const o=opts[$$('.bigpick',row).indexOf(b)];say({zh:'這是'},{en:o.w},{zh:o.zh+'。要摸'},{en:w.w});});
+    fitCheck();
+  };
   // 唸到哪個字母，哪個字母就放大
   const chs=$$('.lword .ch',play);const hl=k=>chs.forEach((c,j)=>c.classList.toggle('big',j===k));
   const sc=(...a)=>say(...a).then(ok=>{hl(-1);if(ok)go();});
