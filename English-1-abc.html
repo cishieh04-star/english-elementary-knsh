@@ -1470,7 +1470,7 @@ function showCover(fn){GEN++;killAll();mode='cover';showRate=false;setPrompt('')
   const play=clearPlay();const d=el('div','cover',`<div class="mascot">${octo()}</div><div class="logo eng">ABC 海底大冒險</div><div class="tsub">英文第一課　<span class="eng">Good morning! · Aa Bb Cc</span></div><div class="cems">${AVATARS.slice(0,4).map(a=>`<span>${a}</span>`).join('')}</div><button class="bigb g cgo" id="coverGo">點一下開始</button>`);
   play.appendChild(d);let done=false;const go=()=>{if(done)return;
     /* 在 LINE 裡：按「點一下開始」直接換到 Safari／Chrome（LINE 裡常常沒有聲音、描字畫面也會亂跑） */
-    if(LINEISH&&!SS.stayHere){sCancel();openExt({});return;}
+    if(LINEISH&&!SS.stayHere){sCancel();openExt({go:'home'});return;}
     done=true;gestureUnlock();fn();};d.onclick=go;}
 (function boot(){
   let q;try{q=new URLSearchParams(location.search);}catch(e){showTitle();return;}
@@ -1480,8 +1480,13 @@ function showCover(fn){GEN++;killAll();mode='cover';showRate=false;setPrompt('')
   /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
   if(failed){const ex={};['go','lv','li','w','nm','av'].forEach(k=>{if(q.get(k)!==null)ex[k]=q.get(k);});const u=extUrl(ex);showTitle();
     if(/Android/i.test(UA))toChrome(u);else extHelp(u);return;}
-  if(go&&!LINEISH&&(go==='trace'||go==='start')){save();
-    showCover(()=>{if(go==='trace')resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');else showMap();});return;}
+  /* 從 LINE 換過來的：不再顯示封面，直接到首頁／地圖／描字。
+     手機允許的話馬上出聲；不允許的話，小朋友第一次點畫面就會出聲。 */
+  if(go&&!LINEISH&&['home','start','trace'].includes(go)){save();needUnlock=go!=='home';
+    if(go==='trace')resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');
+    else if(go==='start')showMap();
+    else showTitle();
+    return;}
   showCover(()=>{showTitle();titleAskAt=performance.now();playTitleHow(true);});
 })();
 </script>
