@@ -254,6 +254,44 @@ body.paused #app *{animation-play-state:paused!important}
 .xwm .xwt{font-size:clamp(16px,4vmin,20px);line-height:1.8;font-weight:700}
 .xwm button{font:inherit;font-size:clamp(18px,4.6vmin,24px);font-weight:900;padding:10px 20px;border-radius:16px;border:none;color:#fff;margin:10px 4px 0;cursor:pointer;box-shadow:0 4px 0 #0003}
 .xwm .xg{background:#22b573}.xwm .xy{background:#6b7280}
+/* ---------- 描單字（和 English-1-abc 同一套） ---------- */
+html.wtracing,html.wtracing body{touch-action:none;overscroll-behavior:none}
+.wthost{position:relative;flex:1 1 auto;min-height:220px;width:100%;align-self:stretch}
+.wtbg{position:absolute;inset:4px;border-radius:22px;background:#fffdf4;border:4px dashed #c9d6e3}
+.wtWrap{position:absolute;inset:0}
+.wtWrap canvas{position:absolute;inset:0;touch-action:none}
+.wtgrid{pointer-events:none}
+.wtsov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.wtsov .sdemo{fill:none;stroke:#ff8a00;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.wtsov .sbadge{transition:opacity .3s}
+.wtsov .scur{fill:none;stroke:#ff8a00;stroke-width:2.6;stroke-dasharray:3 3;stroke-linecap:round;animation:wtdash .8s linear infinite}
+@keyframes wtdash{to{stroke-dashoffset:-6}}
+.wtsov .sbadge.now{animation:wtblink .9s ease-in-out infinite}
+@keyframes wtblink{50%{opacity:.35}}
+.wtsov .sbadge.past circle{fill:#9aa7b4}
+.wtredo{position:absolute;right:10px;bottom:10px;z-index:4;font:inherit;font-size:clamp(16px,4vmin,24px);font-weight:900;padding:6px 16px;border-radius:14px;background:#fff;color:#12385f;border:3px solid #12385f;cursor:pointer}
+.wtredo.wtsob{right:auto;left:calc(min(40%,260px) + 22px);background:#fff3b0}
+.wtbar{position:absolute;left:10px;bottom:14px;width:min(40%,260px);height:18px;border-radius:9px;background:#fff;border:3px solid #12385f;overflow:hidden}
+.wtbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd23f,#ff8a00);transition:width .15s}
+.wtline{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;font:inherit;font-size:clamp(15px,3.8vmin,20px);font-weight:900;padding:8px 14px;border-radius:16px;background:#ff5a4f;color:#fff;border:3px solid #fff;box-shadow:0 4px 0 #0003;white-space:nowrap;cursor:pointer}
+.wtside{position:absolute;left:8px;top:8px;bottom:60px;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh;background:#fffdf4;border:4px solid #12385f;border-radius:20px;padding:6px 4px;box-shadow:0 4px 0 #12385f33}
+.wtside.top{left:8px;right:8px;bottom:auto;width:auto;flex-direction:row;gap:3vw;padding:4px 10px}
+.wtside.top .tzh{white-space:nowrap;flex:none}
+.wtside .tpic{font-size:min(15vw,13vh);line-height:1;display:grid;place-items:center}
+.wtside .tpic svg{width:1em;height:1em}
+.wtside .tword{display:flex;align-items:flex-end;justify-content:center;gap:1px;background:#fff;border-radius:10px;padding:2px}
+.wtside .tword img,.wtside .tword svg{display:block;flex:none}
+.wtside .tzh{font-size:clamp(16px,4.5vmin,28px);font-weight:900;color:#12385f}
+.wtintro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh}
+.wtintro .em{font-size:min(24vw,26vh);line-height:1;display:grid;place-items:center}
+.wtintro .em svg{width:1em;height:1em}
+.wtintro .wd{font:700 min(16vw,17vh)/1.2 "Andika","Comic Sans MS","Chalkboard SE",sans-serif;color:#12385f;background:#fff;border-radius:22px;padding:0 5vw;border:5px solid #12385f;display:flex;gap:.04em}
+.wtintro .wd .lt{display:inline-block;border-radius:10px;transition:transform .15s,background .15s}
+.wtintro .wd .lt.say{background:#fff3b0;transform:scale(1.12)}
+.wtintro .wd.mine{align-items:flex-end;gap:.5vw;padding:1vh 3vw}
+.wtintro .wd.mine img{height:min(24vw,24vh);width:auto;display:block}
+.wtintro .zhw{font-size:clamp(22px,6vmin,40px);font-weight:900;color:#12385f}
+.wtp svg,.wtp img{width:1em;height:1em;display:block}
 </style>
 </head>
 <body>
@@ -288,6 +326,236 @@ body.paused #app *{animation-play-state:paused!important}
   <a class="linebox" id="lineBtn" hidden href="#">你在 LINE 裡面。請按這裡，用瀏覽器打開（才有聲音，寫字畫面才不會晃）</a>
 </div>
 
+<script>
+/* ================= 描單字（和 English-1-abc 同一套描字方式） =================
+   四線格、筆順號碼、示範筆順；照筆順一筆一筆描，描完一個字母換下一個，
+   全部描完再拼一次、唸整個字。描字時鎖住畫面，手指移動畫面不會跟著跑。 */
+(function(){
+'use strict';
+const STROKES={
+ A:['M50 10 L26 63.3','M50 10 L74 63.3','M35 44 L65 44'],
+ B:['M32 10 L32 63.3','M32 10 L50 10 Q66 10 66 23.4 Q66 36.7 50 36.7 L32 36.7 L52 36.7 Q70 36.7 70 50 Q70 63.3 52 63.3 L32 63.3'],
+ C:['M68 20 Q60 10 47 10 Q26 10 26 36.7 Q26 63.3 47 63.3 Q60 63.3 68 53'],
+ D:['M32 10 L32 63.3','M32 10 L46 10 Q70 10 70 36.7 Q70 63.3 46 63.3 L32 63.3'],
+ E:['M34 10 L34 63.3','M34 10 L66 10','M34 36.7 L62 36.7','M34 63.3 L66 63.3'],
+ F:['M34 10 L34 63.3','M34 10 L66 10','M34 36.7 L60 36.7'],
+ G:['M70 20 Q62 10 48 10 Q26 10 26 36.7 Q26 63.3 48 63.3 Q70 63.3 70 42 L54 42'],
+ H:['M30 10 L30 63.3','M70 10 L70 63.3','M30 36.7 L70 36.7'],
+ I:['M50 10 L50 63.3','M36 10 L64 10','M36 63.3 L64 63.3'],
+ J:['M64 10 L64 48 Q64 63.3 48 63.3 Q36 63.3 31 53'],
+ K:['M32 10 L32 63.3','M68 10 L32 42','M44 32 L70 63.3'],
+ L:['M34 10 L34 63.3 L66 63.3'],
+ M:['M26 10 L26 63.3','M26 10 L50 50','M50 50 L74 10','M74 10 L74 63.3'],
+ N:['M30 10 L30 63.3','M30 10 L70 63.3','M70 63.3 L70 10'],
+ O:['M50 10 Q24 10 24 36.7 Q24 63.3 50 63.3 Q76 63.3 76 36.7 Q76 10 50 10'],
+ P:['M32 10 L32 63.3','M32 10 L52 10 Q70 10 70 24 Q70 38 52 38 L32 38'],
+ Q:['M50 10 Q24 10 24 36.7 Q24 63.3 50 63.3 Q76 63.3 76 36.7 Q76 10 50 10','M56 50 L74 66'],
+ R:['M32 10 L32 63.3','M32 10 L52 10 Q70 10 70 24 Q70 38 52 38 L32 38','M48 38 L70 63.3'],
+ S:['M68 18 Q62 10 50 10 Q30 10 30 23 Q30 34 50 36.7 Q72 40 72 50 Q72 63.3 50 63.3 Q36 63.3 30 55'],
+ T:['M28 10 L72 10','M50 10 L50 63.3'],
+ U:['M30 10 L30 46 Q30 63.3 50 63.3 Q70 63.3 70 46 L70 10'],
+ V:['M28 10 L50 63.3 L72 10'],
+ W:['M22 10 L36 63.3 L50 24 L64 63.3 L78 10'],
+ X:['M30 10 L70 63.3','M70 10 L30 63.3'],
+ Y:['M28 10 L50 38','M72 10 L50 38 L50 63.3'],
+ Z:['M30 10 L70 10 L30 63.3 L70 63.3'],
+ a:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 63.3'],
+ b:['M34 10 L34 63.3','M34 50 Q34 36.7 48 36.7 Q62 36.7 62 50 Q62 63.3 48 63.3 Q34 63.3 34 50'],
+ c:['M62 41 Q55 36.7 47 36.7 Q33 36.7 33 50 Q33 63.3 47 63.3 Q55 63.3 62 59'],
+ d:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 10 L60 63.3'],
+ e:['M33 50 L62 50 Q62 36.7 47.5 36.7 Q33 36.7 33 50 Q33 63.3 47.5 63.3 Q56 63.3 61 58'],
+ f:['M62 16 Q58 10 52 10 Q44 10 44 20 L44 63.3','M34 36.7 L58 36.7'],
+ g:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 80 Q60 90 47 90 Q38 90 34 85'],
+ h:['M36 10 L36 63.3','M36 47 Q40 36.7 50 36.7 Q62 36.7 62 48 L62 63.3'],
+ i:['M48 36.7 L48 63.3','M48 23 L48 23.6'],
+ j:['M54 36.7 L54 80 Q54 90 44 90 Q37 90 33 85','M54 23 L54 23.6'],
+ k:['M36 10 L36 63.3','M60 36.7 L36 52','M44 47 L62 63.3'],
+ l:['M48 10 L48 63.3'],
+ m:['M28 36.7 L28 63.3','M28 46 Q31 36.7 39 36.7 Q48 36.7 48 46 L48 63.3','M48 46 Q51 36.7 59 36.7 Q68 36.7 68 46 L68 63.3'],
+ n:['M36 36.7 L36 63.3','M36 47 Q40 36.7 50 36.7 Q62 36.7 62 48 L62 63.3'],
+ o:['M50 36.7 Q34 36.7 34 50 Q34 63.3 50 63.3 Q66 63.3 66 50 Q66 36.7 50 36.7'],
+ p:['M36 36.7 L36 90','M36 50 Q36 36.7 50 36.7 Q64 36.7 64 50 Q64 63.3 50 63.3 Q36 63.3 36 50'],
+ q:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 90'],
+ r:['M38 36.7 L38 63.3','M38 48 Q42 36.7 52 36.7 Q58 36.7 62 40'],
+ s:['M62 40 Q57 36.7 49 36.7 Q36 36.7 36 43.5 Q36 49 49 50 Q63 51 63 56.5 Q63 63.3 49 63.3 Q40 63.3 35 59'],
+ t:['M46 16 L46 57 Q46 63.3 54 63.3 Q58 63.3 61 60','M36 36.7 L58 36.7'],
+ u:['M36 36.7 L36 53 Q36 63.3 47 63.3 Q60 63.3 60 50','M60 36.7 L60 63.3'],
+ v:['M34 36.7 L50 63.3 L66 36.7'],
+ w:['M26 36.7 L37 63.3 L50 40 L63 63.3 L74 36.7'],
+ x:['M36 36.7 L64 63.3','M64 36.7 L36 63.3'],
+ y:['M34 36.7 L50 63.3','M66 36.7 L50 63.3 L40 90'],
+ z:['M36 36.7 L64 36.7 L36 63.3 L64 63.3']
+};
+const ZHNUM=['一','二','三','四','五','六','七','八','九','十'];
+const NS='http://www.w3.org/2000/svg';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const STOP={stop:1};
+let TRACING=false,OPT=null;
+function setTracing(on){TRACING=on;document.documentElement.classList.toggle('wtracing',on);}
+document.addEventListener('touchmove',e=>{if(TRACING&&e.cancelable)e.preventDefault();},{passive:false});
+document.addEventListener('gesturestart',e=>{if(TRACING)e.preventDefault();});
+document.addEventListener('dblclick',e=>{if(TRACING)e.preventDefault();});
+const mk=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
+/* 換畫面前先把舊的描字畫布清掉，舊手機記憶體不夠時才不會整個網頁當掉 */
+function clearHost(host){setTracing(false);host.querySelectorAll('canvas').forEach(c=>{try{c.width=c.height=0;}catch(e){}});host.innerHTML='';}
+/* 每個字母在四線格裡的寬度（描好的、還沒描的字母都用同樣比例，排在一起才會對齊） */
+const LBOX={};
+function lbox(ch){if(LBOX[ch])return LBOX[ch];const sv=document.createElementNS(NS,'svg');sv.style.cssText='position:absolute;width:0;height:0;visibility:hidden';document.body.appendChild(sv);
+  let X0=1e9,X1=-1e9;STROKES[ch].forEach(d=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',d);sv.appendChild(p);const b=p.getBBox();X0=Math.min(X0,b.x);X1=Math.max(X1,b.x+b.width);});sv.remove();
+  return LBOX[ch]={x:X0-7.5,w:X1-X0+15};}
+function letterSVG(ch,cls,hpx){const b=lbox(ch);const out=cls==='cur'?'#ff5a4f':'#c5cfd9',inn=cls==='cur'?'#ffffff':'#f3f6f9';
+  const D=STROKES[ch],SC=['#ff5a4f','#2f80ed','#22b573'];let extra='';
+  if(cls==='todo'){const n=D.length,T=n+1.4;
+    extra=D.map((d,i)=>`<path d="${d}" pathLength="1" stroke="${SC[i%3]}" stroke-width="6" stroke-dasharray="1 1" stroke-dashoffset="1"><animate attributeName="stroke-dashoffset" values="1;1;0;0" keyTimes="0;${(i/T).toFixed(3)};${((i+.85)/T).toFixed(3)};1" dur="${T}s" repeatCount="indefinite"/></path>`).join('');}
+  return `<svg class="lsv ${cls}" viewBox="${b.x} 4 ${b.w} 92" style="height:${hpx}px;width:${hpx*b.w/92}px;overflow:visible"><g fill="none" stroke-linecap="round" stroke-linejoin="round">${D.map(d=>`<path d="${d}" stroke="${out}" stroke-width="14"/>`).join('')}${D.map(d=>`<path d="${d}" stroke="${inn}" stroke-width="10"/>`).join('')}${extra}</g></svg>`;}
+function traceStroke(host,ch,opt){
+  clearHost(host);host.appendChild(mk('div','wtbg'));
+  const wrap=mk('div','wtWrap');
+  const bg=document.createElement('canvas');bg.className='wtgrid';const cv=document.createElement('canvas');
+  const ov=document.createElementNS(NS,'svg');ov.setAttribute('class','wtsov');
+  wrap.append(bg,cv,ov);setTracing(true);
+  const redo=mk('button','wtredo','重畫'),again=mk('button','wtredo wtsob','看筆順'),bar=mk('div','wtbar','<i></i>');
+  wrap.append(redo,again,bar);
+  const LINE=!!OPT.line;
+  if(LINE){const b=mk('button','wtline','✏️ 畫面會亂跑？按我用瀏覽器開啟');b.onclick=()=>{OPT.stop();OPT.line();};wrap.appendChild(b);}
+  host.appendChild(wrap);
+  const w=host.clientWidth,h=host.clientHeight,dpr=Math.min(2,window.devicePixelRatio||1);
+  for(const c of [bg,cv]){c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';}
+  const SW=11,D=STROKES[ch],paths=D.map(d=>new Path2D(d));
+  /* 依照字母實際範圍放大（小寫字母不會太小），四線格照樣畫出來 */
+  const tmp=document.createElementNS(NS,'g');ov.appendChild(tmp);
+  const pe=D.map(d=>{const p=document.createElementNS(NS,'path');p.setAttribute('d',d);tmp.appendChild(p);return p;});
+  let X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;pe.forEach(p=>{const b=p.getBBox();X0=Math.min(X0,b.x);Y0=Math.min(Y0,b.y);X1=Math.max(X1,b.x+b.width);Y1=Math.max(Y1,b.y+b.height);});
+  const starts=pe.map(p=>{const a=p.getPointAtLength(0),b=p.getPointAtLength(Math.min(2,p.getTotalLength()));return [a.x,a.y,b.x-a.x,b.y-a.y];});
+  const cl=pe.map(p=>{const L=p.getTotalLength(),n=Math.max(2,Math.ceil(L/3));return Array.from({length:n+1},(_,i)=>{const q=p.getPointAtLength(L*i/n);return [q.x,q.y];});});
+  tmp.remove();
+  const xr=Math.max(48,X1-X0+SW+18),yr=Math.max(48,Y1-Y0+SW+20),cxu=(X0+X1)/2,cyu=(Y0+Y1)/2;
+  /* 圖文欄：平常放左邊；單字字母多、放左邊會太小時，自動移到上面 */
+  let LW=0,TH=0,mode='';const LH=LINE?46:0;
+  if(opt&&opt.side){const sumW=opt.sumW||100,LWc=Math.round(w*(w<h?.40:.28)),leftHp=(LWc-24)*92/sumW;
+    if(leftHp<70){mode='top';TH=Math.round(Math.min(h*.30,180))+LH;}else{mode='left';LW=LWc;}}
+  const aw=w-LW,ah=h-TH;
+  if(mode){const sp=mk('div','wtside '+mode,opt.side({mode,LW,TH:TH-LH,w}));
+    if(mode==='left'){sp.style.width=(LW-14)+'px';if(LINE)sp.style.top='52px';}else{sp.style.top=(LINE?52:6)+'px';sp.style.height=(TH-LH-10)+'px';}wrap.appendChild(sp);}
+  const kFull=Math.min(aw*.94,ah-64)/100,k=Math.min(aw*.94/xr,(ah-64)/yr,kFull*1.4),ox=LW+aw/2-cxu*k,oy=TH+(ah-58)/2-cyu*k;
+  const ctx=cv.getContext('2d'),bx=bg.getContext('2d');
+  const tf=c=>c.setTransform(dpr*k,0,0,dpr*k,dpr*ox,dpr*oy);
+  /* 四線格 */
+  tf(bx);[[10,'#4a7fc0',0],[36.7,'#4a7fc0',1],[63.3,'#e05a5a',0],[90,'#4a7fc0',0]].forEach(([y,c,dash])=>{bx.strokeStyle=c;bx.lineWidth=.7;bx.setLineDash(dash?[2.5,2]:[]);bx.beginPath();bx.moveTo((LW-ox)/k+2,y);bx.lineTo((w-ox)/k-4,y);bx.stroke();});
+  const hw=SW*k/2;
+  const col=['#e53935','#2f80ed','#8e24aa','#f57c00','#d81b60','#00897b'][(ch.toLowerCase().charCodeAt(0)+(ch===ch.toUpperCase()?0:3))%6];
+  let down=false,last=null,finished=false;
+  function guide(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);tf(ctx);ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle='#12385f';ctx.lineWidth=SW+1.8;paths.forEach(p=>ctx.stroke(p));
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=SW;paths.forEach(p=>ctx.stroke(p));
+    ctx.strokeStyle='#8fa6bf';ctx.lineWidth=1.4;ctx.setLineDash([.1,3.2]);paths.forEach(p=>ctx.stroke(p));ctx.setLineDash([]);}
+  guide();
+  /* 筆順號碼（一直留在畫面上） */
+  const g=document.createElementNS(NS,'g');g.setAttribute('transform',`translate(${ox} ${oy}) scale(${k})`);ov.setAttribute('viewBox',`0 0 ${w} ${h}`);ov.appendChild(g);
+  const anim=document.createElementNS(NS,'g'),badges=document.createElementNS(NS,'g');g.append(anim,badges);
+  const placed=[];
+  D.forEach((d,i)=>{let [sx,sy,dx,dy]=starts[i];let L=Math.hypot(dx,dy);if(L<.01){dx=0;dy=1;L=1;}
+    /* 號碼放在起筆點的「前面」（和筆畫方向相反），兩筆起點相同時再往旁邊挪開 */
+    let bx0=sx-dx/L*8,by0=sy-dy/L*8;
+    for(let t=0;t<4&&placed.some(([px,py])=>Math.hypot(px-bx0,py-by0)<10);t++){bx0+=(-dy/L)*7*(t%2?-1:1);by0+=(dx/L)*7*(t%2?-1:1);}
+    placed.push([bx0,by0]);
+    const b=document.createElementNS(NS,'g');b.setAttribute('class','sbadge');b.innerHTML=`<circle cx="${bx0}" cy="${by0}" r="5" fill="#ff5a4f" stroke="#fff" stroke-width="1"/><text x="${bx0}" y="${by0+2.3}" text-anchor="middle" font-size="6.5" font-weight="900" fill="#fff">${i+1}</text>`;badges.appendChild(b);});
+  /* 示範筆順：一筆一筆慢慢畫出來；小朋友一摸畫面就停止示範，直接開始描 */
+  let demoOn=false,skip=false;
+  const stopDemo=()=>{skip=true;anim.innerHTML='';[...badges.children].forEach(b=>b.style.opacity=1);demoOn=false;};
+  async function demo(){
+    demoOn=true;skip=false;anim.innerHTML='';[...badges.children].forEach(b=>b.style.opacity=0);
+    if(!OPT._told){OPT._told=true;OPT.zh('先看筆順');}
+    await sleep(400);
+    for(let i=0;i<D.length&&!skip;i++){
+      badges.children[i].style.opacity=1;
+      const p=document.createElementNS(NS,'path');p.setAttribute('d',D[i]);p.setAttribute('class','sdemo');anim.appendChild(p);
+      const len=p.getTotalLength()||1,dur=Math.max(450,len*22);
+      p.style.strokeDasharray=len+' '+len;p.style.strokeDashoffset=len;p.getBoundingClientRect();
+      p.style.transition=`stroke-dashoffset ${dur}ms linear`;p.style.strokeDashoffset=0;
+      await sleep(dur+450);
+    }
+    if(!skip){await sleep(500);anim.innerHTML='';}
+    [...badges.children].forEach(b=>b.style.opacity=1);demoOn=false;
+  }
+  const ready=demo();
+  const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+  let resolveDone;const doneP=new Promise(r=>resolveDone=r);
+  /* 照筆順一筆一筆描：只有「現在這一筆」會算分。
+     現在這一筆的中心線沿著走過大約八成就換下一筆（手指放開時六成也算），全部描完才過關。 */
+  const cpts=cl.map(arr=>arr.map(([x,y])=>[ox+x*k,oy+y*k,false])),RC=hw*1.5;
+  cv._cl=cpts;
+  let curS=0,gestGain=0,missN=0;
+  const rate=si=>cpts[si].filter(p=>p[2]).length/cpts[si].length;
+  const curLayer=document.createElementNS(NS,'g');g.insertBefore(curLayer,badges);
+  function showCur(){curLayer.innerHTML=curS<D.length?`<path class="scur" d="${D[curS]}"/>`:'';[...badges.children].forEach((b,i)=>{b.classList.toggle('now',i===curS);b.classList.toggle('past',i<curS);});}
+  showCur();
+  const markC=(x,yv)=>{if(curS>=cpts.length)return;for(const p of cpts[curS]){if(!p[2]&&(p[0]-x)**2+(p[1]-yv)**2<RC*RC){p[2]=true;gestGain++;}}};
+  function complete(){if(finished)return;finished=true;down=false;setTracing(false);bar.firstChild.style.width='100%';curLayer.innerHTML='';tf(ctx);ctx.strokeStyle=col;ctx.lineWidth=SW;ctx.lineCap='round';ctx.lineJoin='round';paths.forEach(p=>ctx.stroke(p));resolveDone();}
+  function nextStroke(){curS++;if(curS>=D.length){complete();return;}OPT.pop();showCur();}
+  function check(lifted){if(finished)return;const r=rate(curS);
+    bar.firstChild.style.width=Math.min(100,(curS+Math.min(1,r/.8))/D.length*100)+'%';
+    if(r>=.8||(lifted&&r>=.6))nextStroke();}
+  function draw(a,b){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.strokeStyle=col;ctx.lineWidth=hw*2.3;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalCompositeOperation='source-atop';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.globalCompositeOperation='source-over';
+    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(RC/2)));for(let i=0;i<=n;i++){markC(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);}
+    check(false);}
+  cv.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  cv.onpointerdown=e=>{e.preventDefault();if(finished||OPT.paused())return;if(demoOn)stopDemo();down=true;gestGain=0;last=pos(e);draw(last,last);cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);};
+  cv.onpointermove=e=>{if(!down||finished)return;const p=pos(e);draw(last,p);last=p;};
+  cv.onpointerup=cv.onpointercancel=()=>{if(down&&!finished){down=false;check(true);
+      /* 描到別的地方、這一筆完全沒描到：第二次就提醒要先描第幾筆 */
+      if(!finished&&gestGain===0&&++missN>=2){missN=0;OPT.stop();OPT.zh(`先描第${ZHNUM[curS]}筆`);}else if(gestGain>0)missN=0;}down=false;};
+  redo.onclick=()=>{if(finished)return;cpts.forEach(q=>q.forEach(p=>p[2]=false));curS=0;missN=0;showCur();bar.firstChild.style.width='0';guide();};
+  again.onclick=()=>{if(finished||demoOn)return;demo();};
+  const snap=()=>{try{const x0=Math.max(0,ox+(X0-SW/2-2)*k),x1=Math.min(w,ox+(X1+SW/2+2)*k),y0=oy+4*k,y1=oy+96*k;
+    const H=150,Wd=Math.max(20,Math.round(H*(x1-x0)/(y1-y0)));const c=document.createElement('canvas');c.width=Wd;c.height=H;
+    c.getContext('2d').drawImage(cv,x0*dpr,y0*dpr,(x1-x0)*dpr,(y1-y0)*dpr,0,0,Wd,H);return c.toDataURL('image/png');}catch(e){return null;}};
+  return{done:doneP,canvas:cv,ready,snap};
+}
+/* 等語音唸完；被別的聲音打斷時也不會一直卡住 */
+const said=(p,t,zh)=>Promise.race([p,sleep(1500+t.length*(zh?380:200))]);
+/* 描一個單字。o 是每個遊戲自己的設定：
+   en(英文)、zh(中文說明)、mean(中文意思) 會回傳 Promise；nm(字母) 是字母名稱；
+   stop() 停止語音；pop()、good() 是音效；paused()、alive() 用來判斷暫停和是不是已經離開；
+   replay(fn) 讓「再聽一次」按鈕唸現在的內容；line() 在 LINE 裡換到瀏覽器（沒有就不顯示按鈕） */
+async function word(host,w,o){
+  OPT=o;const pic=o.pic||'',zhw=o.zhw||'';
+  const ok=()=>{if(!o.alive())throw STOP;};
+  const en=t=>said(o.en(t),t,0).then(ok),zh=t=>said(o.zh(t),t,1).then(ok),mean=t=>said(o.mean(t),t,1).then(ok);
+  const spell=async card=>{const lts=card?card.querySelectorAll('.lt'):[];const fl=k=>lts.forEach((x,j)=>x.classList.toggle('say',j===k));
+    fl(-1);await en(w);await sleep(500);
+    for(let k=0;k<w.length;k++){fl(k);await en(o.nm(w[k]));await sleep(250);}
+    fl(-1);await sleep(300);await en(w);};
+  const intro=()=>{const c=mk('div','wtintro',`<div class="em">${pic}</div><div class="wd">${w.split('').map(c=>`<span class="lt">${c}</span>`).join('')}</div>${zhw?`<div class="zhw">${zhw}</div>`:''}`);clearHost(host);host.appendChild(c);return c;};
+  try{
+    let card=intro();
+    o.replay(()=>{o.stop();spell(card).catch(()=>{});});
+    if(o.first)await zh('看圖，聽單字，再用手指一個字母一個字母描');
+    await en(w);if(zhw)await mean(zhw);await sleep(500);ok();
+    const snaps=[],sumW=w.split('').reduce((a,c)=>a+lbox(c).w,0);
+    for(let k=0;k<w.length;k++){const ch=w[k];
+      const side=G=>{const top=G.mode==='top';
+        const hp=top?Math.max(30,Math.min((G.TH-16)*.78,(G.w*.5-24)*92/sumW)):Math.max(30,Math.min(G.LW*.55,(G.LW-24)*92/sumW));
+        return `<div class="tpic"${top?` style="font-size:${Math.round((G.TH-16)*.5)}px"`:''}>${pic}</div><div class="tword">${w.split('').map((c,j)=>j<k&&snaps[j]?`<img src="${snaps[j]}" alt="${c}" style="height:${hp}px;width:${hp*lbox(c).w/92}px">`:letterSVG(c,j===k?'cur':'todo',hp)).join('')}</div>${zhw?`<div class="tzh">${zhw}</div>`:''}`;};
+      const t=traceStroke(host,ch,{side,sumW});
+      o.replay(()=>{o.stop();o.en(o.nm(ch));});
+      (async()=>{try{await t.ready;if(!o.alive())return;if(k===0&&o.first)await zh('用手指，一個字母一個字母描');await en(o.nm(ch));}catch(e){}})();
+      await t.done;ok();snaps[k]=t.snap?t.snap():null;o.stop();o.pop();await sleep(300);ok();
+    }
+    card=mk('div','wtintro',`<div class="em">${pic}</div><div class="wd mine">${w.split('').map((c,j)=>`<span class="lt">${snaps[j]?`<img src="${snaps[j]}" alt="${c}">`:c}</span>`).join('')}</div>${zhw?`<div class="zhw">${zhw}</div>`:''}`);
+    clearHost(host);host.appendChild(card);o.good(card);
+    o.replay(()=>{o.stop();spell(card).catch(()=>{});});
+    await spell(card);if(zhw)await mean(zhw);await sleep(600);ok();
+    return true;
+  }catch(e){if(e===STOP)return false;throw e;}
+  finally{setTracing(false);}
+}
+/* 離開描字畫面時呼叫：解除畫面鎖定 */
+function leave(){setTracing(false);}
+window.WT={word,leave,has:w=>w.split('').every(c=>STROKES[c])};
+})();
+
+</script>
 <script>
 (function(){
 'use strict';
@@ -341,7 +609,7 @@ function resetScreen(){TM.paused=false;document.body.classList.remove('paused');
 
 /* ========== 語音 ========== */
 const SPEEDS=[{r:.55,l:'很慢'},{r:.7,l:'慢'},{r:.85,l:'中'},{r:1,l:'快'}];
-const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
+const LNM={A:'eh',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
 const LN={a:'ay',b:'bee',c:'see',d:'dee',e:'ee',f:'eff',g:'gee',h:'aitch',i:'eye',j:'jay',k:'kay',l:'el',m:'em',n:'en',o:'oh',p:'pee',q:'cue',r:'are',s:'ess',t:'tee',u:'you',v:'vee',w:'double you',x:'ex',y:'why',z:'zee'};
 const enRate=()=>SPEEDS[state.speed].r;
 const zhRate=()=>Math.min(1.1,SPEEDS[state.speed].r+.2);
@@ -542,7 +810,7 @@ const STAGES=[
   {name:()=>'看圖點'+SKINS[state.skin].thing,ic:()=>({sky:'🎈',sea:'🫧',space:'🪐'}[state.skin]),run:()=>stBalloon(1)},
   {name:'聽音選單字',ic:'👂',run:()=>stPick(2)},
   {name:'字母拼拼看',ic:'🔤',run:()=>stSpell(3)},
-  {name:'描描看',ic:'✏️',run:()=>stWrite(4,'trace')},
+  {name:'描單字',ic:'✏️',run:()=>stTraceWord(4)},
   {name:'天氣小主播',ic:'📺',run:()=>stReporter(5)},
   {name:'句子排排看',ic:'🧩',run:()=>stSentence(6)},
   {name:'自己寫寫看',ic:'📝',run:()=>stWrite(7,'free')}
@@ -763,6 +1031,24 @@ function stWrite(id,mode){const qs=sample(WORDS,3);const trace=mode==='trace';
       pad.clear();if(!trace){pad.hint(true);setTimeout(()=>pad.hint(false),3500);}}};
   talk();
   if(i===0&&innerWidth<innerHeight&&innerWidth<600&&!state.seen.rot){state.seen.rot=1;later(()=>toast('手機可以橫著拿，格子會變大喔',2600),400);}}));}
+
+/* ---------- 第5關 描單字（和 English-1-abc 同一套：照筆順一個字母一個字母描） ---------- */
+let trTok=0;
+function stTraceWord(id){const qs=sample(WORDS,2);const first=!state.seen.trw;state.seen.trw=1;
+  runStage(id,'看圖，聽單字，用手指一個字母一個字母描',qs,(w,api,i,play)=>{
+    const host=el('<div class="wthost"></div>');play.appendChild(host);
+    const ctrl=el('<div class="ctrl"><button class="b2 again">再聽一次</button></div>');play.appendChild(ctrl);
+    let replay=()=>say(spellItems(w.w));$('.again',ctrl).onclick=()=>replay();
+    const start=()=>{const tok=++trTok;
+      WT.word(host,w.w,{pic:`<span class="wtp">${pic(w.w)}</span>`,zhw:w.zh,nm:c=>LN[c]||c,first:first&&i===0,
+        en:t=>say({en:t}),zh:t=>say({zhI:t}),mean:t=>say({zh:t}),stop:()=>Speech.stop(),pop:()=>SFX.tick(),
+        good:()=>{},paused:()=>TM.paused,alive:()=>tok===trTok&&host.isConnected&&!TM.paused,
+        replay:fn=>{replay=fn},
+        line:XLINE&&!stayHere?()=>openExt({go:'start',nm:state.name,av:state.buddy}):null})
+      .then(ok=>{if(ok&&tok===trTok)api.correct(ctrl);});};
+    curTalk=start;/* 暫停後按「繼續玩」：這個單字從頭再描一次 */
+    cleanups.push(()=>{trTok++;WT.leave();});
+    start();});}
 
 /* ---------- 第6關 天氣小主播 ---------- */
 function stReporter(id){const ws=shuffle(WORDS).slice(0,5);const cs=shuffle(CITIES);const qs=ws.map((w,k)=>({w,city:k===0?null:cs[k]}));
