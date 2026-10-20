@@ -150,8 +150,10 @@ html.tracing,html.tracing body{touch-action:none;overscroll-behavior:none}
 .redo.sob{right:auto;left:calc(min(calc(40*var(--cw,1vw)),260px) + 22px);left:calc(min(40cqw,260px) + 22px);bottom:10px;background:#fff3b0}
 .sandbg{position:absolute;inset:6px;border-radius:22px;background:radial-gradient(circle at 20% 30%,#fff4 0 3px,transparent 4px) 0 0/22px 22px,linear-gradient(#f9e7b5,#efd28c);border:5px dashed #fff}
 /* ---------- 摩天輪 ---------- */
-.wheelWrap{position:absolute;left:50%;top:48%;--W:min(76cqw,82cqh);width:var(--W);height:var(--W);transform:translate(-50%,-50%)}
-.wheelWrap.lg{--W:min(72cqw,74cqh)}
+.wheelWrap{position:absolute;left:50%;top:48%;--W:min(calc(76*var(--cw,1vw)),calc(82*var(--ch,1vh)));width:var(--W);height:var(--W);transform:translate(-50%,-50%)}
+.wheelWrap.lg{--W:min(calc(72*var(--cw,1vw)),calc(74*var(--ch,1vh)))}
+/* 新手機用遊戲區大小；舊手機（不認得 cqw）用上面的備用值 */
+@supports (container-type:size){.wheelWrap{--W:min(76cqw,82cqh)}.wheelWrap.lg{--W:min(72cqw,74cqh)}}
 .legs{position:absolute;left:50%;top:50%}
 .legs::before,.legs::after{content:"";position:absolute;left:calc(var(--W)*-.02);top:0;width:calc(var(--W)*.04);height:calc(var(--W)*.6);background:#ff8a65;border-radius:8px;transform-origin:top center}
 .legs::before{transform:rotate(24deg)}.legs::after{transform:rotate(-24deg)}
@@ -520,7 +522,8 @@ document.addEventListener('gesturestart',e=>{if(TRACING)e.preventDefault();});
 document.addEventListener('dblclick',e=>{if(TRACING)e.preventDefault();});
 function setCQ(){try{const p=$('play');if(!p)return;const r=p.getBoundingClientRect();if(!r.width)return;const st=document.documentElement.style;st.setProperty('--cw',(r.width/100)+'px');st.setProperty('--ch',(r.height/100)+'px');st.setProperty('--cm',(Math.min(r.width,r.height)/100)+'px');}catch(e){}}
 addEventListener('resize',setCQ);if(window.ResizeObserver){try{new ResizeObserver(setCQ).observe(document.getElementById('play'));}catch(e){}}
-function clearPlay(){setCQ();setTracing(false);const p=$('play');p.innerHTML='';return p;}
+/* 換畫面前先把舊的描字畫布清掉，舊手機記憶體不夠時才不會整個網頁當掉、跳回首頁 */
+function clearPlay(){setCQ();setTracing(false);const p=$('play');p.querySelectorAll('canvas').forEach(c=>{try{c.width=c.height=0;}catch(e){}});p.innerHTML='';return p;}
 function updStars(){$('starbox').textContent='⭐ '+S.stars;}
 function setQ(k,n){const p=$('qpill');if(!n){p.style.display='none';return;}p.style.display='';p.textContent=k+' / '+n;}
 function toast(t,ms=900){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),ms);}
@@ -822,7 +825,7 @@ function traceStroke(ch,opt){
   wrap.append(bg,cv,ov);setTracing(true);
   const redo=el('button','redo','重畫'),again=el('button','redo sob','看筆順'),bar=el('div','tbar','<i></i>');
   wrap.append(redo,again,bar);addLineBtn(wrap);play.appendChild(wrap);
-  const w=play.clientWidth,h=play.clientHeight,dpr=window.devicePixelRatio||1;
+  const w=play.clientWidth,h=play.clientHeight,dpr=Math.min(2,window.devicePixelRatio||1);
   for(const c of [bg,cv]){c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';}
   const SW=11,D=STROKES[ch],paths=D.map(d=>new Path2D(d));
   /* 依照字母實際範圍放大（小寫字母不會太小），四線格照樣畫出來 */
@@ -935,7 +938,7 @@ function traceFont(ch){
   const play=clearPlay();play.appendChild(el('div','sandbg'));const wrap=el('div','traceWrap');const cv=document.createElement('canvas');wrap.appendChild(cv);
   setTracing(true);
   const redo=el('button','redo','重畫');const bar=el('div','tbar','<i></i>');wrap.appendChild(redo);wrap.appendChild(bar);addLineBtn(wrap);play.appendChild(wrap);
-  const w=play.clientWidth,h=play.clientHeight,dpr=window.devicePixelRatio||1;
+  const w=play.clientWidth,h=play.clientHeight,dpr=Math.min(2,window.devicePixelRatio||1);
   cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
   const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
   const upper=ch===ch.toUpperCase();
