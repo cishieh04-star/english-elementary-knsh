@@ -453,7 +453,10 @@ function speak(text,lang,m){
     try{speechSynthesis.speak(u);}catch(e){done();}
   });
 }
-const say=(t,m)=>speak(t,'en-US',m);
+/* 有些單字手機唸起來怪怪的：可以在老師設定裡試聽、換一種唸法（畫面上的拼字不變） */
+const ALTW={cup:{opts:['Cup.','cup','cuhp'],def:0}};
+const fixW=t=>{const k=String(t).trim().replace(/[.!?]$/,'').toLowerCase();const a=ALTW[k];if(!a)return t;const i=S['w_'+k];return a.opts[(i===undefined||i===null)?a.def:i]||t;};
+const say=(t,m)=>speak(fixW(t),'en-US',m);
 /* 中文語音說明：按了「不要語音說明」就不唸（英文照樣唸） */
 const zh=(t,m)=>GUIDE?speak(t,'zh-TW',m):Promise.resolve();
 let AC;
@@ -1204,7 +1207,7 @@ const TSAY='歡迎來到 A B C 海底大冒險！這裡一共有十一關，要�
 let titleSaid=false;
 function playTitleHow(){if(mode!=='title'||titleSaid||!S.guide||!S.sound)return;
   try{sCancel();const u=new SpeechSynthesisUtterance(TSAY);u.lang='zh-TW';const v=voiceFor('zh-TW');if(v)u.voice=v;u.rate=.9;u.onstart=()=>{titleSaid=true;};speechSynthesis.speak(u);}catch(e){}}
-document.addEventListener('pointerdown',e=>{if(mode!=='title'||titleSaid)return;if(e.target.closest&&e.target.closest('#howT,#go,#xb'))return;unlockAudio();setTimeout(playTitleHow,150);},{capture:true});
+document.addEventListener('pointerdown',e=>{if(mode!=='title'||titleSaid)return;if(e.target.closest&&e.target.closest('#howT,#go,#xb,.modal'))return;unlockAudio();setTimeout(playTitleHow,150);},{capture:true});
 function showTitle(){
   GEN++;killAll();sCancel();mode='title';showRate=false;setPrompt('');setQ(0);
   $('topbar').style.display='none';
@@ -1341,7 +1344,8 @@ function showSettings(){
     ['sound','聲音',[[true,'開'],[false,'關']]]];
   const m=modal(`<h2>老師設定</h2>${rows.map(([k,lab,opts])=>`<div class="srow"><span>${lab}</span>${opts.map(([v,t])=>`<button class="opt ${S[k]===v?'on':''}" data-k="${k}" data-v='${JSON.stringify(v)}'>${t}</button>`).join('')}</div>`).join('')}
   <div class="srow"><span>字母 A 的唸法</span>${Object.keys(ASAY).map((v,i)=>`<button class="opt ${S.aSay===v?'on':''}" data-as="${v}">唸法${'一二三四'[i]}</button>`).join('')}</div>
-  <div style="font-size:14px;color:#666;margin:0 4px 6px">每支手機的聲音不一樣，點一下就會唸，選聽起來像「A」的那一個。</div>
+  ${Object.keys(ALTW).map(w=>`<div class="srow"><span>${w} 的唸法</span>${ALTW[w].opts.map((_,i)=>`<button class="opt ${((S['w_'+w]??ALTW[w].def)===i)?'on':''}" data-aw="${w}" data-ai="${i}">唸法${'一二三四'[i]}</button>`).join('')}</div>`).join('')}
+  <div style="font-size:14px;color:#666;margin:0 4px 6px">每支手機的聲音不一樣，點一下就會唸，選聽起來最正確的那一個。</div>
   ${(voices.length&&!voiceOptions('en').length)?'<div style="color:#c62828;font-weight:800;font-size:15px;margin:4px;line-height:1.6">這支手機找不到英文語音，英文可能會用中文的聲音唸，聽起來怪怪的。<br>請到手機的「設定 → 文字轉語音（TTS）」下載「英文（美國）」語音。</div>':''}
   <div class="srow"><span>英文聲音</span><select class="vsel" id="vEn"></select><button class="opt" id="tEn">試聽</button></div>
   <div class="srow"><span>中文聲音</span><select class="vsel" id="vZh"></select><button class="opt" id="tZh">試聽</button></div>
@@ -1352,6 +1356,7 @@ function showSettings(){
     sel.innerHTML=`<option value="">手機預設（建議）</option>`+ops.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}" ${S[key]===v.name?'selected':''}>${v.name}（${v.lang}）</option>`).join('');
     sel.onchange=()=>{S[key]=sel.value;save();};};
   m.querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{S.aSay=b.dataset.as;save();m.querySelectorAll('[data-as]').forEach(x=>x.classList.toggle('on',x===b));sCancel();unlockAudio();say(nm('a')).catch(()=>{});});
+  m.querySelectorAll('[data-aw]').forEach(b=>b.onclick=()=>{const w=b.dataset.aw;S['w_'+w]=+b.dataset.ai;save();m.querySelectorAll(`[data-aw="${w}"]`).forEach(x=>x.classList.toggle('on',x===b));sCancel();unlockAudio();say(w).catch(()=>{});});
   fillV('#vEn','en','enVoice');fillV('#vZh','zh','zhVoice');
   m.querySelector('#tEn').onclick=()=>{sCancel();unlockAudio();say('Good morning. big A. small b. cat.').catch(()=>{});};
   m.querySelector('#tZh').onclick=()=>{sCancel();unlockAudio();speak('早安，小朋友，我們一起去海底學英文。','zh-TW').catch(()=>{});};
