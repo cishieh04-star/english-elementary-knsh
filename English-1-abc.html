@@ -486,15 +486,13 @@ function unlockAudio(){ac();}
 /* ===== iPhone 聲音解鎖 =====
    iPhone 只有在「手指放開（touchend）或點一下（click）」的那一瞬間，才允許網頁開始發出聲音；
    按下（pointerdown）不算數。所以第一次點畫面時，在這一瞬間把語音、音效都先打開。
-   另外把聲音設成「播放」模式，iPhone 開靜音鍵時也聽得到。 */
+   （不另外播放音檔、不改聲音模式：iPhone 播過音檔後，語音有時會變成沒有聲音） */
 const IOS=/iPhone|iPad|iPod/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
 var audioUnlocked=false,unlockAt=0;
 function silentWav(){const n=800,b=new Uint8Array(44+n),v=new DataView(b.buffer);const w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i);};
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);
   let s='';b.forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s);}
 function gestureUnlock(){if(audioUnlocked)return;audioUnlocked=true;unlockAt=performance.now();
-  try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
-  try{const el=new Audio(silentWav());el.setAttribute('playsinline','');const p=el.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}
   try{const a=ac();if(a){if(a.state!=='running')a.resume();const bf=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=bf;src.connect(a.destination);src.start(0);}}catch(e){}
   try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}}catch(e){}}
 ['touchend','click','keydown'].forEach(t=>document.addEventListener(t,gestureUnlock,{capture:true,passive:true}));
@@ -1453,6 +1451,10 @@ async function resumeTrace(lv,li,w){
 }
 /* 從 LINE 跳過來的瀏覽器，要等小朋友第一次摸畫面才能出聲音：摸到時再唸一次現在的說明 */
 document.addEventListener('click',()=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();setTimeout(()=>{if(repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
+/* 從 LINE 換到瀏覽器後，手機規定要先點一下畫面才能出聲音：放一個大按鈕，點了就開始（有聲音） */
+function tapToStart(fn){GEN++;killAll();mode='tap';showRate=false;setPrompt('');setQ(0);$('topbar').style.display='none';
+  const play=clearPlay();const d=el('div','res',`<div style="font-size:min(22vw,20vh);line-height:1.1">🔊</div><div class="big">已經換到瀏覽器了！</div><button class="bigb g" id="tapGo" style="font-size:clamp(24px,7vmin,40px);padding:14px 36px">點這裡開始</button>`);
+  play.appendChild(d);const go=()=>{gestureUnlock();$('topbar').style.display='';fn();};d.querySelector('#tapGo').onclick=go;d.onclick=e=>{if(e.target===d)go();};}
 (function boot(){
   let q;try{q=new URLSearchParams(location.search);}catch(e){showTitle();return;}
   const go=q.get('go'),failed=LINEISH&&q.get('openExternalBrowser')!==null;
@@ -1461,9 +1463,9 @@ document.addEventListener('click',()=>{if(!needUnlock)return;needUnlock=false;ge
   /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
   if(failed){const ex={};['go','lv','li','w','nm','av'].forEach(k=>{if(q.get(k)!==null)ex[k]=q.get(k);});const u=extUrl(ex);showTitle();
     if(/Android/i.test(UA))toChrome(u);else extHelp(u);return;}
-  if(go&&!LINEISH){needUnlock=true;save();
-    if(go==='trace'){resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');return;}
-    if(go==='start'){showMap();return;}}
+  if(go&&!LINEISH&&(go==='trace'||go==='start')){save();
+    const startNow=()=>{if(go==='trace')resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');else showMap();};
+    tapToStart(startNow);return;}
   showTitle();
 })();
 </script>
