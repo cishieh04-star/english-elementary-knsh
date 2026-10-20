@@ -113,11 +113,24 @@ input{font-family:inherit;user-select:text;-webkit-user-select:text}
 .lw.dimw{opacity:.7}
 @container (max-aspect-ratio:1/1){.learn{flex-direction:column}.lpair .lcard{font-size:min(28cqw,20cqh)}.lcard .tag{font-size:min(5cqw,3.4cqh)}.lw .em{font-size:min(18cqw,13cqh)}.lw .wd{font-size:min(8cqw,5.5cqh)}.zhw{font-size:min(5cqw,3.6cqh)}}
 /* ---------- 描字 ---------- */
+html.tracing,html.tracing body{touch-action:none;overscroll-behavior:none}
+.wintro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqh}
+.wintro .em{font-size:min(26cqw,32cqh);line-height:1}
+.wintro .wd{font-size:min(18cqw,20cqh);font-weight:900;color:var(--navy);background:#fff;border-radius:22px;padding:0 5cqw;border:5px solid var(--navy);line-height:1.25}
+.wintro .zhw{font-size:min(7cqw,7cqh);color:#fff;text-shadow:0 2px 0 #0005}
+.wprog{display:inline-flex;gap:2px;background:#fff;border-radius:10px;padding:0 8px;margin-left:6px}
+.wprog span{display:inline-block;min-width:.55em;text-align:center;color:#b8c2cc}
+.wprog .done{color:#2fbf86}.wprog .cur{color:var(--red);border-bottom:4px solid var(--red)}
 .traceWrap{position:absolute;inset:0}
 .traceWrap canvas{position:absolute;inset:0;touch-action:none}
 .redo{position:absolute;right:10px;bottom:10px;font-size:clamp(16px,4vmin,24px);font-weight:900;padding:6px 16px;border-radius:14px;background:#fff;border:3px solid var(--navy)}
 .tbar{position:absolute;left:10px;bottom:14px;width:min(40cqw,260px);height:18px;border-radius:9px;background:#fff;border:3px solid var(--navy);overflow:hidden}
 .tbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd23f,#ff8a00);transition:width .15s}
+.gridcv{position:absolute;inset:0;pointer-events:none}
+.sov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sov .sdemo{fill:none;stroke:#ff8a00;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.sov .sbadge{transition:opacity .3s}
+.redo.sob{right:auto;left:calc(min(40cqw,260px) + 22px);bottom:10px;background:#fff3b0}
 .sandbg{position:absolute;inset:6px;border-radius:22px;background:radial-gradient(circle at 20% 30%,#fff4 0 3px,transparent 4px) 0 0/22px 22px,linear-gradient(#f9e7b5,#efd28c);border:5px dashed #fff}
 /* ---------- 摩天輪 ---------- */
 .wheelWrap{position:absolute;left:50%;top:48%;--W:min(76cqw,82cqh);width:var(--W);height:var(--W);transform:translate(-50%,-50%)}
@@ -329,8 +342,8 @@ const SITS=[
  {e:'🚌👴',pre:'早上在校門口，遇到警衛伯伯。',ask:'你要說什麼？',ans:'gm'}
 ];
 const LEVELS=[
- {id:'L1',n:'字母小教室',e:'🐙',how:'認識 A a、B b、C c。大寫是 big，小寫是 small。',hs:'認識三個英文字母，還有大寫和小寫。',fn:()=>stLearn()},
- {id:'L2',n:'沙灘描字',e:'✏️',how:'用手指，把沙灘上的字母塗滿顏色。',hs:'用手指，把沙灘上的字母塗滿顏色。',fn:()=>stTrace()},
+ {id:'L1',n:'字母小教室',e:'🐙',how:'認識 A a、B b、C c，再用手指描一描。',hs:'認識三個英文字母，還有大寫和小寫，再用手指描一描。',fn:()=>stLearn()},
+ {id:'L2',n:'沙灘描單字',e:'✏️',how:'看圖聽單字，再一個字母一個字母描出來。',hs:'看圖聽單字，再用手指一個字母一個字母描出來。',fn:()=>stTraceWords()},
  {id:'L3',n:'泡泡聽字母',e:'🫧',how:'聽英文字母，戳破對的泡泡。',hs:'聽英文字母，戳破對的泡泡。',fn:()=>quiz(gListen,5,'bubble')},
  {id:'L4',n:'大魚小魚',e:'🐠',how:'大魚身上是大寫，小魚身上是小寫。聽一聽，點對的魚。',hs:'大魚身上是大寫，小魚身上是小寫。聽一聽，點對的魚。',fn:()=>quiz(gBig,5,'fish')},
  {id:'L5',n:'海底摩天輪',e:'🎡',how:'找出同一個字母的大寫和小寫。',hs:'找出同一個字母的大寫和小寫。',fn:()=>quiz(gCase,5,()=>nextStyle())},
@@ -351,7 +364,7 @@ const ZPRAISE=['答對了！','好厲害！','耳朵真靈！','眼睛真亮！'
 
 /* ================= 設定（星星每次打開都從 0 開始） ================= */
 const KEY='eng-u1-ocean-v1';
-let S={style:'wheel',speed:'normal',spin:'on',zh:true,sound:true,rate:'slow',gap:3.5,guide:true,name:'',avatar:'🐠'};
+let S={style:'wheel',speed:'normal',spin:'on',zh:true,sound:true,rate:'slow',gap:3.5,guide:true,aSay:'eh',name:'',avatar:'🐠'};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){}
 S.stars=0;
 const SS={lv:{},seen:{},mapSeen:false,lineWarned:false};
@@ -365,7 +378,9 @@ function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
 const pick=a=>a[Math.random()*a.length|0];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const nm=ch=>ch.toUpperCase()+'.';
+/* 字母一律用小寫送去發音，避免手機唸出 capital；a、f 用拼音字，避免怪音 */
+const ASAY={eh:'eh.',A:'A.',ei:'ei.',ay:'ay.'};
+const nm=ch=>{const c=ch.toLowerCase();if(c==='a')return ASAY[S.aSay]||'eh.';return (c==='f'?'eff':c)+'.';};
 const isBig=ch=>ch===ch.toUpperCase();
 const other=ch=>isBig(ch)?ch.toLowerCase():ch.toUpperCase();
 const caseEn=ch=>isBig(ch)?'big':'small';
@@ -409,7 +424,7 @@ function speak(text,lang,m){
     {const since=performance.now()-lastCancel;if(since<120)await new Promise(r=>setTimeout(r,120-since));}
     if(GEN!==g){rej(ABORT);return;}
     const u=new SpeechSynthesisUtterance(text);u.lang=lang;const v=voiceFor(lang);if(v)u.voice=v;
-    let er={vslow:.6,slow:.7,normal:.82,fast:.95}[S.rate]||.7;if(!/^[A-Za-z]\.$/.test(text))er+=.1;u.rate=lang.startsWith('en')?er:.9;
+    let er={vslow:.6,slow:.7,normal:.82,fast:.95}[S.rate]||.7;if(!/^([A-Za-z]|ay|eh|ei|eff)\.$/.test(text))er+=.1;u.rate=lang.startsWith('en')?er:.9;
     talking++;let fin=false;const done=()=>{if(fin)return;fin=true;talking--;clearTimeout(tm);if(GEN!==g)rej(ABORT);else setTimeout(res,120);};
     u.onend=done;u.onerror=ev=>{if(LINEISH&&ev&&/synthesis|unavailable|not-allowed/.test(ev.error||''))soundHelp();done();};
     const tm=setTimeout(done,2500+text.length*(lang.startsWith('en')?110/er:330));
@@ -472,7 +487,13 @@ function bumpRate(d){if(performance.now()-lastBump<700)return;lastBump=performan
 $('rSlow').onclick=()=>bumpRate(-1);$('rFast').onclick=()=>bumpRate(1);
 $('again').onclick=()=>{if(repeatFn)manual(repeatFn,$('again'));};
 $('gBtn').onclick=()=>{GUIDE=!GUIDE;updGuide();if(!GUIDE){sCancel();toast('不唸中文說明',900);}else toast('要唸中文說明',900);};
-function clearPlay(){const p=$('play');p.innerHTML='';return p;}
+/* 描字時：鎖住整個網頁，手指移動時畫面不會跟著浮動（LINE、Safari 都適用） */
+let TRACING=false;
+function setTracing(on){TRACING=on;document.documentElement.classList.toggle('tracing',on);}
+document.addEventListener('touchmove',e=>{if(TRACING&&e.cancelable)e.preventDefault();},{passive:false});
+document.addEventListener('gesturestart',e=>{if(TRACING)e.preventDefault();});
+document.addEventListener('dblclick',e=>{if(TRACING)e.preventDefault();});
+function clearPlay(){setTracing(false);const p=$('play');p.innerHTML='';return p;}
 function updStars(){$('starbox').textContent='⭐ '+S.stars;}
 function setQ(k,n){const p=$('qpill');if(!n){p.style.display='none';return;}p.style.display='';p.textContent=k+' / '+n;}
 function toast(t,ms=900){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),ms);}
@@ -719,11 +740,129 @@ async function stLearn(){
     }
     touched=true;target.classList.remove('pulse');target.classList.add('good');sfx('good');if(!wrongN){addStar(target);LV.ok++;}
     await reward(target);
+    /* 描一描：大寫描一次、小寫描一次，手指動畫面不會跑 */
+    if(LINEISH&&!SS.lineWarned){SS.lineWarned=true;await lineTraceWarn();}
+    for(const ch of [L.U,L.l]){
+      setPrompt(`描一描 <b class="eng pl">${ch}</b>（${caseZh(ch)}）`,m=>runSteps(sayBS(ch),()=>false,m));
+      const t=traceLetter(ch);LV.tot++;
+      (async()=>{try{await t.ready;await zh(`用手指描一描，${caseZh(ch)}`);await say(nm(ch));}catch(e){}})();
+      await t.done;sCancel();sfx('good');addStar(t.canvas);LV.ok++;await say(nm(ch));await reward(t.canvas);
+    }
   }
   }finally{rateDemo=null;}
 }
-function traceLetter(ch){
+/* ================= 筆順 ================= */
+/* 座標是 100×100 的英文四線格：上線 10、中線 36.7、基線 63.3、下線 90（和課本四線格一樣） */
+const STROKES={
+ A:['M50 10 L26 63.3','M50 10 L74 63.3','M35 44 L65 44'],
+ B:['M32 10 L32 63.3','M32 10 L50 10 Q66 10 66 23.4 Q66 36.7 50 36.7 L32 36.7 L52 36.7 Q70 36.7 70 50 Q70 63.3 52 63.3 L32 63.3'],
+ C:['M68 20 Q60 10 47 10 Q26 10 26 36.7 Q26 63.3 47 63.3 Q60 63.3 68 53'],
+ a:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 63.3'],
+ b:['M34 10 L34 63.3','M34 50 Q34 36.7 48 36.7 Q62 36.7 62 50 Q62 63.3 48 63.3 Q34 63.3 34 50'],
+ c:['M62 41 Q55 36.7 47 36.7 Q33 36.7 33 50 Q33 63.3 47 63.3 Q55 63.3 62 59'],
+ d:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 10 L60 63.3'],
+ e:['M33 50 L62 50 Q62 36.7 47.5 36.7 Q33 36.7 33 50 Q33 63.3 47.5 63.3 Q56 63.3 61 58'],
+ g:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 80 Q60 90 47 90 Q38 90 34 85'],
+ i:['M48 36.7 L48 63.3','M48 23 L48 23.6'],
+ l:['M48 10 L48 63.3'],
+ n:['M36 36.7 L36 63.3','M36 47 Q40 36.7 50 36.7 Q62 36.7 62 48 L62 63.3'],
+ p:['M36 36.7 L36 90','M36 50 Q36 36.7 50 36.7 Q64 36.7 64 50 Q64 63.3 50 63.3 Q36 63.3 36 50'],
+ r:['M38 36.7 L38 63.3','M38 48 Q42 36.7 52 36.7 Q58 36.7 62 40'],
+ t:['M46 16 L46 57 Q46 63.3 54 63.3 Q58 63.3 61 60','M36 36.7 L58 36.7'],
+ u:['M36 36.7 L36 53 Q36 63.3 47 63.3 Q60 63.3 60 50','M60 36.7 L60 63.3']
+};
+const traceLetter=(ch)=>STROKES[ch]?traceStroke(ch):traceFont(ch);
+function traceStroke(ch){
+  const play=clearPlay();play.appendChild(el('div','sandbg'));
+  const wrap=el('div','traceWrap');const ns='http://www.w3.org/2000/svg';
+  const bg=document.createElement('canvas');bg.className='gridcv';const cv=document.createElement('canvas');
+  const ov=document.createElementNS(ns,'svg');ov.setAttribute('class','sov');
+  wrap.append(bg,cv,ov);setTracing(true);
+  const redo=el('button','redo','重畫'),again=el('button','redo sob','看筆順'),bar=el('div','tbar','<i></i>');
+  wrap.append(redo,again,bar);play.appendChild(wrap);
+  const w=play.clientWidth,h=play.clientHeight,dpr=window.devicePixelRatio||1;
+  for(const c of [bg,cv]){c.width=w*dpr;c.height=h*dpr;c.style.width=w+'px';c.style.height=h+'px';}
+  const SW=11,D=STROKES[ch],paths=D.map(d=>new Path2D(d));
+  /* 依照字母實際範圍放大（小寫字母不會太小），四線格照樣畫出來 */
+  const tmp=document.createElementNS(ns,'g');ov.appendChild(tmp);
+  const pe=D.map(d=>{const p=document.createElementNS(ns,'path');p.setAttribute('d',d);tmp.appendChild(p);return p;});
+  let X0=1e9,Y0=1e9,X1=-1e9,Y1=-1e9;pe.forEach(p=>{const b=p.getBBox();X0=Math.min(X0,b.x);Y0=Math.min(Y0,b.y);X1=Math.max(X1,b.x+b.width);Y1=Math.max(Y1,b.y+b.height);});
+  const starts=pe.map(p=>{const a=p.getPointAtLength(0),b=p.getPointAtLength(Math.min(2,p.getTotalLength()));return [a.x,a.y,b.x-a.x,b.y-a.y];});
+  tmp.remove();
+  const xr=Math.max(48,X1-X0+SW+18),yr=Math.max(48,Y1-Y0+SW+20),cxu=(X0+X1)/2,cyu=(Y0+Y1)/2;
+  const kFull=Math.min(w*.94,h-64)/100,k=Math.min(w*.94/xr,(h-64)/yr,kFull*1.4),ox=w/2-cxu*k,oy=(h-58)/2-cyu*k;
+  const ctx=cv.getContext('2d'),bx=bg.getContext('2d');
+  const tf=c=>c.setTransform(dpr*k,0,0,dpr*k,dpr*ox,dpr*oy);
+  /* 四線格 */
+  tf(bx);[[10,'#4a7fc0',0],[36.7,'#4a7fc0',1],[63.3,'#e05a5a',0],[90,'#4a7fc0',0]].forEach(([y,c,dash])=>{bx.strokeStyle=c;bx.lineWidth=.7;bx.setLineDash(dash?[2.5,2]:[]);bx.beginPath();bx.moveTo(-ox/k+4,y);bx.lineTo((w-ox)/k-4,y);bx.stroke();});
+  /* 可以塗色的範圍 */
+  const off=document.createElement('canvas');off.width=w;off.height=h;const o=off.getContext('2d');
+  o.setTransform(k,0,0,k,ox,oy);o.lineWidth=SW;o.lineCap='round';o.lineJoin='round';paths.forEach(p=>o.stroke(p));
+  const data=o.getImageData(0,0,w,h).data;
+  const inside=(x,y)=>x>=0&&y>=0&&x<w&&y<h&&data[(Math.round(y)*w+Math.round(x))*4+3]>180;
+  const hw=SW*k/2,step=Math.max(4,Math.round(hw/3)),R=hw*1.05,m=hw*.5,pts=[];
+  for(let yy=0;yy<h;yy+=step)for(let xx=0;xx<w;xx+=step)if(inside(xx,yy)){let ok=true;for(let a=0;a<8&&ok;a++){if(!inside(xx+Math.cos(a*Math.PI/4)*m,yy+Math.sin(a*Math.PI/4)*m))ok=false;}if(ok)pts.push([xx,yy,false]);}
+  if(pts.length<20)for(let yy=0;yy<h;yy+=step)for(let xx=0;xx<w;xx+=step)if(inside(xx,yy))pts.push([xx,yy,false]);
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys),cw=(Math.max(...xs)-x0)/7+1,chh=(Math.max(...ys)-y0)/7+1;
+  const cTot={},cCov={};pts.forEach(p=>{p[3]=Math.floor((p[0]-x0)/cw)+'_'+Math.floor((p[1]-y0)/chh);cTot[p[3]]=(cTot[p[3]]||0)+1;cCov[p[3]]=0;});
+  const allCells=()=>Object.keys(cTot).every(q=>cCov[q]/cTot[q]>=(cTot[q]<4?.5:.75));
+  const col=['#e53935','#2f80ed','#8e24aa','#f57c00','#d81b60','#00897b'][(ch.toLowerCase().charCodeAt(0)+(ch===ch.toUpperCase()?0:3))%6];
+  let covered=0,down=false,last=null,finished=false;
+  function guide(){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);tf(ctx);ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.strokeStyle='#12385f';ctx.lineWidth=SW+1.8;paths.forEach(p=>ctx.stroke(p));
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=SW;paths.forEach(p=>ctx.stroke(p));
+    ctx.strokeStyle='#8fa6bf';ctx.lineWidth=1.4;ctx.setLineDash([.1,3.2]);paths.forEach(p=>ctx.stroke(p));ctx.setLineDash([]);}
+  guide();
+  /* 筆順號碼（一直留在畫面上） */
+  const g=document.createElementNS(ns,'g');g.setAttribute('transform',`translate(${ox} ${oy}) scale(${k})`);ov.setAttribute('viewBox',`0 0 ${w} ${h}`);ov.appendChild(g);
+  const anim=document.createElementNS(ns,'g'),badges=document.createElementNS(ns,'g');g.append(anim,badges);
+  const placed=[];
+  D.forEach((d,i)=>{let [sx,sy,dx,dy]=starts[i];let L=Math.hypot(dx,dy);if(L<.01){dx=0;dy=1;L=1;}
+    /* 號碼放在起筆點的「前面」（和筆畫方向相反），兩筆起點相同時再往旁邊挪開 */
+    let bx0=sx-dx/L*8,by0=sy-dy/L*8;
+    for(let t=0;t<4&&placed.some(([px,py])=>Math.hypot(px-bx0,py-by0)<10);t++){bx0+=(-dy/L)*7*(t%2?-1:1);by0+=(dx/L)*7*(t%2?-1:1);}
+    placed.push([bx0,by0]);
+    const b=document.createElementNS(ns,'g');b.setAttribute('class','sbadge');b.innerHTML=`<circle cx="${bx0}" cy="${by0}" r="5" fill="#ff5a4f" stroke="#fff" stroke-width="1"/><text x="${bx0}" y="${by0+2.3}" text-anchor="middle" font-size="6.5" font-weight="900" fill="#fff">${i+1}</text>`;badges.appendChild(b);});
+  /* 示範筆順：一筆一筆慢慢畫出來；小朋友一摸畫面就停止示範，直接開始描 */
+  let demoOn=false,skip=false;
+  const stopDemo=()=>{skip=true;anim.innerHTML='';[...badges.children].forEach(b=>b.style.opacity=1);demoOn=false;};
+  async function demo(){
+    demoOn=true;skip=false;anim.innerHTML='';[...badges.children].forEach(b=>b.style.opacity=0);
+    try{
+      if(!SS.strokeTold){SS.strokeTold=true;zh('先看筆順').catch(()=>{});}
+      await sleep(T(400));
+      for(let i=0;i<D.length&&!skip;i++){
+        badges.children[i].style.opacity=1;
+        const p=document.createElementNS(ns,'path');p.setAttribute('d',D[i]);p.setAttribute('class','sdemo');anim.appendChild(p);
+        const len=p.getTotalLength()||1,dur=Math.max(450,len*22);
+        p.style.strokeDasharray=len+' '+len;p.style.strokeDashoffset=len;p.getBoundingClientRect();
+        p.style.transition=`stroke-dashoffset ${dur}ms linear`;p.style.strokeDashoffset=0;
+        await sleep(dur+T(450));
+      }
+      if(!skip)await sleep(T(500));
+    }catch(e){if(e!==ABORT)throw e;}
+    if(!skip){anim.innerHTML='';}
+    [...badges.children].forEach(b=>b.style.opacity=1);demoOn=false;
+  }
+  const ready=demo();
+  const mark=(x,yv)=>{for(const p of pts){if(!p[2]){const dx=p[0]-x,dy=p[1]-yv;if(dx*dx+dy*dy<R*R){p[2]=true;covered++;cCov[p[3]]++;}}}};
+  const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+  let resolveDone;const doneP=waitEvent(d=>resolveDone=d);doneP.catch(()=>{});
+  function draw(a,b){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.strokeStyle=col;ctx.lineWidth=hw*1.9;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalCompositeOperation='source-atop';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.globalCompositeOperation='source-over';
+    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(R/2)));for(let i=0;i<=n;i++)mark(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);
+    const pr=covered/pts.length;const ok=pr>=.88&&allCells();bar.firstChild.style.width=(ok?100:Math.min(95,pr/.88*95))+'%';
+    if(ok&&!finished){finished=true;down=false;setTracing(false);tf(ctx);ctx.strokeStyle=col;ctx.lineWidth=SW;ctx.lineCap='round';ctx.lineJoin='round';paths.forEach(p=>ctx.stroke(p));resolveDone();}}
+  cv.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  cv.onpointerdown=e=>{e.preventDefault();if(finished||paused)return;if(demoOn)stopDemo();down=true;last=pos(e);draw(last,last);cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);};
+  cv.onpointermove=e=>{if(!down||finished)return;const p=pos(e);draw(last,p);last=p;};
+  cv.onpointerup=cv.onpointercancel=()=>{down=false;};
+  redo.onclick=()=>{if(finished)return;pts.forEach(p=>p[2]=false);for(const q in cCov)cCov[q]=0;covered=0;bar.firstChild.style.width='0';guide();};
+  again.onclick=()=>{if(finished||demoOn)return;demo().catch(()=>{});};
+  return{done:doneP,canvas:cv,ready:ready.catch(()=>{})};
+}
+function traceFont(ch){
   const play=clearPlay();play.appendChild(el('div','sandbg'));const wrap=el('div','traceWrap');const cv=document.createElement('canvas');wrap.appendChild(cv);
+  setTracing(true);
   const redo=el('button','redo','重畫');const bar=el('div','tbar','<i></i>');wrap.appendChild(redo);wrap.appendChild(bar);play.appendChild(wrap);
   const w=play.clientWidth,h=play.clientHeight,dpr=window.devicePixelRatio||1;
   cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';
@@ -758,13 +897,13 @@ function traceLetter(ch){
   function draw(a,b){ctx.strokeStyle=col;ctx.lineWidth=hw*1.9;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalCompositeOperation='source-atop';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.globalCompositeOperation='source-over';
     const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(R/2)));for(let i=0;i<=n;i++)mark(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);
     const pr=covered/pts.length;const ok=pr>=.88&&allCells();bar.firstChild.style.width=(ok?100:Math.min(95,pr/.88*95))+'%';
-    if(ok&&!finished){finished=true;down=false;ctx.fillStyle=col;ctx.font=FONT;ctx.fillText(ch,w/2,y);resolveDone();}}
+    if(ok&&!finished){finished=true;down=false;setTracing(false);ctx.fillStyle=col;ctx.font=FONT;ctx.fillText(ch,w/2,y);resolveDone();}}
   cv.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
   cv.onpointerdown=e=>{e.preventDefault();if(finished||paused)return;down=true;last=pos(e);draw(last,last);cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);};
   cv.onpointermove=e=>{if(!down||finished)return;const p=pos(e);draw(last,p);last=p;};
   cv.onpointerup=cv.onpointercancel=()=>{down=false;};
   redo.onclick=()=>{if(finished)return;pts.forEach(p=>p[2]=false);for(const k in cCov)cCov[k]=0;covered=0;bar.firstChild.style.width='0';guide();};
-  return{done:doneP,canvas:cv};
+  return{done:doneP,canvas:cv,ready:Promise.resolve()};
 }
 /* 在 LINE 裡描字，手指一滑整個網頁會跟著動，先請小朋友用瀏覽器開 */
 async function lineTraceWarn(){
@@ -780,8 +919,32 @@ async function stTrace(list){
   for(let i=0;i<list.length;i++){const ch=list[i];setQ(i+1,list.length);
     setPrompt(`用手指把 <b class="eng pl">${ch}</b>（${caseEn(ch)}）塗滿顏色`,m=>runSteps(sayBS(ch),()=>false,m));
     const t=traceLetter(ch);LV.tot++;
-    (async()=>{try{await zh(caseZh(ch));await say(nm(ch));if(i===0)await zh('用手指，把字母塗滿顏色');}catch(e){}})();
+    (async()=>{try{await t.ready;await zh(caseZh(ch));await say(nm(ch));if(i===0)await zh('用手指，把字母塗滿顏色');}catch(e){}})();
     await t.done;sCancel();sfx('good');addStar(t.canvas);LV.ok++;await say(nm(ch));await reward(t.canvas);
+  }
+}
+/* 描單字：先看圖、聽單字，再一個字母一個字母描，描完拼一次、唸整個字 */
+function wordCard(w){return el('div','wintro',`<div class="em">${W[w].e}</div><div class="wd eng">${hi(w)}</div>${S.zh?`<div class="zhw">${W[w].zh}</div>`:''}`);}
+async function stTraceWords(list){
+  list=list||shuffle(LETTERS.map(L=>pick(L.words))).slice(0,2);
+  if(LINEISH&&!SS.lineWarned){SS.lineWarned=true;await lineTraceWarn();}
+  for(let wi=0;wi<list.length;wi++){const w=list[wi];setQ(wi+1,list.length);
+    let card=wordCard(w);clearPlay().appendChild(card);
+    setPrompt(`要描的單字 <b class="eng pl">${w}</b>`,m=>runSteps(SPELL(w,card),()=>false,m));
+    await say(w);if(S.zh)await zh(W[w].zh);await sleep(T(500));
+    for(let k=0;k<w.length;k++){const ch=w[k];
+      const prog=`<span class="wprog eng">${w.split('').map((c,j)=>`<span class="${j<k?'done':j===k?'cur':''}">${c}</span>`).join('')}</span>`;
+      setPrompt(`描 <b class="eng pl">${ch}</b>${prog}`,m=>runSteps([{en:nm(ch)}],()=>false,m));
+      const t=traceLetter(ch);
+      (async()=>{try{await t.ready;if(k===0&&wi===0)await zh('用手指，一個字母一個字母描');await say(nm(ch));}catch(e){}})();
+      await t.done;sCancel();sfx('good');await sleep(T(300));
+    }
+    LV.tot++;LV.ok++;
+    card=wordCard(w);clearPlay().appendChild(card);
+    setPrompt(`描好了 <b class="eng pl">${w}</b>`,m=>runSteps(SPELL(w,card),()=>false,m));
+    addStar(card);
+    await runSteps(SPELL(w,card),()=>false);if(S.zh)await zh(W[w].zh);
+    await reward(card);
   }
 }
 /* 拼字 / 排句子：先慢慢唸整個字與每個字母，等待時不斷重複，並提示「下一個要夾哪一個」 */
@@ -945,7 +1108,7 @@ async function runRandom(){
   const types=[
    ['泡泡聽字母','🫧',()=>quiz(gListen,2,'bubble')],['大魚小魚','🐠',()=>quiz(gBig,2,'fish')],['海底摩天輪','🎡',()=>quiz(gCase,2,()=>nextStyle())],
    ['珍珠對不對','🦪',()=>stOX(2)],['釣魚聽單字','🎣',()=>quiz(()=>gWord(3),2,'fishing')],['貝殼第一個字母','🐚',()=>quiz(gFirst,2,'shell')],
-   ['夾娃娃拼字','🦀',()=>stSpell(1)],['船長說早安','⛵',()=>stTalk(1,false)],['翻牌配對','🃏',()=>stFlip()],['沙灘描字','✏️',()=>stTrace([pick(ALL6)])],['排句子','📝',()=>stTalk(0,true)]];
+   ['夾娃娃拼字','🦀',()=>stSpell(1)],['船長說早安','⛵',()=>stTalk(1,false)],['翻牌配對','🃏',()=>stFlip()],['沙灘描字','✏️',()=>stTrace([pick(ALL6)])],['描單字','✏️',()=>stTraceWords([pick(WORDS)])],['排句子','📝',()=>stTalk(0,true)]];
   const list=shuffle(types).slice(0,8);
   try{
     for(let i=0;i<list.length;i++){await intro(`第 ${i+1} 題（共 ${list.length} 題）`,list[i][0],list[i][1]);$('title').textContent=`隨機練習 ${i+1}/${list.length}`;await list[i][2]();}
@@ -1096,6 +1259,8 @@ function showSettings(){
     ['zh','中文意思',[[true,'顯示'],[false,'不顯示']]],
     ['sound','聲音',[[true,'開'],[false,'關']]]];
   const m=modal(`<h2>老師設定</h2>${rows.map(([k,lab,opts])=>`<div class="srow"><span>${lab}</span>${opts.map(([v,t])=>`<button class="opt ${S[k]===v?'on':''}" data-k="${k}" data-v='${JSON.stringify(v)}'>${t}</button>`).join('')}</div>`).join('')}
+  <div class="srow"><span>字母 A 的唸法</span>${Object.keys(ASAY).map((v,i)=>`<button class="opt ${S.aSay===v?'on':''}" data-as="${v}">唸法${'一二三四'[i]}</button>`).join('')}</div>
+  <div style="font-size:14px;color:#666;margin:0 4px 6px">每支手機的聲音不一樣，點一下就會唸，選聽起來像「A」的那一個。</div>
   <div class="srow"><span>英文聲音</span><select class="vsel" id="vEn"></select><button class="opt" id="tEn">試聽</button></div>
   <div class="srow"><span>中文聲音</span><select class="vsel" id="vZh"></select><button class="opt" id="tZh">試聽</button></div>
   <div style="font-size:14px;color:#666;margin:4px;line-height:1.6">「海底摩天輪」關卡和「船長說早安」會用上面選的樣式；拼字、排句子固定用夾娃娃機。<br>等待作答時，英文會一直重複唸；重複兩次後，正確答案會發光提示。星星每次打開遊戲都從 0 開始。</div>
@@ -1104,6 +1269,7 @@ function showSettings(){
   const fillV=(id,fam,key)=>{const sel=m.querySelector(id);const ops=voiceOptions(fam);
     sel.innerHTML=`<option value="">手機預設（建議）</option>`+ops.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}" ${S[key]===v.name?'selected':''}>${v.name}（${v.lang}）</option>`).join('');
     sel.onchange=()=>{S[key]=sel.value;save();};};
+  m.querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{S.aSay=b.dataset.as;save();m.querySelectorAll('[data-as]').forEach(x=>x.classList.toggle('on',x===b));sCancel();unlockAudio();say(nm('a')).catch(()=>{});});
   fillV('#vEn','en','enVoice');fillV('#vZh','zh','zhVoice');
   m.querySelector('#tEn').onclick=()=>{sCancel();unlockAudio();say('Good morning. big A. small b. cat.').catch(()=>{});};
   m.querySelector('#tZh').onclick=()=>{sCancel();unlockAudio();speak('早安，小朋友，我們一起去海底學英文。','zh-TW').catch(()=>{});};
