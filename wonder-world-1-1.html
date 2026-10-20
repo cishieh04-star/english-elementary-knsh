@@ -307,8 +307,13 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
 .lc .lw2 span.hl{color:#3b7be0;transform:translateY(-6px) scale(1.2)}
 .lc .lz{font:900 clamp(18px,4.6vmin,30px)/1.2 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
 .lc.on,.lc.hl{transform:translateY(-6px) scale(1.05);box-shadow:0 0 0 7px #ffd43b,0 10px 0 #1f2a44;background:#fff7cc}
+.lrow.two{grid-template-columns:1fr 1fr 1.1fr 1.1fr;width:min(100%,980px)}
+.lrow.two .lc .lt{font-size:clamp(60px,15vmin,140px)}
+.lrow.two .lc .lp{font-size:clamp(46px,11vmin,96px)}
+.lrow.two .lc .lp svg,.lrow.two .lc .lp .pic{width:clamp(56px,13vmin,110px)}
+.lrow.two .lc .lw2{font-size:clamp(26px,6vmin,48px)}
 @media (max-height:520px){ .lset{gap:4px} .lhead{display:none} .lc{padding:4px 6px;border-width:4px} .lc .lt{font-size:17vh} .lc .lb{font-size:4.6vh} .lc .lp{font-size:12vh} .lc .lp svg,.lc .lp .pic{width:14vh} .lc .lw2{font-size:7vh} .lc .lz{font-size:4.6vh} .learn .lcount{display:none} }
-@media (max-aspect-ratio:1/1){ .lrow{grid-template-columns:1fr 1fr} .lc.word{grid-column:1/-1;flex-direction:row;gap:14px;flex-wrap:wrap} .lc .lt{font-size:clamp(64px,22vw,130px)} }
+@media (max-aspect-ratio:1/1){ .lrow{grid-template-columns:1fr 1fr} .lc.word{grid-column:1/-1;flex-direction:row;gap:14px;flex-wrap:wrap} .lc .lt{font-size:clamp(64px,22vw,130px)} .lrow.two{grid-template-columns:1fr 1fr} .lrow.two .lc.word{grid-column:auto;flex-direction:column;gap:2px} .lrow.two .lc .lt{font-size:clamp(56px,19vw,120px)} .lrow.two .lc .lw2{font-size:clamp(24px,8vw,44px)} }
 
 .lc.shake2{animation:lcshake .45s}
 @keyframes lcshake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
@@ -415,7 +420,7 @@ const synth=window.speechSynthesis;
 const SP={rate:1,voice:true,homeVoice:true,tok:0};
 /* 一律用小寫唸，避免手機唸出 capital；a、f 用拼音字避免怪音 */
 const LNAME={a:'ay',f:'eff'};
-const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
+const LNM={A:'eh',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫；A 用 eh，避免手機唸成 capital A */
 const LN=c=>LNM[c.toUpperCase()]||c;
 function unlock(){gestureUnlock();ac();}
 function say(items,done){
@@ -616,7 +621,7 @@ const SVGP={
   igloo:`<svg viewBox="0 0 100 100"><path d="M8 82 A42 42 0 0 1 92 82 Z" fill="#e6f6ff" stroke="#2b2340" stroke-width="4"/><path d="M14 68 H86 M22 54 H78 M34 42 H66 M30 68 V54 M50 54 V42 M64 54 V68 M44 82 V68" stroke="#8fc3e0" stroke-width="3"/><path d="M60 82 v-12 a10 10 0 0 1 20 0 v12z" fill="#3a6f8f" stroke="#2b2340" stroke-width="4"/></svg>`,
   jam:`<svg viewBox="0 0 100 100"><rect x="26" y="12" width="48" height="18" rx="4" fill="#e63946" stroke="#2b2340" stroke-width="4"/><path d="M28 21 h44" stroke="#fff" stroke-width="3" stroke-dasharray="5 5"/><rect x="22" y="30" width="56" height="60" rx="10" fill="#c1121f" stroke="#2b2340" stroke-width="4"/><ellipse cx="50" cy="60" rx="18" ry="16" fill="#fff"/><text x="50" y="69" font-size="22" text-anchor="middle">🍓</text></svg>`
 };
-const EMO={fish:'🐟',goat:'🐐',hat:'👒',ham:'🍖',jet:'✈️'};
+const EMO={fish:'🐟',goat:'🐐',hat:'👒',ham:'🍖',jet:'✈️',arm:'💪',bus:'🚌',door:'🚪',elephant:'🐘',girl:'👧',insect:'🐛',foot:'🦶',hand:'✋',jeans:'👖'};
 const pic=w=>SVGP[w]||`<span>${EMO[w]}</span>`;
 
 /* ================= QUESTION BANKS (第一課 The Birthday Party) ================= */
@@ -834,18 +839,17 @@ function runIntro(cards,then){
     $('#instr').textContent='先認識這些英文';P().innerHTML='';
     const big=c.big||c.en;
     if(c.cs){const l=c.en.slice(7),L=l.toUpperCase(),w=c.sub,bf=Math.random()<.5;
-      F().innerHTML=`<div class="learn"><div class="lcount">${i+1} / ${list.length}</div><div class="lset"><div class="lhead">認識字母 <b class="hb">${L}</b> 和 <b class="hs">${l}</b></div><div class="lrow"><button class="lc big" id="cB" style="order:${bf?0:1}"><span class="lt">${L}</span><span class="lb">大寫 <i>big</i></span></button><button class="lc small" id="cS" style="order:${bf?1:0}"><span class="lt">${l}</span><span class="lb">小寫 <i>small</i></span></button><button class="lc word" id="cW" style="order:2"><span class="lp">${c.pic}</span><span class="lw2">${[...w].map(ch=>`<span class="${ch===l?'fl':''}">${ch}</span>`).join('')}</span><span class="lz">${c.zh}</span></button></div></div><div class="lnav"><button class="tb" id="lPrev" ${i?'':'disabled'}>上一個</button><button class="tb" id="lNext">下一個</button><button class="bigBtn" id="lGo">開始玩</button></div></div>`;
+      F().innerHTML=`<div class="learn"><div class="lcount">${i+1} / ${list.length}</div><div class="lset"><div class="lhead">認識字母 <b class="hb">${L}</b> 和 <b class="hs">${l}</b></div><div class="lrow two"><button class="lc big" id="cB" style="order:${bf?0:1}"><span class="lt">${L}</span><span class="lb">大寫 <i>big</i></span></button><button class="lc small" id="cS" style="order:${bf?1:0}"><span class="lt">${l}</span><span class="lb">小寫 <i>small</i></span></button><button class="lc word" id="cW" style="order:2"><span class="lp">${c.pic}</span><span class="lw2">${[...w].map(ch=>`<span class="${ch===l?'fl':''}">${ch}</span>`).join('')}</span><span class="lz">${c.zh}</span></button><button class="lc word" id="cW2" style="order:3"><span class="lp">${c.pic2}</span><span class="lw2">${[...c.sub2].map(ch=>`<span class="${ch===l?'fl':''}">${ch}</span>`).join('')}</span><span class="lz">${c.zh2}</span></button></div></div><div class="lnav"><button class="tb" id="lPrev" ${i?'':'disabled'}>上一個</button><button class="tb" id="lNext">下一個</button><button class="bigBtn" id="lGo">開始玩</button></div></div>`;
     }else
     F().innerHTML=`<div class="learn"><div class="lcount">${i+1} / ${list.length}</div><button class="lcard" id="lcard">${c.pic?`<span class="lpic">${c.pic}</span>`:''}${c.cs?`<span class="len cs">${c.cs}</span>`:`<span class="len ${big.length>9?'small':''}">${big}</span>`}${c.sub?`<span class="lsub">${c.sub}</span>`:''}<span class="lzh">${c.zh}</span></button><div class="lnav"><button class="tb" id="lPrev" ${i?'':'disabled'}>上一個</button><button class="tb" id="lNext">下一個</button><button class="bigBtn" id="lGo">開始玩</button></div></div>`;
     let items=c.items||[{t:c.en,gap:700},{t:c.zh,mean:1,gap:700},{t:c.en,gap:900}];
     if(c.cs){const l=c.en.slice(7),w=c.sub,on=q=>()=>csOn(q),off=q=>()=>csOff(q);
-      const mk=k=>()=>$$('#cW .lw2 span').forEach((e,j)=>e.classList.toggle('hl',j===k));
+      const wordSeq=(id,w,zh)=>{const mk=k=>()=>$$(id+' .lw2 span').forEach((e,j)=>e.classList.toggle('hl',j===k));
+        return [{t:w,gap:300,on:on(id)},{t:zh,mean:1,gap:600},...[...w].map((ch,k)=>({t:LN(ch),gap:350,on:mk(k)})),{t:w,gap:800,on:mk(-1),off:off(id)}]};
       items=[{t:'這是字母',mean:1,gap:150},{t:LN(l),gap:600},
         {t:'大寫',mean:1,gap:100,on:on('#cB')},{t:'big',gap:150,on:on('#cB')},{t:LN(l),gap:700,on:on('#cB'),off:off('#cB')},
         {t:'小寫',mean:1,gap:100,on:on('#cS')},{t:'small',gap:150,on:on('#cS')},{t:LN(l),gap:800,on:on('#cS'),off:off('#cS')},
-        {t:w,gap:300,on:on('#cW')},{t:c.zh,mean:1,gap:600},
-        ...[...w].map((ch,k)=>({t:LN(ch),gap:350,on:mk(k)})),
-        {t:w,gap:800,on:mk(-1),off:off('#cW')}];}
+        ...wordSeq('#cW',w,c.zh),...wordSeq('#cW2',c.sub2,c.zh2)];}
     G.promptItems=items;
     /* 學完以後「摸一摸」：要小朋友自己點出大寫或小寫，點對了才進下一個 */
     const check=()=>{
@@ -866,7 +870,7 @@ function runIntro(cards,then){
     G.onReplay=()=>{hush();play()};
     play(i===0?[{t:'先認識這些英文',zh:1,gap:400}]:[]);
     if($('#lcard'))$('#lcard').onclick=()=>{hush();play()};
-    if(c.cs){const l=c.en.slice(7);$('#cB').onclick=()=>say([{t:'big',gap:150,on:()=>csOn('#cB')},{t:LN(l),on:()=>csOn('#cB'),off:()=>csOff('#cB')}]);$('#cS').onclick=()=>say([{t:'small',gap:150,on:()=>csOn('#cS')},{t:LN(l),on:()=>csOn('#cS'),off:()=>csOff('#cS')}]);$('#cW').onclick=()=>{const w=c.sub,mk=k=>()=>$$('#cW .lw2 span').forEach((e,j)=>e.classList.toggle('hl',j===k));say([{t:w,gap:300,on:()=>csOn('#cW')},{t:c.zh,mean:1,gap:500},...[...w].map((ch,k)=>({t:LN(ch),gap:350,on:mk(k)})),{t:w,on:mk(-1),off:()=>csOff('#cW')}])};}
+    if(c.cs){const l=c.en.slice(7);$('#cB').onclick=()=>say([{t:'big',gap:150,on:()=>csOn('#cB')},{t:LN(l),on:()=>csOn('#cB'),off:()=>csOff('#cB')}]);$('#cS').onclick=()=>say([{t:'small',gap:150,on:()=>csOn('#cS')},{t:LN(l),on:()=>csOn('#cS'),off:()=>csOff('#cS')}]);const tap=(id,w,zh)=>()=>{const mk=k=>()=>$$(id+' .lw2 span').forEach((e,j)=>e.classList.toggle('hl',j===k));say([{t:w,gap:300,on:()=>csOn(id)},{t:zh,mean:1,gap:500},...[...w].map((ch,k)=>({t:LN(ch),gap:350,on:mk(k)})),{t:w,on:mk(-1),off:()=>csOff(id)}])};$('#cW').onclick=tap('#cW',c.sub,c.zh);$('#cW2').onclick=tap('#cW2',c.sub2,c.zh2);}
     $('#lPrev').onclick=()=>{if(i){hush();i--;card()}};
     $('#lNext').onclick=()=>{hush();go()};
     $('#lGo').onclick=finish;
@@ -876,12 +880,13 @@ function runIntro(cards,then){
 }
 
 /* 第一課的單字卡資料 */
-const ZH1={fish:'魚',fan:'電風扇',goat:'山羊',hat:'帽子',ham:'火腿',ink:'墨水',igloo:'冰屋',jam:'果醬',jet:'噴射機',apple:'蘋果',bed:'床',dog:'狗',egg:'蛋'};
+const ZH1={fish:'魚',fan:'電風扇',goat:'山羊',hat:'帽子',ham:'火腿',ink:'墨水',igloo:'冰屋',jam:'果醬',jet:'噴射機',apple:'蘋果',bed:'床',dog:'狗',egg:'蛋',arm:'手臂',bus:'公車',door:'門',elephant:'大象',girl:'女孩',insect:'昆蟲',foot:'腳',hand:'手',jeans:'牛仔褲'};
 const NUMZH=['零','一','二','三','四','五','六','七','八','九','十'];
-const LEXL={a:['apple','🍎'],b:['bed','🛏️'],d:['dog','🐶'],e:['egg','🥚'],f:['fish'],g:['goat'],h:['hat'],i:['ink'],j:['jam']};
+/* 每個字母兩個單字：第二個是同一個字首、生活裡常看到的，而且不和關卡裡、English 1～4 課、其他 wonder-world 遊戲的單字重複 */
+const LEXL={a:[['apple','🍎'],['arm']],b:[['bed','🛏️'],['bus']],d:[['dog','🐶'],['door']],e:[['egg','🥚'],['elephant']],f:[['fish'],['foot']],g:[['goat'],['girl']],h:[['hat'],['hand']],i:[['ink'],['insect']],j:[['jam'],['jeans']]};
 const wordCard=w=>({en:w,pic:pic(w),zh:ZH1[w]});
 const numCard=n=>({en:NUMW[n],pic:`<span class="lnum">${n}</span>`,zh:NUMZH[n]});
-const letterCard=l=>{l=l.toLowerCase();const x=LEXL[l];if(!x)return null;const [w,e]=x;return {en:'letter-'+l,big:l.toUpperCase()+' '+l,cs:`<span id="cB">${l.toUpperCase()}<small>big</small></span> <span id="cS">${l}<small>small</small></span>`,pic:e?`<span>${e}</span>`:pic(w),sub:w,zh:ZH1[w],items:[{t:'big',gap:150},{t:LN(l),gap:600,on:()=>csOn('#cB'),off:()=>csOff('#cB')},{t:'small',gap:150},{t:LN(l),gap:900,on:()=>csOn('#cS'),off:()=>csOff('#cS')},{t:w,gap:600,on:()=>csOn('#cW'),off:()=>csOff('#cW')},{t:ZH1[w],mean:1,gap:900,on:()=>csOn('#cW'),off:()=>csOff('#cW')}]}};
+const letterCard=l=>{l=l.toLowerCase();const x=LEXL[l];if(!x)return null;const [[w,e],[w2,e2]]=x;return {en:'letter-'+l,big:l.toUpperCase()+' '+l,cs:1,pic:e?`<span>${e}</span>`:pic(w),sub:w,zh:ZH1[w],pic2:e2?`<span>${e2}</span>`:pic(w2),sub2:w2,zh2:ZH1[w2]}};
 const SZH={'How old are you?':'你幾歲？',"I'm nine.":'我九歲。',"I'm nine years old.":'我九歲。','Happy birthday!':'生日快樂！','This is for you.':'這是給你的。','Thank you.':'謝謝你。',"You're welcome.":'不客氣。','Yum!':'好好吃！','Oh, no!':'糟糕！'};
 const SPIC={'How old are you?':'🎂','I\'m nine.':'<span class="lnum">9</span>',"I'm nine years old.":'<span class="lnum">9</span>','Happy birthday!':'🎂','This is for you.':'🎁','Thank you.':'🙏',"You're welcome.":'😊','Yum!':'😋','Oh, no!':'😱'};
 const sentCard=s=>({en:s,zh:SZH[s]||'',pic:SPIC[s]||''});
