@@ -248,6 +248,12 @@ body.paused #app *{animation-play-state:paused!important}
 @keyframes tw{from{opacity:.2}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01s !important;animation-iteration-count:1 !important}}
 @media (max-height:520px){ .bigpic{width:min(34vh,240px);height:min(34vh,240px)} .midpic{width:20vh;height:20vh} .play{gap:5px} .scr{gap:4px} .slot{height:12vh;font-size:9vh;width:9vh} .tile{width:13vh;height:13vh;font-size:9vh} .sbox{height:11vh;font-size:7.5vh;min-width:9vh} .sline{min-height:11vh} .chip{font-size:7.5vh;padding:2px 12px} .sentopt{font-size:6vh;width:auto;padding:4px 10px;gap:8px} .card{padding:4px 12px} .qbtn{font-size:6.5vh;padding:2px 12px} .tv{padding:5px 5px 2px} .tvs{padding:2px 8px} .city{font-size:6vh} .tvl{display:none} .b1,.b2{padding:6px 18px;font-size:6vh} .wordopt{font-size:9vh} .bal{--sz:min(24vw,27vh)} .balcell{gap:2px} .bq .midpic{width:17vh;height:17vh} #bar{gap:2px;padding-block:3px 2px} .tb{padding:4px 8px} }
+.xwm{position:fixed;inset:0;z-index:9999;background:#0009;display:flex;align-items:center;justify-content:center;padding:12px}
+.xwm .xwb{background:#fff;color:#1d2433;border-radius:22px;padding:16px;width:min(94vw,520px);text-align:center;border:5px solid #2f80ed;font-family:inherit}
+.xwm h2{font-size:clamp(22px,5vmin,30px);margin:6px 0 8px}
+.xwm .xwt{font-size:clamp(16px,4vmin,20px);line-height:1.8;font-weight:700}
+.xwm button{font:inherit;font-size:clamp(18px,4.6vmin,24px);font-weight:900;padding:10px 20px;border-radius:16px;border:none;color:#fff;margin:10px 4px 0;cursor:pointer;box-shadow:0 4px 0 #0003}
+.xwm .xg{background:#22b573}.xwm .xy{background:#6b7280}
 </style>
 </head>
 <body>
@@ -341,7 +347,7 @@ const enRate=()=>SPEEDS[state.speed].r;
 const zhRate=()=>Math.min(1.1,SPEEDS[state.speed].r+.2);
 const Speech={
   tok:0, ok:('speechSynthesis' in window),
-  stop(){this.tok++;if(this.ok){try{speechSynthesis.cancel();}catch(e){}}},
+  stop(){this.tok++;if(this.ok&&!justUnlocked()){try{speechSynthesis.cancel();}catch(e){}}},
   one(text,lang,rate,my){return new Promise(res=>{
     if(!this.ok||my!==this.tok)return res();
     let done=false;const fin=()=>{if(done)return;done=true;clearTimeout(t);res();};
@@ -350,7 +356,7 @@ const Speech={
     try{speechSynthesis.speak(u);}catch(e){fin();}
   });},
   async seq(items){
-    this.stop();const my=this.tok;await sleep(90);
+    this.stop();const my=this.tok;if(!justUnlocked())await sleep(90);/* 剛點完畫面：馬上唸，iPhone 才會出聲 */
     for(const it of items){
       if(my!==this.tok)return false;
       if(it.on)try{it.on();}catch(e){}
@@ -373,6 +379,47 @@ function instr(key,long,short){const s=state.seen[key]?short:long;state.seen[key
 let AC=null,NB=null;
 function audio(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate;NB=AC.createBuffer(1,n,n);const d=NB.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}catch(e){AC=null;}}
   if(AC&&AC.state==='suspended')AC.resume();return AC;}
+
+/* ===== 和 English-1-abc 同一套：手機聲音解鎖、LINE 換到瀏覽器 =====
+   iPhone 只有在「手指放開（touchend）或點一下（click）」的那一瞬間，才允許網頁開始發出聲音；
+   按下（pointerdown）不算數。所以第一次點畫面時，在這一瞬間把語音、音效都先打開。
+   剛打開聲音的 0.6 秒內不要取消語音，iPhone 會因此失去聲音。 */
+const XUA=navigator.userAgent,XLINE=/\bLine\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(XUA);
+let unlockAt=0,audioUnlocked=false,needUnlock=false,stayHere=false;
+function gestureUnlock(){if(audioUnlocked)return;audioUnlocked=true;unlockAt=performance.now();
+  try{const a=audio();if(a){if(a.state!=='running')a.resume();const bf=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=bf;src.connect(a.destination);src.start(0);}}catch(e){}
+  try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}}catch(e){}}
+const justUnlocked=()=>performance.now()-unlockAt<600;
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,gestureUnlock,{capture:true,passive:true}));
+/* 開到瀏覽器時，網址帶著「要回到哪裡」：go=start 直接進地圖，名字和好朋友也一起帶過去 */
+const XKEYS=['go','nm','av','openExternalBrowser'];
+function extUrl(extra){const u=new URL(location.href.split('#')[0]);XKEYS.forEach(k=>u.searchParams.delete(k));
+  if(extra)for(const [k,v] of Object.entries(extra))if(v!==undefined&&v!==null&&v!=='')u.searchParams.set(k,v);return u.toString();}
+const toChrome=u=>{location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';};
+function openExt(extra){const u=extUrl(extra);
+  if(/\bLine\//i.test(XUA)){location.href=u+(u.indexOf('?')<0?'?':'&')+'openExternalBrowser=1';return;}
+  if(/Android/i.test(XUA)){toChrome(u);return;}
+  extHelp(u);}
+/* 沒辦法自動跳到瀏覽器時（例如 iPhone 的 Facebook、或 LINE 沒有反應），告訴大人怎麼做 */
+function extHelp(u){const ios=/iPhone|iPad|iPod/i.test(XUA);
+  const m=document.createElement('div');m.className='xwm';
+  m.innerHTML=`<div class="xwb"><div style="font-size:3rem">🌐</div><h2>請用瀏覽器開啟</h2><div class="xwt">${ios?'請按畫面右下角或右上角的「⋯」或「分享」，<br>選「用 Safari 開啟」或「以預設瀏覽器開啟」。':'請按右上角的「⋮」，選「用瀏覽器開啟」。'}<br>也可以按「複製網址」，貼到 Safari 或 Chrome。</div><div><button class="xg" data-x="c">複製網址</button><button class="xy" data-x="x">先在這裡玩</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector('[data-x="c"]').onclick=e=>copyUrl(u,e.currentTarget);
+  m.querySelector('[data-x="x"]').onclick=()=>{stayHere=true;m.remove();};}
+function copyUrl(u,btn){const ok=()=>{if(btn)btn.textContent='網址已複製';};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(ok,fb);return;}}catch(e){}
+  fb();function fb(){try{const t=document.createElement('textarea');t.value=u;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();ok();}catch(e){if(btn)btn.textContent='請手動複製網址';}}}
+/* 在 LINE 裡按「開始闖關」：換到瀏覽器（有聲音、畫面不會亂跑）；選「先在這裡玩」就留在 LINE */
+const goExt=(nm,av)=>{if(XLINE&&!stayHere){openExt({go:'start',nm,av});return true;}return false;};
+function bootParams(){let q;try{q=new URLSearchParams(location.search);}catch(e){return {};}
+  const r={go:q.get('go'),nm:q.get('nm'),av:q.get('av'),failed:XLINE&&q.get('openExternalBrowser')!==null};
+  try{const u=new URL(location.href);XKEYS.forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.toString());}catch(e){}
+  if(r.failed){const ex={};['go','nm','av'].forEach(k=>{if(r[k]!==null)ex[k]=r[k];});r.url=extUrl(ex);}
+  return r;}
+/* 從 LINE 換過來的瀏覽器，要等小朋友第一次點畫面才能出聲音：點到時再唸一次現在的說明 */
+document.addEventListener('click',e=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();
+  if(!(e.target.closest&&e.target.closest('button,a,input'))){if(curTalk)curTalk();};},{capture:true});
 function tone(f,dur,o={}){const a=audio();if(!a)return;const t=a.currentTime+(o.at||0);const os=a.createOscillator(),g=a.createGain();os.type=o.type||'sine';os.frequency.setValueAtTime(f,t);if(o.slide)os.frequency.exponentialRampToValueAtTime(o.slide,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(o.vol||.18,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);os.connect(g).connect(a.destination);os.start(t);os.stop(t+dur+.05);}
 function noise(dur,o={}){const a=audio();if(!a)return;const t=a.currentTime+(o.at||0);const s=a.createBufferSource();s.buffer=NB;const f=a.createBiquadFilter();f.type=o.type||'bandpass';f.frequency.value=o.freq||1500;f.Q.value=o.q||1;const g=a.createGain();g.gain.setValueAtTime(o.vol||.2,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(a.destination);s.start(t,Math.random()*.5);s.stop(t+dur+.05);}
 const SFX={
@@ -484,7 +531,7 @@ function showHome(){resetScreen();setTitle('天氣闖關大冒險',true);
   $$('.bd',h).forEach(b=>b.onclick=()=>{state.buddy=+b.dataset.i;$$('.bd',h).forEach(x=>x.classList.toggle('sel',x===b));SFX.tick();});
   $$('.sk',h).forEach(b=>b.onclick=()=>{setSkin(b.dataset.s);$$('.sk',h).forEach(x=>x.classList.toggle('sel',x===b));SFX.chime();});
   $('#nameIn').oninput=e=>state.name=e.target.value.trim();
-  $('#goMap').onclick=()=>{Speech.stop();showMap();};
+  $('#goMap').onclick=()=>{Speech.stop();if(goExt(state.name,state.buddy))return;showMap();};
   $('#goBattle').onclick=()=>{Speech.stop();showBattleSetup();};
   (curTalk=()=>say(instr('home','歡迎來到天氣闖關大冒險！先選一個好朋友，再按，開始闖關。','按，開始闖關。')))();
   fitCheck();}
@@ -802,8 +849,15 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)Speech.stop
 
 /* ========== 開始 ========== */
 setSkin(state.skin);updSpeed();updVoice();FX.init();ensureFont();
-if(/\bLine\//i.test(navigator.userAgent)){const a=$('#lineBtn');a.hidden=false;const u=location.href.split('#')[0];a.href=u+(u.includes('?')?'&':'?')+'openExternalBrowser=1';}
-$('#goBtn').onclick=()=>{audio();SFX.chime();$('#splash').remove();showHome();};
+if(/\bLine\//i.test(navigator.userAgent)){const a=$('#lineBtn');a.hidden=false;const u=location.href.split('#')[0];a.href=u+(u.includes('?')?'&':'?')+'openExternalBrowser=1';a.onclick=e=>{e.preventDefault();Speech.stop();openExt();};}
+$('#goBtn').onclick=()=>{gestureUnlock();audio();SFX.chime();$('#splash').remove();showHome();};
+(function(){const B=bootParams();
+  if(B.nm!==null&&B.nm!==undefined)state.name=B.nm.slice(0,8);
+  if(B.av!==null&&B.av!==undefined&&BUDDIES[+B.av])state.buddy=+B.av;
+  /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
+  if(B.failed){if(/Android/i.test(XUA))toChrome(B.url);else extHelp(B.url);return;}
+  /* 從 LINE 換過來的：不再顯示封面，直接到地圖。手機允許的話馬上出聲；不允許的話，第一次點畫面就會出聲 */
+  if(B.go==='start'&&!XLINE){needUnlock=true;const sp=$('#splash');if(sp)sp.remove();showMap();}})();
 })();
 </script>
 

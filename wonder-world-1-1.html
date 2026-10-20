@@ -317,6 +317,12 @@ button:focus-visible{outline:4px solid var(--accent2);outline-offset:3px}
 .lc.good{background:#dff7e6;box-shadow:0 0 0 7px #2bb673,0 6px 0 #1f2a44}
 .lc .lw2 span.hl{color:#3b7be0;transform:translateY(-8px) scale(1.35)}
 .lhead.askh{background:#fff7cc;animation:lcpulse 1.2s ease-in-out infinite}
+.xwm{position:fixed;inset:0;z-index:9999;background:#0009;display:flex;align-items:center;justify-content:center;padding:12px}
+.xwm .xwb{background:#fff;color:#1d2433;border-radius:22px;padding:16px;width:min(94vw,520px);text-align:center;border:5px solid #2f80ed;font-family:inherit}
+.xwm h2{font-size:clamp(22px,5vmin,30px);margin:6px 0 8px}
+.xwm .xwt{font-size:clamp(16px,4vmin,20px);line-height:1.8;font-weight:700}
+.xwm button{font:inherit;font-size:clamp(18px,4.6vmin,24px);font-weight:900;padding:10px 20px;border-radius:16px;border:none;color:#fff;margin:10px 4px 0;cursor:pointer;box-shadow:0 4px 0 #0003}
+.xwm .xg{background:#22b573}.xwm .xy{background:#6b7280}
 </style>
 </head>
 <body>
@@ -411,10 +417,10 @@ const SP={rate:1,voice:true,homeVoice:true,tok:0};
 const LNAME={a:'ay',f:'eff'};
 const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee'}; /* 字母名稱用固定拼法，避免手機把 F. W. 唸成縮寫 */
 const LN=c=>LNM[c.toUpperCase()]||c;
-function unlock(){ac();try{if(synth){const u=new SpeechSynthesisUtterance(' ');u.volume=0;synth.speak(u)}}catch(e){}}
+function unlock(){gestureUnlock();ac();}
 function say(items,done){
   if(!synth){if(done)setTimeout(done,400);return}
-  try{synth.cancel()}catch(e){}
+  if(!justUnlocked()){try{synth.cancel()}catch(e){}}
   const tok=++SP.tok;let i=0;
   const next=()=>{
     if(tok!==SP.tok)return;
@@ -431,13 +437,54 @@ function say(items,done){
     const tm=setTimeout(fin,(1300+it.t.length*((it.zh||it.mean)?340:130))/SP.rate);
     try{synth.speak(u)}catch(e){fin()}
   };
-  setTimeout(next,90);
+  if(justUnlocked())next();else setTimeout(next,90);/* 剛點完畫面：馬上唸，iPhone 才會出聲 */
 }
-function hush(){SP.tok++;$$('.reading').forEach(e=>e.classList.remove('reading'));try{synth&&synth.cancel()}catch(e){}}
+function hush(){SP.tok++;$$('.reading').forEach(e=>e.classList.remove('reading'));if(justUnlocked())return;try{synth&&synth.cancel()}catch(e){}}
 
 /* ================= SOUND FX ================= */
 let AC=null;
 function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+
+/* ===== 和 English-1-abc 同一套：手機聲音解鎖、LINE 換到瀏覽器 =====
+   iPhone 只有在「手指放開（touchend）或點一下（click）」的那一瞬間，才允許網頁開始發出聲音；
+   按下（pointerdown）不算數。所以第一次點畫面時，在這一瞬間把語音、音效都先打開。
+   剛打開聲音的 0.6 秒內不要取消語音，iPhone 會因此失去聲音。 */
+const XUA=navigator.userAgent,XLINE=/\bLine\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(XUA);
+let unlockAt=0,audioUnlocked=false,needUnlock=false,stayHere=false;
+function gestureUnlock(){if(audioUnlocked)return;audioUnlocked=true;unlockAt=performance.now();
+  try{const a=ac();if(a){if(a.state!=='running')a.resume();const bf=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=bf;src.connect(a.destination);src.start(0);}}catch(e){}
+  try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}}catch(e){}}
+const justUnlocked=()=>performance.now()-unlockAt<600;
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,gestureUnlock,{capture:true,passive:true}));
+/* 開到瀏覽器時，網址帶著「要回到哪裡」：go=start 直接進地圖，名字和好朋友也一起帶過去 */
+const XKEYS=['go','nm','av','openExternalBrowser'];
+function extUrl(extra){const u=new URL(location.href.split('#')[0]);XKEYS.forEach(k=>u.searchParams.delete(k));
+  if(extra)for(const [k,v] of Object.entries(extra))if(v!==undefined&&v!==null&&v!=='')u.searchParams.set(k,v);return u.toString();}
+const toChrome=u=>{location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';};
+function openExt(extra){const u=extUrl(extra);
+  if(/\bLine\//i.test(XUA)){location.href=u+(u.indexOf('?')<0?'?':'&')+'openExternalBrowser=1';return;}
+  if(/Android/i.test(XUA)){toChrome(u);return;}
+  extHelp(u);}
+/* 沒辦法自動跳到瀏覽器時（例如 iPhone 的 Facebook、或 LINE 沒有反應），告訴大人怎麼做 */
+function extHelp(u){const ios=/iPhone|iPad|iPod/i.test(XUA);
+  const m=document.createElement('div');m.className='xwm';
+  m.innerHTML=`<div class="xwb"><div style="font-size:3rem">🌐</div><h2>請用瀏覽器開啟</h2><div class="xwt">${ios?'請按畫面右下角或右上角的「⋯」或「分享」，<br>選「用 Safari 開啟」或「以預設瀏覽器開啟」。':'請按右上角的「⋮」，選「用瀏覽器開啟」。'}<br>也可以按「複製網址」，貼到 Safari 或 Chrome。</div><div><button class="xg" data-x="c">複製網址</button><button class="xy" data-x="x">先在這裡玩</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector('[data-x="c"]').onclick=e=>copyUrl(u,e.currentTarget);
+  m.querySelector('[data-x="x"]').onclick=()=>{stayHere=true;m.remove();};}
+function copyUrl(u,btn){const ok=()=>{if(btn)btn.textContent='網址已複製';};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(ok,fb);return;}}catch(e){}
+  fb();function fb(){try{const t=document.createElement('textarea');t.value=u;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();ok();}catch(e){if(btn)btn.textContent='請手動複製網址';}}}
+/* 在 LINE 裡按「開始闖關」：換到瀏覽器（有聲音、畫面不會亂跑）；選「先在這裡玩」就留在 LINE */
+const goExt=(nm,av)=>{if(XLINE&&!stayHere){openExt({go:'start',nm,av});return true;}return false;};
+function bootParams(){let q;try{q=new URLSearchParams(location.search);}catch(e){return {};}
+  const r={go:q.get('go'),nm:q.get('nm'),av:q.get('av'),failed:XLINE&&q.get('openExternalBrowser')!==null};
+  try{const u=new URL(location.href);XKEYS.forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.toString());}catch(e){}
+  if(r.failed){const ex={};['go','nm','av'].forEach(k=>{if(r[k]!==null)ex[k]=r[k];});r.url=extUrl(ex);}
+  return r;}
+/* 從 LINE 換過來的瀏覽器，要等小朋友第一次點畫面才能出聲音：點到時再唸一次現在的說明 */
+document.addEventListener('click',e=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();
+  if(!(e.target.closest&&e.target.closest('button,a,input'))){if(G.screen==='mapScr')openMap();else if(G.screen==='home')goHome();};},{capture:true});
 function tone(f,t0,d,type='sine',v=.16,f2){const a=ac();if(!a)return;const t=a.currentTime+t0,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05)}
 function noise(t0,d,v,freq=1800){const a=ac();if(!a)return;const b=a.createBuffer(1,Math.max(1,a.sampleRate*d|0),a.sampleRate),ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/ch.length,3);const s=a.createBufferSource();s.buffer=b;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;const g=a.createGain();g.gain.value=v;s.connect(f).connect(g).connect(a.destination);s.start(a.currentTime+t0)}
 const FX={
@@ -954,7 +1001,7 @@ function resumeGame(){if(!G.paused)return;G.paused=false;$('#pauseOv').hidden=tr
 function fitCheck(){requestAnimationFrame(()=>{const s=$$('.screen').find(x=>!x.hidden);$('#fitHint').hidden=!s||s.scrollHeight<=s.clientHeight+4})}
 addEventListener('resize',()=>{fitCanvas();fitCheck();drawPath()});
 $$('.screen').forEach(s=>s.addEventListener('scroll',()=>{if(s.scrollTop+s.clientHeight>=s.scrollHeight-6)$('#fitHint').hidden=true}));
-$('#goSolo').onclick=()=>{unlock();readName();openMap()};
+$('#goSolo').onclick=()=>{unlock();readName();if(goExt(G.name,G.char)){hush();return;}openMap()};
 $('#goGroup').onclick=groupSetup;
 $('#vOn').onclick=()=>{SP.homeVoice=SP.voice=true;updVoice();unlock();say([{t:'要語音說明',zh:1}])};
 $('#vOff').onclick=()=>{SP.homeVoice=SP.voice=false;updVoice();hush()};
@@ -969,12 +1016,20 @@ $('#bAgain').onclick=replay;
 $('#bSlow').onclick=()=>{SP.rate=Math.max(.55,+(SP.rate-.15).toFixed(2));replay()};
 $('#bFast').onclick=()=>{SP.rate=Math.min(1.45,+(SP.rate+.15).toFixed(2));replay()};
 if(/\bLine\//i.test(navigator.userAgent)){
-  const u=new URL(location.href);u.searchParams.set('openExternalBrowser','1');
-  $('#lineLink').href=u.toString();$('#lineTip').hidden=false;
+  $('#lineLink').onclick=e=>{e.preventDefault();hush();openExt();};$('#lineTip').hidden=false;
 }
 $('#lOn').onclick=()=>{SP.learnOn=true;$('#lOn').classList.add('on');$('#lOff').classList.remove('on')};
 $('#lOff').onclick=()=>{SP.learnOn=false;$('#lOff').classList.add('on');$('#lOn').classList.remove('on')};
-applyTheme(theme);updVoice();renderChars();show('splash');
+applyTheme(theme);updVoice();renderChars();
+/* ---------- 開始 ---------- */
+(function(){const B=bootParams();
+  if(B.nm!==null&&B.nm!==undefined){G.name=B.nm.slice(0,10);store.set('wwName',G.name);$('#nameIn').value=G.name;}
+  if(B.av!==null&&B.av!==undefined&&CHARS[+B.av]){G.char=+B.av;store.set('wwChar',G.char);renderChars();}
+  /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
+  if(B.failed){show('splash');if(/Android/i.test(XUA))toChrome(B.url);else extHelp(B.url);return;}
+  /* 從 LINE 換過來的：不再顯示封面，直接到地圖。手機允許的話馬上出聲；不允許的話，第一次點畫面就會出聲 */
+  if(B.go==='start'&&!XLINE){needUnlock=true;openMap();return;}
+  show('splash');})();
 </script>
 
 </body>

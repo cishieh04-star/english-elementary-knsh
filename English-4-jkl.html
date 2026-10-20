@@ -362,6 +362,13 @@ html.tracing,html.tracing body{touch-action:none;overscroll-behavior:none}
 .bad{opacity:.3;filter:grayscale(1);animation:shake .4s;pointer-events:none}
 .hl{transform:scale(1.15);box-shadow:0 0 0 6px var(--yellow)!important;z-index:5}
 @supports not (container-type:size){@media (max-aspect-ratio:1/1){.learn{flex-direction:column}.lpair .lcard{font-size:min(calc(28*var(--cw,1vw)),calc(20*var(--ch,1vh)));font-size:min(28cqw,20cqh)}.lcard .tag{font-size:min(calc(5*var(--cw,1vw)),calc(3.4*var(--ch,1vh)));font-size:min(5cqw,3.4cqh)}.lw .em{font-size:min(calc(18*var(--cw,1vw)),calc(13*var(--ch,1vh)));font-size:min(18cqw,13cqh)}.lw .wd{font-size:min(calc(8*var(--cw,1vw)),calc(5.5*var(--ch,1vh)));font-size:min(8cqw,5.5cqh)}.zhw{font-size:min(calc(5*var(--cw,1vw)),calc(3.6*var(--ch,1vh)));font-size:min(5cqw,3.6cqh)}}@media (min-aspect-ratio:3/2){.pearl.board.two{width:min(calc(44*var(--cw,1vw)),calc(96*var(--ch,1vh)));width:min(44cqw,96cqh);height:min(calc(22*var(--cw,1vw)),calc(48*var(--ch,1vh)));height:min(22cqw,48cqh)}}@media (max-aspect-ratio:1/1){.sndcard{flex-direction:column}.sndcard .lp{width:min(calc(84*var(--cw,1vw)),calc(60*var(--ch,1vh)));width:min(84cqw,60cqh);height:min(calc(42*var(--cw,1vw)),calc(30*var(--ch,1vh)));height:min(42cqw,30cqh)}}@media (max-aspect-ratio:1/1){.demo .pair{display:grid;grid-template-columns:1fr 1fr;gap:calc(3*var(--ch,1vh)) calc(3*var(--cw,1vw));gap:3cqh 3cqw}.demo .dc{width:min(calc(20*var(--cw,1vw)),calc(15*var(--ch,1vh)));width:min(20cqw,15cqh);height:min(calc(20*var(--cw,1vw)),calc(15*var(--ch,1vh)));height:min(20cqw,15cqh)}}@media (min-aspect-ratio:3/2){.oxscr{flex-direction:row;justify-content:space-evenly}.clam{width:min(calc(34*var(--cw,1vw)),calc(70*var(--ch,1vh)));width:min(34cqw,70cqh);height:min(calc(26*var(--cw,1vw)),calc(56*var(--ch,1vh)));height:min(26cqw,56cqh)}.pearl{width:min(calc(22*var(--cw,1vw)),calc(48*var(--ch,1vh)));width:min(22cqw,48cqh);height:min(calc(22*var(--cw,1vw)),calc(48*var(--ch,1vh)));height:min(22cqw,48cqh);font-size:min(calc(15*var(--cw,1vw)),calc(34*var(--ch,1vh)));font-size:min(15cqw,34cqh)}.oxrow{gap:calc(4*var(--cw,1vw));gap:4cqw}.oxb{width:min(calc(22*var(--cw,1vw)),calc(52*var(--ch,1vh)));width:min(22cqw,52cqh);height:min(calc(20*var(--cw,1vw)),calc(46*var(--ch,1vh)));height:min(20cqw,46cqh)}.oxb .oxs{font-size:min(calc(9*var(--cw,1vw)),calc(22*var(--ch,1vh)));font-size:min(9cqw,22cqh)}.oxb .oxt{font-size:min(calc(5*var(--cw,1vw)),calc(11*var(--ch,1vh)));font-size:min(5cqw,11cqh)}.pearl.board{width:min(calc(32*var(--cw,1vw)),calc(72*var(--ch,1vh)));width:min(32cqw,72cqh);height:min(calc(32*var(--cw,1vw)),calc(72*var(--ch,1vh)));height:min(32cqw,72cqh)}.clam{width:min(calc(40*var(--cw,1vw)),calc(86*var(--ch,1vh)));width:min(40cqw,86cqh);height:min(calc(30*var(--cw,1vw)),calc(66*var(--ch,1vh)));height:min(30cqw,66cqh)}}@media (max-aspect-ratio:1/1){.flip{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(4,1fr)}}}
+.cover{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.2vh;text-align:center;padding:16px;cursor:pointer;z-index:5}
+.cover .mascot{width:min(34vw,24vh);height:min(34vw,24vh)}
+.cover .mascot svg{width:100%;height:100%}
+.cover .cems{display:flex;gap:4vw;font-size:min(13vw,9vh);line-height:1}
+.cover .cems span{animation:pulse2 1.6s ease-in-out infinite}
+.cover .cems span:nth-child(2){animation-delay:.3s}.cover .cems span:nth-child(3){animation-delay:.6s}.cover .cems span:nth-child(4){animation-delay:.9s}
+.cover .cgo{font-size:clamp(26px,7.5vmin,46px);padding:14px 46px;animation:pulse2 1.2s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -488,7 +495,7 @@ function voiceOK(v,fam){const l=vlang(v);if(NOVELTY.test(v.name))return false;if
 function voiceFor(lang){const want=lang.startsWith('en')?S.enVoice:S.zhVoice;if(want){const v=voices.find(x=>x.name===want);if(v)return v;}return null;}
 function voiceOptions(fam){return voices.filter(v=>voiceOK(v,fam));}
 let talking=0,manualBusy=false,lastCancel=0,lineHelpShown=false;
-function sCancel(){lastCancel=performance.now();try{speechSynthesis.cancel();}catch(e){}}
+function sCancel(){if(performance.now()-unlockAt<600&&!talking)return;/* 剛解鎖時不要馬上取消，iPhone 會失去聲音 */lastCancel=performance.now();try{speechSynthesis.cancel();}catch(e){}}
 function speak(text,lang,m){
   const g=GEN;
   return new Promise(async(res,rej)=>{
@@ -527,7 +534,20 @@ function sfx(k){if(!S.sound)return;
   else if(k==='firework'){tone(500,.45,'sine',.08,0,1800);noise(.6,900,.6,.45);for(let i=0;i<6;i++)tone(1500+Math.random()*1500,.12,'sine',.05,.6+Math.random()*.4);}
   else if(k==='star'){tone(1200,.08,'sine',.12);tone(1800,.12,'sine',.1,.06);}
 }
-function unlockAudio(){ac();try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+function unlockAudio(){ac();}
+/* ===== iPhone 聲音解鎖 =====
+   iPhone 只有在「手指放開（touchend）或點一下（click）」的那一瞬間，才允許網頁開始發出聲音；
+   按下（pointerdown）不算數。所以第一次點畫面時，在這一瞬間把語音、音效都先打開。
+   （不另外播放音檔、不改聲音模式：iPhone 播過音檔後，語音有時會變成沒有聲音） */
+const IOS=/iPhone|iPad|iPod/i.test(UA)||(/Macintosh/.test(UA)&&navigator.maxTouchPoints>1);
+var audioUnlocked=false,unlockAt=0;
+function silentWav(){const n=800,b=new Uint8Array(44+n),v=new DataView(b.buffer);const w=(o,t)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i);};
+  w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);
+  let s='';b.forEach(x=>s+=String.fromCharCode(x));return 'data:audio/wav;base64,'+btoa(s);}
+function gestureUnlock(){if(audioUnlocked)return;audioUnlocked=true;unlockAt=performance.now();
+  try{const a=ac();if(a){if(a.state!=='running')a.resume();const bf=a.createBuffer(1,1,22050),src=a.createBufferSource();src.buffer=bf;src.connect(a.destination);src.start(0);}}catch(e){}
+  try{if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}}catch(e){}}
+['touchend','click','keydown'].forEach(t=>document.addEventListener(t,gestureUnlock,{capture:true,passive:true}));
 
 /* ================= 特效：每次答對的慶祝都不一樣（不用一直說「你好棒」） ================= */
 const FXC=['#ff5f8f','#ffd23f','#4fc3f7','#7cfc9a','#c9a0ff','#ff9f43','#ffffff'];
@@ -1305,9 +1325,13 @@ async function finale(msg){
 const TSAY='歡迎來到英文城市大冒險！仔細聽英文，用手指點出答案，還要用手指描字。選一個城市好朋友，再按綠色的出發按鈕！';
 /* 打開首頁就用語音介紹玩法；手機不讓網頁自己出聲時，小朋友第一次摸畫面就開始介紹 */
 let titleSaid=false;
-function playTitleHow(){if(mode!=='title'||titleSaid||!S.guide||!S.sound)return;
-  try{sCancel();const u=new SpeechSynthesisUtterance(TSAY);u.lang='zh-TW';const v=voiceFor('zh-TW');if(v)u.voice=v;u.rate=.9;u.onstart=()=>{titleSaid=true;};speechSynthesis.speak(u);}catch(e){}}
-document.addEventListener('pointerdown',e=>{if(mode!=='title'||titleSaid)return;if(e.target.closest&&e.target.closest('#howT,#go,#xb,.modal'))return;unlockAudio();setTimeout(playTitleHow,150);},{capture:true});
+let titleAskAt=-1e9;
+function playTitleHow(){if(mode!=='title'||titleSaid||!S.guide||!S.sound)return;if(performance.now()-titleAskAt<3000&&titleAskAt>0&&!arguments[0])return;
+  try{if(talking)sCancel();const u=new SpeechSynthesisUtterance(TSAY);u.lang='zh-TW';const v=voiceFor('zh-TW');if(v)u.voice=v;u.rate=.9;u.onstart=()=>{titleSaid=true;};speechSynthesis.speak(u);}catch(e){}}
+/* 第一次點畫面（手指放開的那一下）就開始介紹；要在同一瞬間呼叫，iPhone 才會出聲 */
+let titleTapAt=-1e9;
+const titleTap=e=>{if(mode!=='title'||titleSaid)return;if(e.target.closest&&e.target.closest('#howT,#go,#xb,.modal'))return;if(performance.now()-titleTapAt<2000)return;titleTapAt=performance.now();gestureUnlock();try{if(speechSynthesis.pending&&!speechSynthesis.speaking)speechSynthesis.cancel();}catch(_){}playTitleHow();};
+document.addEventListener('touchend',titleTap,{capture:true,passive:true});document.addEventListener('click',titleTap,{capture:true});
 function showTitle(){
   GEN++;killAll();sCancel();mode='title';showRate=false;setPrompt('');setQ(0);
   $('topbar').style.display='none';
@@ -1327,7 +1351,7 @@ function showTitle(){
   play.appendChild(t);fitTitle();
   const xb=t.querySelector('#xb');if(xb)xb.onclick=()=>{S.name=t.querySelector('#nm').value.trim();openExt({go:'start',nm:S.name,av:S.avatar});};
   t.querySelector('#howT').onclick=()=>{titleSaid=true;unlockAudio();sCancel();speak(TSAY,'zh-TW').catch(()=>{});};
-  titleSaid=false;setTimeout(playTitleHow,500);
+  titleSaid=false;setTimeout(()=>playTitleHow(),500);/* 手機允許的話一打開就唸；不允許的，等第一次點畫面再唸 */
   t.querySelectorAll('.avs button').forEach(b=>b.onclick=()=>{S.avatar=b.dataset.a;t.querySelectorAll('.avs button').forEach(x=>x.classList.toggle('sel',x===b));sfx('pop');});
   t.querySelector('#go').onclick=()=>{unlockAudio();sCancel();S.name=t.querySelector('#nm').value.trim();save();
     if(LINEISH&&!SS.stayHere){openExt({go:'start',nm:S.name,av:S.avatar});return;}
@@ -1490,7 +1514,23 @@ async function resumeTrace(lv,li,w){
   }catch(e){if(e!==ABORT)console.error(e);}
 }
 /* 從 LINE 跳過來的瀏覽器，要等小朋友第一次摸畫面才能出聲音：摸到時再唸一次現在的說明 */
-document.addEventListener('pointerdown',()=>{if(!needUnlock)return;needUnlock=false;unlockAudio();setTimeout(()=>{if(repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
+const MAPSAY='點一下發亮的關卡，或是按綠色的開始冒險。';
+document.addEventListener('click',e=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();
+  /* 在地圖上點的不是關卡：補唸一次地圖說明 */
+  if(mode==='map'&&!(e.target.closest&&e.target.closest('button'))){sCancel();zh(MAPSAY).catch(()=>{});return;}
+  setTimeout(()=>{if(mode!=='map'&&repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
+/* 從 LINE 換到瀏覽器後，手機規定要先點一下畫面才能出聲音：放一個大按鈕，點了就開始（有聲音） */
+function tapToStart(fn){GEN++;killAll();mode='tap';showRate=false;setPrompt('');setQ(0);$('topbar').style.display='none';
+  const play=clearPlay();const d=el('div','res',`<div style="font-size:min(22vw,20vh);line-height:1.1">🔊</div><div class="big">已經換到瀏覽器了！</div><button class="bigb g" id="tapGo" style="font-size:clamp(24px,7vmin,40px);padding:14px 36px">點這裡開始</button>`);
+  play.appendChild(d);const go=()=>{gestureUnlock();$('topbar').style.display='';fn();};d.querySelector('#tapGo').onclick=go;d.onclick=e=>{if(e.target===d)go();};}
+/* ===== 封面：一打開先看到封面，小朋友點一下「點一下開始」=====
+   手機（尤其 iPhone）規定要先點一下畫面才能出聲音；點封面的這一下就把聲音打開，
+   後面的首頁介紹、遊戲語音都能正常播放。從 LINE 換到瀏覽器時也一樣先看到封面。 */
+function showCover(fn){GEN++;killAll();mode='cover';showRate=false;setPrompt('');setQ(0);$('topbar').style.display='none';
+  const play=clearPlay();const d=el('div','cover',`<div class="mascot">${octo()}</div><div class="logo eng">ABC 城市大冒險</div><div class="tsub">英文第四課　<span class="eng">I'm sorry. · It's OK. · Jj Kk Ll Mm</span></div><div class="cems">${AVATARS.slice(0,4).map(a=>`<span>${a}</span>`).join('')}</div><button class="bigb g cgo" id="coverGo">點一下開始</button>`);
+  play.appendChild(d);let done=false;const go=()=>{if(done)return;
+    /* 和 wonder-world 一樣：在 LINE 裡按「點一下開始」先留在 LINE，馬上唸首頁介紹；按「出發！」才換到瀏覽器 */
+    done=true;gestureUnlock();fn();};d.onclick=go;}
 (function boot(){
   let q;try{q=new URLSearchParams(location.search);}catch(e){showTitle();return;}
   const go=q.get('go'),failed=LINEISH&&q.get('openExternalBrowser')!==null;
@@ -1499,10 +1539,14 @@ document.addEventListener('pointerdown',()=>{if(!needUnlock)return;needUnlock=fa
   /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
   if(failed){const ex={};['go','lv','li','w','nm','av'].forEach(k=>{if(q.get(k)!==null)ex[k]=q.get(k);});const u=extUrl(ex);showTitle();
     if(/Android/i.test(UA))toChrome(u);else extHelp(u);return;}
-  if(go&&!LINEISH){needUnlock=true;save();
-    if(go==='trace'){resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');return;}
-    if(go==='start'){showMap();return;}}
-  showTitle();
+  /* 從 LINE 換過來的：不再顯示封面，直接到首頁／地圖／描字。
+     手機允許的話馬上出聲；不允許的話，小朋友第一次點畫面就會出聲。 */
+  if(go&&!LINEISH&&['home','start','trace'].includes(go)){save();needUnlock=go!=='home';
+    if(go==='trace')resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');
+    else if(go==='start')showMap();
+    else showTitle();
+    return;}
+  showCover(()=>{showTitle();titleAskAt=performance.now();playTitleHow(true);});
 })();
 </script>
 </body>
