@@ -445,10 +445,15 @@ const UA=navigator.userAgent,LINEISH=/\bLine\/|FBAN|FBAV|Instagram|MicroMessenge
 let TRACE_RESUME={go:'trace',lv:1},CUR_LV=0,LAST_WORD='',needUnlock=false;
 function extUrl(extra){const u=new URL(location.href.split('#')[0]);['go','lv','li','w','nm','av','openExternalBrowser'].forEach(k=>u.searchParams.delete(k));
   if(extra&&!(extra instanceof Event))for(const [k,v] of Object.entries(extra))if(v!==undefined&&v!==null&&v!=='')u.searchParams.set(k,v);return u.toString();}
+const toChrome=u=>{location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';};
 function openExt(extra){const u=extUrl(extra);
   if(/\bLine\//i.test(UA)){location.href=u+(u.indexOf('?')<0?'?':'&')+'openExternalBrowser=1';return;}
-  if(/Android/i.test(UA)){location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';return;}
-  copyUrl(u);}
+  if(/Android/i.test(UA)){toChrome(u);return;}
+  extHelp(u);}
+/* 沒辦法自動跳到瀏覽器時（例如 iPhone 的 Facebook、或 LINE 沒有反應），告訴大人怎麼做 */
+function extHelp(u){const ios=/iPhone|iPad|iPod/i.test(UA);
+  const m=modal(`<div style="font-size:3rem">🌐</div><h2>請用瀏覽器開啟</h2><div style="font-size:1.05rem;line-height:1.8;font-weight:700">${ios?'請按畫面右下角或右上角的「⋯」或「分享」，<br>選「用 Safari 開啟」或「以預設瀏覽器開啟」。':'請按右上角的「⋮」，選「用瀏覽器開啟」。'}<br>也可以按「複製網址」，貼到 Safari 或 Chrome。</div><div style="margin-top:10px"><button class="bigb g" id="ehc">複製網址</button> <button class="bigb gray" id="ehx">先在這裡玩</button></div>`);
+  m.querySelector('#ehc').onclick=()=>copyUrl(u);m.querySelector('#ehx').onclick=()=>{SS.stayHere=true;m.remove();sCancel();};}
 function copyUrl(url){const u=(typeof url==='string')?url:location.href.split('#')[0];const ok=()=>toast('網址已複製',1600);
   try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(ok,fb);return;}}catch(e){}
   fb();function fb(){try{const t=document.createElement('textarea');t.value=u;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();ok();}catch(e){toast('請手動複製網址',1600);}}}
@@ -1277,7 +1282,7 @@ async function finale(msg){
 }
 
 /* ================= 標題畫面 ================= */
-const TSAY='歡迎來到英文太空大冒險！這裡一共有十一關，要一關一關闖過去。仔細聽英文，再用手指點出答案。描字的時候，先看筆順，再用手指在字母上面描一描。聽不清楚，就按「再聽一次」。答對可以得到星星和太空貼紙。現在，選一個太空好朋友，寫上你的名字，再按綠色的出發按鈕！';
+const TSAY='歡迎來到英文太空大冒險！仔細聽英文，用手指點出答案，還要用手指描字。選一個太空好朋友，再按綠色的出發按鈕！';
 /* 打開首頁就用語音介紹玩法；手機不讓網頁自己出聲時，小朋友第一次摸畫面就開始介紹 */
 let titleSaid=false;
 function playTitleHow(){if(mode!=='title'||titleSaid||!S.guide||!S.sound)return;
@@ -1305,7 +1310,7 @@ function showTitle(){
   titleSaid=false;setTimeout(playTitleHow,500);
   t.querySelectorAll('.avs button').forEach(b=>b.onclick=()=>{S.avatar=b.dataset.a;t.querySelectorAll('.avs button').forEach(x=>x.classList.toggle('sel',x===b));sfx('pop');});
   t.querySelector('#go').onclick=()=>{unlockAudio();sCancel();S.name=t.querySelector('#nm').value.trim();save();
-    if(LINEISH){openExt({go:'start',nm:S.name,av:S.avatar});return;}
+    if(LINEISH&&!SS.stayHere){openExt({go:'start',nm:S.name,av:S.avatar});return;}
     showMap();};
 }
 function fitTitle(){const t=document.querySelector('.titlescr .tin');if(!t)return;t.style.transform='';const p=$('play');const sc=Math.min(1,(p.clientHeight-12)/t.offsetHeight,(p.clientWidth-12)/t.offsetWidth);if(sc<1)t.style.transform=`scale(${sc})`;}
@@ -1468,9 +1473,12 @@ async function resumeTrace(lv,li,w){
 document.addEventListener('pointerdown',()=>{if(!needUnlock)return;needUnlock=false;unlockAudio();setTimeout(()=>{if(repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
 (function boot(){
   let q;try{q=new URLSearchParams(location.search);}catch(e){showTitle();return;}
-  const go=q.get('go');
+  const go=q.get('go'),failed=LINEISH&&q.get('openExternalBrowser')!==null;
   if(q.get('nm')!==null)S.name=q.get('nm').slice(0,8);if(q.get('av'))S.avatar=q.get('av');
   try{const u=new URL(location.href);['go','lv','li','w','nm','av','openExternalBrowser'].forEach(k=>u.searchParams.delete(k));history.replaceState(null,'',u.toString());}catch(e){}
+  /* 已經試過跳到瀏覽器，卻還留在 LINE 裡：Android 直接叫 Chrome 打開；iPhone 告訴大人怎麼做 */
+  if(failed){const ex={};['go','lv','li','w','nm','av'].forEach(k=>{if(q.get(k)!==null)ex[k]=q.get(k);});const u=extUrl(ex);showTitle();
+    if(/Android/i.test(UA))toChrome(u);else extHelp(u);return;}
   if(go&&!LINEISH){needUnlock=true;save();
     if(go==='trace'){resumeTrace(+q.get('lv')||0,+q.get('li')||0,q.get('w')||'');return;}
     if(go==='start'){showMap();return;}}
