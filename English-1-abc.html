@@ -1458,7 +1458,11 @@ async function resumeTrace(lv,li,w){
   }catch(e){if(e!==ABORT)console.error(e);}
 }
 /* 從 LINE 跳過來的瀏覽器，要等小朋友第一次摸畫面才能出聲音：摸到時再唸一次現在的說明 */
-document.addEventListener('click',()=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();setTimeout(()=>{if(repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
+const MAPSAY='點一下發亮的關卡，或是按綠色的開始冒險。';
+document.addEventListener('click',e=>{if(!needUnlock)return;needUnlock=false;gestureUnlock();
+  /* 在地圖上點的不是關卡：補唸一次地圖說明 */
+  if(mode==='map'&&!(e.target.closest&&e.target.closest('button'))){sCancel();zh(MAPSAY).catch(()=>{});return;}
+  setTimeout(()=>{if(mode!=='map'&&repeatFn)Promise.resolve(repeatFn()).catch(()=>{});},200);},{capture:true});
 /* 從 LINE 換到瀏覽器後，手機規定要先點一下畫面才能出聲音：放一個大按鈕，點了就開始（有聲音） */
 function tapToStart(fn){GEN++;killAll();mode='tap';showRate=false;setPrompt('');setQ(0);$('topbar').style.display='none';
   const play=clearPlay();const d=el('div','res',`<div style="font-size:min(22vw,20vh);line-height:1.1">🔊</div><div class="big">已經換到瀏覽器了！</div><button class="bigb g" id="tapGo" style="font-size:clamp(24px,7vmin,40px);padding:14px 36px">點這裡開始</button>`);
@@ -1469,8 +1473,7 @@ function tapToStart(fn){GEN++;killAll();mode='tap';showRate=false;setPrompt('');
 function showCover(fn){GEN++;killAll();mode='cover';showRate=false;setPrompt('');setQ(0);$('topbar').style.display='none';
   const play=clearPlay();const d=el('div','cover',`<div class="mascot">${octo()}</div><div class="logo eng">ABC 海底大冒險</div><div class="tsub">英文第一課　<span class="eng">Good morning! · Aa Bb Cc</span></div><div class="cems">${AVATARS.slice(0,4).map(a=>`<span>${a}</span>`).join('')}</div><button class="bigb g cgo" id="coverGo">點一下開始</button>`);
   play.appendChild(d);let done=false;const go=()=>{if(done)return;
-    /* 在 LINE 裡：按「點一下開始」直接換到 Safari／Chrome（LINE 裡常常沒有聲音、描字畫面也會亂跑） */
-    if(LINEISH&&!SS.stayHere){sCancel();openExt({go:'home'});return;}
+    /* 和 wonder-world 一樣：在 LINE 裡按「點一下開始」先留在 LINE，馬上唸首頁介紹；按「出發！」才換到瀏覽器 */
     done=true;gestureUnlock();fn();};d.onclick=go;}
 (function boot(){
   let q;try{q=new URLSearchParams(location.search);}catch(e){showTitle();return;}
