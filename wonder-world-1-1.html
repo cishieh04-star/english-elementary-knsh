@@ -893,7 +893,7 @@ const SVGP={
   igloo:`<svg viewBox="0 0 100 100"><path d="M8 82 A42 42 0 0 1 92 82 Z" fill="#e6f6ff" stroke="#2b2340" stroke-width="4"/><path d="M14 68 H86 M22 54 H78 M34 42 H66 M30 68 V54 M50 54 V42 M64 54 V68 M44 82 V68" stroke="#8fc3e0" stroke-width="3"/><path d="M60 82 v-12 a10 10 0 0 1 20 0 v12z" fill="#3a6f8f" stroke="#2b2340" stroke-width="4"/></svg>`,
   jam:`<svg viewBox="0 0 100 100"><rect x="26" y="12" width="48" height="18" rx="4" fill="#e63946" stroke="#2b2340" stroke-width="4"/><path d="M28 21 h44" stroke="#fff" stroke-width="3" stroke-dasharray="5 5"/><rect x="22" y="30" width="56" height="60" rx="10" fill="#c1121f" stroke="#2b2340" stroke-width="4"/><ellipse cx="50" cy="60" rx="18" ry="16" fill="#fff"/><text x="50" y="69" font-size="22" text-anchor="middle">🍓</text></svg>`
 };
-const EMO={fish:'🐟',goat:'🐐',hat:'👒',ham:'🍖',jet:'✈️',arm:'💪',bus:'🚌',door:'🚪',elephant:'🐘',girl:'👧',insect:'🐛',foot:'🦶',hand:'✋',jeans:'👖'};
+const EMO={gap:'🚉',fish:'🐟',goat:'🐐',hat:'👒',ham:'🍖',jet:'✈️',arm:'💪',bus:'🚌',door:'🚪',elephant:'🐘',girl:'👧',insect:'🐛',foot:'🦶',hand:'✋',jeans:'👖'};
 const pic=w=>SVGP[w]||`<span>${EMO[w]}</span>`;
 
 /* ================= QUESTION BANKS (第一課 The Birthday Party) ================= */
@@ -905,11 +905,11 @@ const LETTER_Q=[
  {a:'d',o:['d','g','b']},{a:'g',o:['d','g','b']},{a:'b',o:['d','g','b']},{a:'i',o:['i','j','h']},{a:'j',o:['i','j','h']},
  {a:'f',o:['f','g','t']},{a:'G',o:['G','C','O']},{a:'h',o:['h','n','g']}];
 const START_Q=[
- {w:'fish',a:'f',o:['f','g','h']},{w:'fan',a:'f',o:['f','j','h']},{w:'goat',a:'g',o:['g','j','d']},
+ {w:'fish',a:'f',o:['f','g','h']},{w:'fan',a:'f',o:['f','j','h']},{w:'goat',a:'g',o:['g','j','d']},{w:'gap',a:'g',o:['g','j','h']},
  {w:'hat',a:'h',o:['h','f','g']},{w:'ham',a:'h',o:['h','j','f']},{w:'ink',a:'i',o:['i','j','l']},
  {w:'igloo',a:'i',o:['i','j','g']},{w:'jam',a:'j',o:['j','g','i']},{w:'jet',a:'j',o:['j','i','g']}];
 const BLANK_Q=[
- {w:'fish',o:['f','g','h']},{w:'fan',o:['f','g','j']},{w:'goat',o:['g','f','h']},{w:'hat',o:['h','g','j']},
+ {w:'fish',o:['f','g','h']},{w:'fan',o:['f','g','j']},{w:'goat',o:['g','f','h']},{w:'gap',o:['g','j','h']},{w:'hat',o:['h','g','j']},
  {w:'ham',o:['h','f','g']},{w:'ink',o:['i','j','f']},{w:'igloo',o:['i','j','h']},{w:'jam',o:['j','g','i']},{w:'jet',o:['j','f','i']}];
 const KIDS=[['Rose','👧'],['Ben','👦'],['Jerry','👦'],['Wendy','👧'],['Yuki','👧'],['Andy','👦'],['Betty','👧'],['Candy','👧'],['David','👦'],['Amy','👧'],['Kevin','👦']];
 const COMIC=[
@@ -919,6 +919,30 @@ const COMIC=[
  {line:'How old are you?',pic:'🎂',ok:"I'm nine.",bad:['Thank you.','Yum!']},
  {scene:'yum',ok:'Yum!',bad:['Oh, no!',"You're welcome."]},
  {scene:'oh',ok:'Oh, no!',bad:['Yum!','Thank you.']}];
+
+/* ---------- 句子排排看、考考你（題目來自兩份考卷） ---------- */
+const SENT_Q=[
+ {t:["I'm",'six','years','old','.'],zh:'我六歲。',pic:'6️⃣'},
+ {t:['How','old','are','you','?'],zh:'你幾歲？',pic:'🎂'},
+ {t:["I'm",'eight','.'],zh:'我八歲。',pic:'8️⃣'},
+ {t:["I'm",'seven','years','old','.'],zh:'我七歲。',pic:'7️⃣'},
+ {t:['This','is','for','you','.'],zh:'這是給你的。',pic:'🎁'},
+ {t:['Happy','birthday','!'],zh:'生日快樂！',pic:'🎉'}];
+const EQ=(ins,p,o,ans,lead,read)=>({ins,p:`<div class="speech" style="font-size:clamp(18px,5vmin,28px);line-height:1.5;max-width:92vw">${p}</div>`,lead,read:read===false?0:1,cls:'sent',
+  o:shuffle(o).map(x=>({h:x,s:x,ok:x===ans}))});
+const EXAM_Q=[
+ ()=>EQ('空格要填哪一個字？','A: I\'m eight. How old are ____?<br>B: I\'m ten.',['I','my','you'],'you',{t:"I'm eight. How old are, blank?",gap:600}),
+ ()=>EQ('空格要填哪一個字？','A: Happy birthday! How old are you?<br>B: I\'m ten ____ old.',['year','years','you'],'years',{t:'Happy birthday! How old are you?',gap:600}),
+ ()=>EQ('朋友說謝謝，你要回答什麼？','Thank you, Emma.',["You're welcome.",'Happy birthday!','This is for you.'],"You're welcome.",{t:'Thank you, Emma.',gap:600}),
+ ()=>EQ('朋友送你禮物，你要回答什麼？','Happy birthday! This is for you.',['Thank you.',"You're welcome.",'Goodbye.'],'Thank you.',{t:'Happy birthday! This is for you.',gap:600}),
+ ()=>EQ('朋友問你的名字，你要回答什麼？',"What's your name?",['My name is Mark.',"I'm nine years old.","I'm eight."],'My name is Mark.',{t:"What's your name?",gap:600}),
+ ()=>EQ('朋友問你幾歲，你要回答什麼？','How old are you?',["I'm seven.","I'm Amy.","I'm fine."],"I'm seven.",{t:'How old are you?',gap:600}),
+ ()=>EQ('讀一讀：Mark 幾歲？','Amy: How old are you, Mark?<br>Mark: I\'m nine.<br><b>How old is Mark?</b>',["He's nine.","He's eight.","He's seven."],"He's nine.",{t:"How old are you, Mark? I'm nine. How old is Mark?",gap:600}),
+ ()=>EQ('句子第一個字母、名字第一個字母，都要大寫。選出寫對的句子。','哪一句寫對了？',['My name is Sandy.','my name is Sandy.','My name is sandy.'],'My name is Sandy.',null,false),
+ ()=>EQ('句子第一個字母、名字第一個字母，都要大寫。選出寫對的句子。','哪一句寫對了？',["I'm Amy.","I'm amy.","i'm Amy."],"I'm Amy.",null,false),
+ ()=>EQ('數字不用大寫。選出寫對的句子。','哪一句寫對了？',["I'm five.","I'm Five.","i'm five years old."],"I'm five.",null,false),
+ ()=>EQ('大寫 FACE 的小寫是哪一個？','FACE',['face','fega','eacf'],'face',null,false),
+ ()=>EQ('小寫 head 的大寫是哪一個？','head',['HEAD','HFAB','FAED'],'HEAD',null,false)];
 const LCOL=['#ff9eb5','#ffd27a','#9fe0c0','#a8c8ff','#d6b0ff','#ffb38a'];
 
 /* ================= GAME STATE ================= */
@@ -1028,15 +1052,15 @@ const LV=[
      if(G.locked||b.classList.contains('used'))return;
      if(b.dataset.c!==w[k]){hush();FX.boop();b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);G.wrong++;
        if(G.wrong>=2)$$('.tile').forEach(t=>{if(!t.classList.contains('used')&&t.dataset.c===w[k])t.classList.add('hint')});
-       G.promptItems=[ask()];later(()=>say([ask()]),300);return}
+       return}
      hush();FX.pop();b.classList.add('used','no');b.classList.remove('hint');
      const sl=$('#sl'+k);sl.textContent=w[k];sl.classList.add('full');k++;G.wrong=0;mark();
      $('#sc').innerHTML=cake({n:w.length,lit:k});
-     if(k<w.length){G.promptItems=[ask()];say([ask()]);return}
+     if(k<w.length){say([{t:LN(b.dataset.c)}]);return}
      G.locked=true;addStar();FX.bday();celebrate($('#sc'));
      later(()=>say([...[...w].map(c=>({t:LN(c),gap:350})),{t:w,gap:300}],()=>later(advance,500)),2700);
    });
-   begin([instrItem('L7','聽字母，照順序點字母，點亮蠟燭。','照順序點字母。'),{t:w,gap:700}],[ask()]);
+   begin([instrItem('L7','聽單字，照順序點字母，點亮蠟燭。','拼出這個英文。')],[{t:w,gap:500},{t:NUMZH[NUMW.indexOf(w)],mean:1}]);
  }},
 /* 8 */ {name:'漫畫對話',icon:'💬',gen:()=>shuffle(COMIC).slice(0,5),show(q){
    const left=q.scene?`<div class="scene">${q.scene==='oh'?'😱<span class="fall">🍪</span>':'😋🍪'}</div>`:`<div class="speech">${q.pic} ${q.line}</div><div class="who">${monster('happy')}</div>`;
@@ -1069,6 +1093,20 @@ const LV=[
    begin([instrItem('L9','翻開兩張牌，找出一樣的數字。','翻牌，找一樣的數字。')],[]);
  }},
 /* ✏️ */ {name:'描單字',icon:'✏️',gen:()=>shuffle(TRACE_W).slice(0,2).map((w,i)=>({w,i})),show(q){traceShow(q)}},
+/* 🧩 */ {name:'句子排排看',icon:'🧩',gen:()=>shuffle(SENT_Q).slice(0,4),show(q){
+   const toks=q.t,full=q.t.join(' ').replace(/ ([.?!])/g,'$1');let k=0;
+   P().innerHTML=`<div class="picCard" style="font-size:clamp(40px,11vmin,64px)">${q.pic}</div><div class="word" style="font-size:clamp(18px,5vmin,26px)">${q.zh}</div>`;
+   F().innerHTML=`<div id="sr" style="min-height:1.6em;font:700 clamp(22px,6.5vmin,36px)/1.3 var(--en);background:var(--card);border:3px dashed var(--ink);border-radius:16px;padding:4px 14px;min-width:60%;text-align:center"></div><div class="tiles">${shuffle(toks.map((t,i)=>({t,i}))).map(o=>`<button class="opt sent wt" data-t="${o.t.replace(/"/g,'&quot;')}" style="padding:8px 14px">${o.t}</button>`).join('')}</div>`;
+   const sr=$('#sr');
+   $$('.wt').forEach(b=>b.onclick=()=>{if(G.locked||b.classList.contains('used'))return;
+     if(b.dataset.t!==toks[k]){hush();FX.boop();b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);G.wrong++;
+       if(G.wrong>=2)$$('.wt').forEach(x=>{if(!x.classList.contains('used')&&x.dataset.t===toks[k])x.classList.add('hint')});return}
+     hush();FX.pop();b.classList.add('used','no');b.classList.remove('hint');sr.textContent=(sr.textContent+' '+b.dataset.t).trim().replace(/ ([.?!])/g,'$1');k++;G.wrong=0;
+     if(!/^[.?!]$/.test(b.dataset.t))say([{t:b.dataset.t}]);
+     if(k>=toks.length){G.locked=true;addStar();celebrate(sr);later(()=>say([{t:full,gap:400},{t:q.zh,mean:1}],()=>later(advance,600)),600)}});
+   begin([instrItem('LS','聽句子，照順序點出英文。','照順序點出英文。')],[{t:full,gap:500},{t:q.zh,mean:1}]);
+ }},
+/* 📝 */ {name:'考考你',icon:'📝',gen:()=>shuffle(EXAM_Q).slice(0,6).map(x=>x()),show(q){P().innerHTML='';cardQ(q)}},
 /* 10 */ {name:'超級大蛋糕',icon:'🏰',boss:true,gen:()=>shuffle(['letter','start','numWord','count','howOld','dialog']).map(t=>mixQ([t])),show(q){
    P().innerHTML=`<div class="bossTop"><div class="tower" id="tower">${Array.from({length:G.qi},(_,i)=>layerHtml(i)).join('')}</div><div class="who" id="bossMon">${monster('happy')}</div></div>`;
    cardQ(q,()=>{$('#tower').insertAdjacentHTML('beforeend',layerHtml(G.qi))});
@@ -1154,10 +1192,10 @@ function runIntro(cards,then){
 }
 
 /* 第一課的單字卡資料 */
-const ZH1={fish:'魚',fan:'電風扇',goat:'山羊',hat:'帽子',ham:'火腿',ink:'墨水',igloo:'冰屋',jam:'果醬',jet:'噴射機',apple:'蘋果',bed:'床',dog:'狗',egg:'蛋',arm:'手臂',bus:'公車',door:'門',elephant:'大象',girl:'女孩',insect:'昆蟲',foot:'腳',hand:'手',jeans:'牛仔褲'};
+const ZH1={gap:'縫隙（月台和車廂中間）',fish:'魚',fan:'電風扇',goat:'山羊',hat:'帽子',ham:'火腿',ink:'墨水',igloo:'冰屋',jam:'果醬',jet:'噴射機',apple:'蘋果',bed:'床',dog:'狗',egg:'蛋',arm:'手臂',bus:'公車',door:'門',elephant:'大象',girl:'女孩',insect:'昆蟲',foot:'腳',hand:'手',jeans:'牛仔褲'};
 const NUMZH=['零','一','二','三','四','五','六','七','八','九','十'];
 /* 每個字母兩個單字：第二個是同一個字首、生活裡常看到的，而且不和關卡裡、English 1～4 課、其他 wonder-world 遊戲的單字重複 */
-const LEXL={a:[['apple','🍎'],['arm']],b:[['bed','🛏️'],['bus']],d:[['dog','🐶'],['door']],e:[['egg','🥚'],['elephant']],f:[['fish'],['foot']],g:[['goat'],['girl']],h:[['hat'],['hand']],i:[['ink'],['insect']],j:[['jam'],['jeans']]};
+const LEXL={a:[['apple','🍎'],['arm']],b:[['bed','🛏️'],['bus']],d:[['dog','🐶'],['door']],e:[['egg','🥚'],['elephant']],f:[['fish'],['fan']],g:[['goat'],['gap']],h:[['hat'],['ham']],i:[['ink'],['igloo']],j:[['jam'],['jet']]};
 const wordCard=w=>({en:w,pic:pic(w),zh:ZH1[w]});
 const numCard=n=>({en:NUMW[n],pic:`<span class="lnum">${n}</span>`,zh:NUMZH[n]});
 const letterCard=l=>{l=l.toLowerCase();const x=LEXL[l];if(!x)return null;const [[w,e],[w2,e2]]=x;return {en:'letter-'+l,big:l.toUpperCase()+' '+l,cs:1,pic:e?`<span>${e}</span>`:pic(w),sub:w,zh:ZH1[w],pic2:e2?`<span>${e2}</span>`:pic(w2),sub2:w2,zh2:ZH1[w2]}};
@@ -1175,10 +1213,12 @@ const LEARN=[null,
   qs=>qs.flatMap(q=>q.line?[q.line,q.ok]:[q.ok]).map(sentCard),
   qs=>qs[0].nums.map(numCard),
   null,/* 描單字：描字畫面自己會先看圖、聽單字 */
+  qs=>qs.map(q=>({en:q.t.join(' ').replace(/ ([.?!])/g,'$1'),zh:q.zh,pic:q.pic})),
+  null,
   null];
 
 /* ================= 描單字（和 English-1-abc 同一套） ================= */
-const TRACE_W=['fish','fan','goat','hat','ham','ink','jam','jet'];
+const TRACE_W=['fish','fan','goat','gap','hat','ham','ink','igloo','jam','jet'];
 function traceShow(q){
   const run=G.run,first=!G.seen.trace;G.seen.trace=1;
   $('#instr').textContent='看圖，聽單字，用手指描一描';P().innerHTML='';const f=F();f.innerHTML='';
@@ -1354,37 +1394,37 @@ window.STORY_DATA={
 ]},
 /* ---------- English 1-1 Unit 1 The Birthday Party ---------- */
 '1-1':{title:'The Birthday Party',pages:[
- {n:0,w:'girl',en:'Shh!',zh:'噓！',tip:'Shh! 是「噓！」，叫大家小聲一點。大家要偷偷幫 Boka 辦一個生日派對（birthday party）。',bg:'party',sfx:'shh',cast:[['girl',90],['jello',190],['kevin',300]],props:[['🎂',140,165,36],['🤫',90,95,30,1]]},
- {n:1,w:'all',en:'Happy birthday!',zh:'生日快樂！',tip:'birthday 是「生日」。Happy birthday! 是祝別人「生日快樂！」',bg:'party',sfx:'bday',cast:[['girl',70],['jello',150],['kevin',230],['boka',320]],props:[['🎉',230,95,34,1],['🎂',70,120,34]]},
- {n:2,w:'boka',en:'Thank you.',zh:'謝謝你。',tip:'Thank you. 是「謝謝你」，別人送你東西或祝福你的時候說。',bg:'party',sfx:'gift',cast:[['boka',130],['jello',260]],props:[['🎁',200,175,40,1]]},
- {n:3,w:'jello',en:"You're welcome.",zh:'不客氣。',tip:"別人跟你說 Thank you. 的時候，要回答 You're welcome.「不客氣」。",bg:'party',sfx:'thanks',cast:[['boka',130],['jello',260]],props:[['🎁',190,175,36]]},
+ {n:0,w:'girl',en:'Shh!',zh:'噓！',tip:'Shh! 是「噓！」，叫大家小聲一點。大家要偷偷幫 Boka 辦一個生日派對（birthday party）。',bg:'party',sfx:'shhGiggle',cast:[['girl',90],['jello',190],['kevin',300]],props:[['🎂',140,165,36],['🤫',90,95,30,1]]},
+ {n:1,w:'all',en:'Happy birthday!',zh:'生日快樂！',tip:'birthday 是「生日」。Happy birthday! 是祝別人「生日快樂！」',bg:'party',sfx:'partyBday',cast:[['girl',70],['jello',150],['kevin',230],['boka',320]],props:[['🎉',230,95,34,1],['🎂',70,120,34]]},
+ {n:2,w:'boka',en:'Thank you.',zh:'謝謝你。',tip:'Thank you. 是「謝謝你」，別人送你東西或祝福你的時候說。',bg:'party',sfx:'giftOpen',cast:[['boka',130],['jello',260]],props:[['🎁',200,175,40,1]]},
+ {n:3,w:'jello',en:"You're welcome.",zh:'不客氣。',tip:"別人跟你說 Thank you. 的時候，要回答 You're welcome.「不客氣」。",bg:'party',sfx:'welcome',cast:[['boka',130],['jello',260]],props:[['🎁',190,175,36]]},
  {n:4,w:'kevin',en:'How old are you, Boka?',zh:'Boka，你幾歲？',tip:'How old are you? 是問別人「你幾歲？」old 是「年紀」。',bg:'party',sfx:'hmm',cast:[['girl',70],['kevin',150],['boka',290]],props:[['❓',150,85,28,1],['🍰',220,180,30]]},
- {n:5,w:'boka',en:"I'm one.",zh:'我一歲。',tip:"I'm 是 I am，「我是」。one 是「一」。I'm one. 是「我一歲」。",bg:'party',sfx:'one',cast:[['kevin',110],['boka',260]],props:[['☝️',320,120,34,1],['🕯️',200,175,30]]},
- {n:6,w:'kevin',en:'One?',zh:'一歲？',tip:'One? 句尾的聲音往上揚，表示很驚訝、不相信：「一歲？」Boka 個子這麼大，竟然才一歲！',bg:'party',sfx:'boing',cast:[['kevin',130],['boka',280]],props:[['😮',130,80,30,1]]},
+ {n:5,w:'boka',en:"I'm one.",zh:'我一歲。',tip:"I'm 是 I am，「我是」。one 是「一」。I'm one. 是「我一歲」。",bg:'party',sfx:'babyOne',cast:[['kevin',110],['boka',260]],props:[['☝️',320,120,34,1],['🕯️',200,175,30]]},
+ {n:6,w:'kevin',en:'One?',zh:'一歲？',tip:'One? 句尾的聲音往上揚，表示很驚訝、不相信：「一歲？」Boka 個子這麼大，竟然才一歲！',bg:'party',sfx:'surprise',cast:[['kevin',130],['boka',280]],props:[['😮',130,80,30,1]]},
  {n:7,w:'boka',en:'How old are you?',zh:'你幾歲？',tip:'How old are you? 是「你幾歲？」換 Boka 問小朋友了。',bg:'party',sfx:'hmm',cast:[['girl',90],['kevin',170],['boka',300]],props:[['❓',300,80,28,1]]},
- {n:8,w:'girl',en:"I'm eight years old.",zh:'我八歲。',tip:'eight 是「八」，years old 是「……歲」。I\'m eight years old. 是「我八歲」。',bg:'party',sfx:'candle',cast:[['girl',120],['kevin',230]],props:[['8️⃣',60,110,34,1]]},
- {n:9,w:'kevin',en:"I'm nine.",zh:'我九歲。',tip:"nine 是「九」。說幾歲時，也可以不說 years old，只說 I'm nine.",bg:'party',sfx:'candle',cast:[['girl',120],['kevin',230]],props:[['9️⃣',320,110,34,1]]},
+ {n:8,w:'girl',en:"I'm eight years old.",zh:'我八歲。',tip:'eight 是「八」，years old 是「……歲」。I\'m eight years old. 是「我八歲」。',bg:'party',sfx:'eight',cast:[['girl',120],['kevin',230]],props:[['8️⃣',60,110,34,1]]},
+ {n:9,w:'kevin',en:"I'm nine.",zh:'我九歲。',tip:"nine 是「九」。說幾歲時，也可以不說 years old，只說 I'm nine.",bg:'party',sfx:'nine',cast:[['girl',120],['kevin',230]],props:[['9️⃣',320,110,34,1]]},
  {n:10,w:'jello',en:'This is for you.',zh:'這是給你的。',tip:'This is 是「這是」，for you 是「給你的」。把東西送給別人時說 This is for you.',bg:'party',sfx:'gift',cast:[['jello',110],['girl',200],['kevin',300]],props:[['🍰',160,150,32,1]]},
- {n:11,w:'girl',en:'Thank you.',zh:'謝謝你。',tip:'收到東西要說 Thank you.「謝謝你」。',bg:'party',sfx:'thanks',cast:[['jello',110],['girl',210],['kevin',310]],props:[['🍰',160,150,32]]},
- {n:0,w:'kevin',en:'Yum!',zh:'好吃！',tip:'Yum! 是吃到好吃的東西時說的話，意思是「好吃！」凱文偷吃了罐子裡的餅乾。',bg:'party',sfx:'chomp',cast:[['boka',110],['kevin',270]],props:[['🍪',230,150,36,1],['🍪',320,175,30]]},
+ {n:11,w:'girl',en:'Thank you.',zh:'謝謝你。',tip:'收到東西要說 Thank you.「謝謝你」。',bg:'party',sfx:'thanksGiggle',cast:[['jello',110],['girl',210],['kevin',310]],props:[['🍰',160,150,32]]},
+ {n:0,w:'kevin',en:'Yum!',zh:'好吃！',tip:'Yum! 是吃到好吃的東西時說的話，意思是「好吃！」凱文偷吃了罐子裡的餅乾。',bg:'party',sfx:'yum',cast:[['boka',110],['kevin',270]],props:[['🍪',230,150,36,1],['🍪',320,175,30]]},
  {n:12,w:'girl',en:'Oh, no!',zh:'糟糕！',tip:'Oh, no! 是發生不好的事情時說「糟糕！」',bg:'party',sfx:'ohno',cast:[['girl',110],['kevin',270]],props:[['😱',110,80,30,1]]},
- {n:0,w:'kevin',en:'Ahh!',zh:'啊！',tip:'Ahh! 是嚇一跳時的叫聲。凱文吃了餅乾，身體變小了！',bg:'party',sfx:'shrink',cast:[['girl',100],['kevin',260,.6],['boka',340]],props:[['✨',260,120,30,1]]}
+ {n:0,w:'kevin',en:'Ahh!',zh:'啊！',tip:'Ahh! 是嚇一跳時的叫聲。凱文吃了餅乾，身體一直變大、變大！',bg:'party',sfx:'ahh',cast:[['girl',90],['kevin',230,1.6],['boka',345]],props:[['✨',260,120,30,1]]}
 ]},
 /* ---------- English 1-2 Unit 2 Poor Kevin ---------- */
 '1-2':{title:'Poor Kevin',pages:[
- {n:1,w:'girl',en:'Are you OK?',zh:'你還好嗎？',tip:'OK 是「好、沒問題」。Are you OK? 是關心別人「你還好嗎？」',bg:'party',sfx:'worry',cast:[['boka',80],['girl',170],['kevin',290,.6]],props:[['💧',300,120,20,1]]},
- {n:2,w:'kevin',en:"Oh, I'm fine.",zh:'噢，我很好。',tip:"fine 是「很好」。I'm fine. 是「我很好」。",bg:'party',sfx:'ok',cast:[['boka',80],['girl',170],['kevin',290,.6]]},
- {n:3,w:'boka',en:'Are you hungry?',zh:'你餓嗎？',tip:'hungry 是「餓」。Are you…? 是問別人「你……嗎？」',bg:'party',sfx:'stomach',cast:[['boka',110],['kevin',270]],props:[['🍔',300,80,34,1]]},
- {n:4,w:'kevin',en:'Yes, I am.',zh:'是的，我餓。',tip:'別人問 Are you…? 的時候，「是」要回答 Yes, I am.',bg:'party',sfx:'stomach',cast:[['boka',110],['kevin',270]],props:[['🍔',200,90,30]]},
- {n:5,w:'girl',en:'Here you are.',zh:'給你。',tip:'Here you are. 是把東西拿給別人時說「給你」。',bg:'party',sfx:'plate',cast:[['girl',120],['kevin',290]],props:[['🍔',200,160,32,1],['🍔',230,150,28,1]]},
- {n:6,w:'kevin',en:'Thank you.',zh:'謝謝你。',tip:'拿到東西要說 Thank you.「謝謝你」。',bg:'party',sfx:'chomp',cast:[['girl',120],['kevin',290]],props:[['🍔',240,150,30,1]]},
- {n:7,w:'jello',en:'Are you thirsty?',zh:'你渴嗎？',tip:'thirsty 是「渴」，很想喝水。',bg:'party',sfx:'water',cast:[['jello',120],['kevin',280]],props:[['🥛',280,80,32,1]]},
- {n:8,w:'kevin',en:'Yes, I am.',zh:'是的，我渴。',tip:'「是」要回答 Yes, I am.',bg:'party',sfx:'water',cast:[['jello',120],['kevin',280]]},
- {n:9,w:'girl',en:'Oops!',zh:'哎呀！',tip:'Oops! 是不小心做錯事時說「哎呀！」水杯全都打翻了。',bg:'party',sfx:'splash',cast:[['jello',110],['girl',230]],props:[['💦',170,170,34,1],['🥛',300,170,28,1]]},
- {n:10,w:'kevin',en:"I'm hungry and thirsty. I'm sad.",zh:'我又餓又渴。我很難過。',tip:'and 是「和、而且」。sad 是「難過的」。凱文哭得好傷心。',bg:'party',sfx:'sad',cast:[['kevin',200]],props:[['😭',200,80,30,1],['💧',150,170,24,1],['💧',250,170,24,1]]},
- {n:11,w:'boka',en:'Drink it.',zh:'把它喝下去。',tip:'drink 是「喝」，it 是「它」。Drink it. 是「把它喝下去」。',bg:'party',sfx:'potion',cast:[['boka',120],['kevin',280,.6]],props:[['🧪',200,140,34,1]]},
- {n:12,w:'boka',en:'Five, four, three, two, one!',zh:'五、四、三、二、一！',tip:'倒數：five 五、four 四、three 三、two 二、one 一。',bg:'party',sfx:'count',cast:[['girl',70],['kevin',200],['boka',320]],props:[['✨',200,90,30,1]]},
- {n:13,w:'kevin',en:'Phew!',zh:'呼！',tip:'Phew! 是鬆了一口氣時說「呼！」凱文變回原來的樣子了。',bg:'party',sfx:'phew',cast:[['girl',70],['jello',150],['kevin',240],['boka',330]],props:[['🌟',240,80,30,1]]}
+ {n:1,w:'girl',en:'Are you OK?',zh:'你還好嗎？',tip:'OK 是「好、沒問題」。Are you OK? 是關心別人「你還好嗎？」',bg:'party',sfx:'giantStep',cast:[['boka',70],['girl',150],['kevin',290,1.6]],props:[['💧',250,95,20,1]]},
+ {n:2,w:'kevin',en:"Oh, I'm fine.",zh:'噢，我很好。',tip:"fine 是「很好」。I'm fine. 是「我很好」。凱文吃了餅乾，變成一個大巨人了！",bg:'party',sfx:'bigLaugh',cast:[['boka',70],['girl',150],['kevin',290,1.6]]},
+ {n:3,w:'boka',en:'Are you hungry?',zh:'你肚子餓嗎？',tip:'hungry 是「肚子餓的」。Are you…? 是問別人「你……嗎？」',bg:'party',sfx:'growl',cast:[['boka',90],['kevin',270,1.5]],props:[['🍔',200,80,34,1]]},
+ {n:4,w:'kevin',en:'Yes, I am.',zh:'是的，我肚子餓。',tip:'別人問 Are you…? 的時候，「是」要回答 Yes, I am.',bg:'party',sfx:'growl',cast:[['boka',90],['kevin',270,1.5]],props:[['🍔',190,90,30]]},
+ {n:5,w:'girl',en:'Here you are.',zh:'給你。',tip:'Here you are. 是把東西拿給別人時說「給你」。女孩拿來一大盤漢堡。',bg:'party',sfx:'servePlate',cast:[['girl',100],['kevin',290,1.5]],props:[['🍔',180,165,26,1],['🍔',205,155,26,1],['🍔',192,140,26,1]]},
+ {n:6,w:'kevin',en:'Thank you.',zh:'謝謝你。',tip:'拿到東西要說 Thank you.「謝謝你」。凱文一口氣吃掉好多漢堡！',bg:'party',sfx:'munch',cast:[['girl',100],['kevin',290,1.5]],props:[['🍔',200,150,30,1]]},
+ {n:7,w:'jello',en:'Are you thirsty?',zh:'你口渴嗎？',tip:'thirsty 是「口渴的」，很想喝水。',bg:'party',sfx:'drips',cast:[['jello',100],['kevin',280,1.5]],props:[['🥛',190,90,32,1]]},
+ {n:8,w:'kevin',en:'Yes, I am.',zh:'是的，我口渴。',tip:'「是」要回答 Yes, I am.',bg:'party',sfx:'gulps',cast:[['jello',100],['kevin',280,1.5]]},
+ {n:9,w:'jello',en:'Oops!',zh:'哎呀！',tip:'Oops! 是不小心做錯事時說「哎呀！」Jello 滑倒，水杯全都打翻了。',bg:'party',sfx:'oopsSplash',cast:[['jello',130],['girl',250]],props:[['💦',190,170,34,1],['🥛',310,170,28,1]]},
+ {n:10,w:'kevin',en:"I'm hungry and thirsty. I'm sad.",zh:'我又餓又渴。我很難過。',tip:'and 是「和、而且」。sad 是「難過的」。凱文哭得好傷心。',bg:'party',sfx:'cry',cast:[['kevin',200,1.5]],props:[['💧',140,170,24,1],['💧',260,170,24,1]]},
+ {n:11,w:'boka',en:'Drink it.',zh:'把它喝下去。',tip:'drink 是「喝」，it 是「它」。Drink it. 是「把它喝下去」。Boka 拿出神奇藥水。',bg:'party',sfx:'potionGulp',cast:[['boka',100],['kevin',280,1.5]],props:[['🧪',190,130,34,1]]},
+ {n:12,w:'boka',en:'Five, four, three, two, one!',zh:'五、四、三、二、一！',tip:'倒數：five 五、four 四、three 三、two 二、one 一。',bg:'party',sfx:'count',cast:[['girl',70],['kevin',200,1.2],['boka',320]],props:[['✨',200,90,30,1]]},
+ {n:13,w:'kevin',en:'Phew!',zh:'呼！',tip:'Phew! 是鬆了一口氣時說「呼！」凱文變回原來的樣子了。',bg:'party',sfx:'phewBack',cast:[['girl',70],['jello',150],['kevin',240],['boka',330]],props:[['🌟',240,80,30,1]]}
 ]},
 /* ---------- English 1-3 Unit 3 At B&J's Toys ---------- */
 '1-3':{title:"At B&J's Toys",pages:[
@@ -1535,6 +1575,37 @@ var SFX={
   jingle:function(){var E=659,G=784,C=523,D=587;for(var i=0;i<14;i++)noise(i*.16,.05,.18,6000);return notes([[E,.22],[E,.22],[E,.44],[E,.22],[E,.22],[E,.44],[E,.22],[G,.22],[C,.33],[D,.11],[E,.6]],'triangle',.13)},
   hohoho:function(){[0,.4,.8].forEach(function(t){tone(150,t,.3,'triangle',.1,120);tone(300,t,.3,'sine',.06,240)});for(var i=0;i<8;i++)noise(1.1+i*.12,.05,.15,6000);return 2},
   sleigh:function(){for(var i=0;i<18;i++){noise(i*.11,.05,.2,7000);tone(2200+(i%3)*300,i*.11,.06,'sine',.03)}return 2.1},
+  horn:function(){tone(520,0,.45,'triangle',.14,880);tone(880,.45,.25,'triangle',.12,620);tone(620,.7,.3,'triangle',.12,900);return 1.1},
+  giggle:function(){for(var i=0;i<7;i++)tone(760+i*45+(i%2)*120,i*.1,.08,'sine',.12,980+i*45);return .9},
+  squeak:function(){tone(1200,0,.12,'sine',.13,1900);tone(1500,.16,.14,'sine',.12,2200);return .4},
+  slideUp:function(){tone(300,0,.7,'sine',.16,1300);return .8},
+  slideDown:function(){tone(1400,0,1,'sine',.16,180);return 1.1},
+  crunch:function(){[0,.22,.44,.66].forEach(function(t){noise(t,.07,.6,2600);noise(t+.05,.05,.4,1200)});tone(220,.95,.6,'sine',.12,300);return 1.6},
+  chimes:function(n){for(var i=0;i<n;i++){tone(988+(i%3)*196,i*.16,.25,'sine',.12)}return n*.16+.3},
+  rattle:function(){for(var i=0;i<8;i++)noise(i*.08,.04,.5,4500);return .8},
+  unwrap:function(){noise(0,.35,.35,3500);noise(.35,.3,.3,3000);tone(988,.7,.25,'sine',.12);tone(1319,.8,.4,'sine',.12);return 1.3},
+  shhGiggle:function(){SFX.shh();setTimeout(SFX.giggle,1400);return 2.4},
+  partyBday:function(){SFX.horn();var d=0;setTimeout(function(){SFX.bday()},1100);return 1.1+3.6},
+  giftOpen:function(){SFX.unwrap();setTimeout(SFX.sparkle,1300);return 2.3},
+  welcome:function(){SFX.giggle();setTimeout(SFX.sparkle,900);return 1.9},
+  babyOne:function(){SFX.rattle();setTimeout(SFX.one,850);return 1.7},
+  surprise:function(){SFX.slideUp();setTimeout(SFX.boing,800);return 1.5},
+  eight:function(){return SFX.chimes(8)},
+  nine:function(){return SFX.chimes(9)},
+  thanksGiggle:function(){SFX.thanks();setTimeout(SFX.giggle,700);return 1.6},
+  yum:function(){SFX.crunch();return 1.6},
+  ahh:function(){SFX.slideUp();setTimeout(function(){tone(200,0,.9,'sine',.14,90)},700);return 1.9},
+  giantStep:function(){[0,.55,1.1].forEach(function(t){tone(70,t,.35,'sine',.22,45);lnoise(t,.25,.25,300)});return 1.6},
+  bigLaugh:function(){[0,.3,.6].forEach(function(t){tone(160,t,.25,'triangle',.14,130)});return 1.1},
+  growl:function(){tone(180,0,.4,'sine',.13,130);tone(150,.45,.5,'sine',.13,110);tone(200,.95,.3,'sine',.1,260);return 1.4},
+  servePlate:function(){tone(1200,0,.35,'sine',.08);tone(1600,.12,.4,'sine',.06);setTimeout(SFX.sparkle,450);return 1.5},
+  munch:function(){for(var i=0;i<6;i++){noise(i*.18,.06,.5,1800);tone(300,i*.18,.08,'sine',.08,220)}tone(330,1.2,.4,'sine',.1,440);return 1.7},
+  drips:function(){[0,.3,.55,.9].forEach(function(t){tone(900,t,.12,'sine',.12,1500)});return 1.2},
+  gulps:function(){[0,.4,.8].forEach(function(t){tone(260,t,.18,'sine',.16,120)});tone(500,1.2,.25,'sine',.1,700);return 1.5},
+  oopsSplash:function(){tone(700,0,.5,'sine',.14,250);setTimeout(SFX.splash,450);return 1.6},
+  cry:function(){[[523,0],[494,.45],[440,.9],[392,1.35]].forEach(function(n){tone(n[0],n[1],.4,'sine',.12,n[0]*.92)});return 1.9},
+  potionGulp:function(){SFX.potion();setTimeout(function(){[0,.35].forEach(function(t){tone(260,t,.18,'sine',.16,120)})},1000);return 1.8},
+  phewBack:function(){tone(1200,0,1,'sine',.12,250);setTimeout(SFX.phew,1000);return 2.8},
   dragon:function(){tone(160,0,.6,'triangle',.1,90);tone(240,.1,.5,'triangle',.04,120);return .9}
 };
 /* iPhone 靜音鍵開著時，音效也要聽得到 */
@@ -1552,7 +1623,7 @@ function playSfx(cb){
   setTimeout(function(){sc.classList.remove('snd');if(m===SH.ptok&&cb&&!SH.closed)cb()},Math.round(d*1000)+250)}
 
 /* ---------- 特效：彩帶、愛心、星星、雨滴、樹葉、驚嘆號……都在圖上跳出來 ---------- */
-var FXMAP={jingle:['snow','❄️'],hohoho:['burst','🎁'],sleigh:['dash','✨'],shh:['zzz'],bday:['confetti','🎉'],gift:['burst','✨'],thanks:['rise','💖'],hmm:['rise','❓'],one:['pop','1️⃣'],boing:['shock','❗'],candle:['burst','✨'],chomp:['burst','🍪'],
+var FXMAP={shhGiggle:['zzz'],partyBday:['confetti','🎉'],giftOpen:['burst','🎁'],welcome:['rise','😊'],babyOne:['pop','1️⃣'],surprise:['shock','❓'],eight:['rise','🕯️'],nine:['rise','🕯️'],thanksGiggle:['rise','💖'],yum:['burst','🍪'],ahh:['grow','✨'],giantStep:['shock','💥'],bigLaugh:['rise','😆'],growl:['rise','🍔'],servePlate:['burst','🍔'],munch:['burst','🍔'],drips:['fall','💧'],gulps:['rise','🥛'],oopsSplash:['shock','💦'],cry:['fall','💧'],potionGulp:['rise','🫧'],phewBack:['shrink'],jingle:['snow','❄️'],hohoho:['burst','🎁'],sleigh:['dash','✨'],shh:['zzz'],bday:['confetti','🎉'],gift:['burst','✨'],thanks:['rise','💖'],hmm:['rise','❓'],one:['pop','1️⃣'],boing:['shock','❗'],candle:['burst','✨'],chomp:['burst','🍪'],
   ohno:['shock','💦'],shrink:['shrink'],worry:['rise','💧'],ok:['rise','👍'],stomach:['rise','🍔'],plate:['burst','🍔'],water:['rise','💧'],splash:['burst','💦'],sad:['fall','💧'],
   potion:['rise','✨'],count:['count'],phew:['burst','🌟'],morning:['rise','🎵'],conveyor:['rise','⚙️'],bounce:['bounce','⚽'],wow:['burst','⭐'],car:['dash','💨'],printer:['burst','✨'],
   cute:['rise','💕'],whistle:['rise','🎵'],robot:['burst','⚡'],crash:['shock','💥'],alarm:['shock','⚠️'],ring:['shock','⏰'],birds:['rise','🎵'],rain:['fall','💧'],wind:['wind','🍃'],
@@ -1571,6 +1642,7 @@ function fx(kind,ch){var g=fxLayer();if(!g)return;var sc=$s('#shScene'),p=spk(),
   if(kind==='shock'){pt(g,ch,p[0],p[1]-50,48,'pfPop',0);pt(g,ch,p[0]-60,p[1]-20,30,'pfPop',150);pt(g,ch,p[0]+60,p[1]-20,30,'pfPop',300);sc.classList.remove('shShake');void sc.offsetWidth;sc.classList.add('shShake');return}
   if(kind==='zzz'){pt(g,'🤫',p[0],p[1]-40,40,'pfPop',0);for(i=0;i<4;i++)pt(g,'…',p[0]+20+i*10,p[1]-60,26,'pfRise',300+i*250);return}
   if(kind==='count'){['5️⃣','4️⃣','3️⃣','2️⃣','1️⃣'].forEach(function(n,k){pt(g,n,200,120,70,'pfCount',k*550)});setTimeout(function(){fx('confetti','✨')},2750);return}
+  if(kind==='grow'){pt(g,'✨',p[0],p[1]-40,40,'pfPop',0);var w2=$s('#shScene .who[data-who="'+SH.pages[SH.page].w+'"]');if(w2){w2.classList.remove('shGrow');void w2.getBoundingClientRect();w2.classList.add('shGrow')}return}
   if(kind==='shrink'){pt(g,'✨',p[0],p[1]-30,40,'pfPop',0);var w=$s('#shScene .who[data-who="'+SH.pages[SH.page].w+'"]');if(w){w.classList.remove('shShrink');void w.getBoundingClientRect();w.classList.add('shShrink')}return}
   if(kind==='bounce'){for(i=0;i<3;i++)pt(g,ch,120+i*80,150,34,'pfBounce',i*250);return}
   if(kind==='dash'){for(i=0;i<5;i++)pt(g,ch,p[0]-30,p[1]+20,24,'pfDash',i*200);return}
@@ -1616,7 +1688,8 @@ function scene(pg){
   (pg.props||[]).forEach(function(p){s+='<text class="'+(p[4]?'act':'')+'" x="'+p[1]+'" y="'+p[2]+'" font-size="'+(p[3]||40)+'" text-anchor="middle">'+p[0]+'</text>'});
   (pg.cast||[]).forEach(function(c){var w=c[0],x=c[1],sz=c[2]||1;
     var inner=(w==='boka'||w==='jello'||w==='dragon')?blob(w,0,0):'<text x="0" y="30" font-size="58" text-anchor="middle">'+(EMO[w]||'🙂')+'</text>';
-    s+='<g class="who" data-who="'+w+'"><g transform="translate('+x+' 190) scale('+sz+')">'+inner+'</g></g>'});
+    var isB=(w==='boka'||w==='jello'||w==='dragon'),ty=isB?226-36*sz:220-30*sz;
+    s+='<g class="who" data-who="'+w+'"><g transform="translate('+x+' '+ty+') scale('+sz+')">'+inner+'</g></g>'});
   var sp=(pg.cast||[]).filter(function(c){return c[0]===pg.w})[0];
   if(sp&&pg.n){var x=sp[1],y=120-(sp[2]||1)*20;s+='<g id="shBub"><path d="M'+(x-16)+' '+y+' h32 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 h-10 l-6 9 l-6 -9 h-10 a8 8 0 0 1 -8 -8 v-18 a8 8 0 0 1 8 -8Z" fill="#fff" stroke="'+K+'" stroke-width="3"/><text x="'+x+'" y="'+(y+24)+'" font-size="18" font-weight="900" text-anchor="middle" fill="#d9533c" font-family="Arial">'+pg.n+'</text></g>'}
   if(pg.weather==='rain'&&pg.bg!=='bedroom'){for(var r=0;r<16;r++)s+='<line class="drop" x1="'+(15+r*25)+'" y1="'+(10+(r%4)*25)+'" x2="'+(11+r*25)+'" y2="'+(24+(r%4)*25)+'" stroke="#2f6db5" stroke-width="2.5"/>'}
@@ -1663,6 +1736,7 @@ var CSS='#shRoot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;backg
 '#shScene.shShake svg{animation:shShake .5s}@keyframes shShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-1deg)}40%{transform:translateX(8px) rotate(1deg)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}'+
 '@keyframes shIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}'+
 '#shScene .who.shJump{animation:shJump .6s ease-out}@keyframes shJump{0%{transform:translateY(0)}35%{transform:translateY(-34px) scale(1.08)}60%{transform:translateY(0) scaleY(.9)}100%{transform:none}}'+
+'#shScene .who.shGrow{animation:shGrow 1.6s ease-out}@keyframes shGrow{0%{transform:scale(.6)}30%{transform:scale(.8) rotate(-4deg)}60%{transform:scale(1.08) rotate(4deg)}100%{transform:none}}'+
 '#shScene .who.shShrink{animation:shShrink 1.4s ease-in-out}@keyframes shShrink{0%{transform:scale(1.4)}50%{transform:scale(.6) rotate(10deg)}75%{transform:scale(1.1) rotate(-6deg)}100%{transform:none}}'+
 '#shBub{transform-box:fill-box;transform-origin:50% 100%}#shBub.shPop{animation:shBubPop .5s ease-out}@keyframes shBubPop{0%{transform:scale(.4)}60%{transform:scale(1.35)}100%{transform:scale(1)}}'+
 '.shEn .shW{transition:transform .15s,background .15s}.shEn .shW.shOn{transform:translateY(-4px) scale(1.12)}'+
@@ -1703,7 +1777,7 @@ function showPage(i){
   $s('#shTop').textContent=SH.opt.title+'　第 '+(i+1)+' 頁 / 共 '+SH.pages.length+' 頁';
   $s('#shScene').innerHTML=scene(pg);
   $s('#shScene').onclick=function(e){var w=e.target.closest&&e.target.closest('.who');
-    if(w){if(Date.now()<(SH.tapUntil||0))return;SH.tapUntil=Date.now()+900;w.classList.remove('shJump');void w.getBoundingClientRect();w.classList.add('shJump');SFX.boing();var g=fxLayer();if(g){var bb=w.getBBox();for(var k=0;k<5;k++){var a=k/5*Math.PI*2;pt(g,'⭐',bb.x+bb.width/2,bb.y,18,'pfBurst',k*40,{'--dx':(Math.cos(a)*50|0)+'px','--dy':(Math.sin(a)*40|0)+'px'})}}return}
+    if(w){if(Date.now()<(SH.tapUntil||0))return;SH.tapUntil=Date.now()+900;w.classList.remove('shJump');void w.getBoundingClientRect();w.classList.add('shJump');[SFX.boing,SFX.giggle,SFX.squeak,SFX.slideUp][Math.floor(Math.random()*4)]();var g=fxLayer();if(g){var bb=w.getBBox();for(var k=0;k<5;k++){var a=k/5*Math.PI*2;pt(g,'⭐',bb.x+bb.width/2,bb.y,18,'pfBurst',k*40,{'--dx':(Math.cos(a)*50|0)+'px','--dy':(Math.sin(a)*40|0)+'px'})}}return}
     if(Date.now()<SH.sndUntil)return;playSfx(null)};
   $s('#shText').innerHTML='<div class="shLine"><span class="shNo '+(pg.n?'':'star')+'">'+(pg.n||'★')+'</span><span class="shWho">'+whoIcon(pg.w)+'</span><div><div class="shEn">'+pg.en.split(' ').map(function(w){return '<span class="shW">'+w+'</span>'}).join(' ')+'</div><div class="shZh">'+pg.zh+'</div></div></div><div id="shTip">💡 '+pg.tip+'</div>';
   $$s('#shText .shW').forEach(function(sp){sp.onclick=function(e){e.stopPropagation();SH.ptok++;hush();var w=sp.textContent.replace(/[.,!?]/g,'');sp.classList.add('shOn');say([{t:w,lang:'en',r:.8}],function(){sp.classList.remove('shOn')})}});
