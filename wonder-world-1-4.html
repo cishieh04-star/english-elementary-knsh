@@ -392,8 +392,8 @@ const STROKES={
  f:['M62 16 Q58 10 52 10 Q44 10 44 20 L44 63.3','M34 36.7 L58 36.7'],
  g:['M60 41 Q54 36.7 46 36.7 Q32 36.7 32 50 Q32 63.3 46 63.3 Q54 63.3 60 58','M60 36.7 L60 80 Q60 90 47 90 Q38 90 34 85'],
  h:['M36 10 L36 63.3','M36 47 Q40 36.7 50 36.7 Q62 36.7 62 48 L62 63.3'],
- i:['M48 36.7 L48 63.3','M48 23 L48 23.6'],
- j:['M54 36.7 L54 80 Q54 90 44 90 Q37 90 33 85','M54 23 L54 23.6'],
+ i:['M48 36.7 L48 63.3','M48 22 L48 24.5'],
+ j:['M54 36.7 L54 80 Q54 90 44 90 Q37 90 33 85','M54 22 L54 24.5'],
  k:['M36 10 L36 63.3','M60 36.7 L36 52','M44 47 L62 63.3'],
  l:['M48 10 L48 63.3'],
  m:['M28 36.7 L28 63.3','M28 46 Q31 36.7 39 36.7 Q48 36.7 48 46 L48 63.3','M48 46 Q51 36.7 59 36.7 Q68 36.7 68 46 L68 63.3'],
@@ -482,7 +482,9 @@ function traceStroke(host,ch,opt){
   D.forEach((d,i)=>{let [sx,sy,dx,dy]=starts[i];let L=Math.hypot(dx,dy);if(L<.01){dx=0;dy=1;L=1;}
     /* 號碼放在起筆點的「前面」（和筆畫方向相反），兩筆起點相同時再往旁邊挪開 */
     let bx0=sx-dx/L*8,by0=sy-dy/L*8;
-    for(let t=0;t<4&&placed.some(([px,py])=>Math.hypot(px-bx0,py-by0)<10);t++){bx0+=(-dy/L)*7*(t%2?-1:1);by0+=(dx/L)*7*(t%2?-1:1);}
+    /* 號碼不能蓋住別的筆畫（例如 i、j 上面的點），也不能和別的號碼疊在一起：蓋到就往旁邊移 */
+    const bx1=bx0,by1=by0,clash=(x,y)=>placed.some(([px,py])=>Math.hypot(px-x,py-y)<11)||cl.some((arr,j)=>j!==i&&arr.some(([qx,qy])=>Math.hypot(qx-x,qy-y)<10));
+    for(let t=1;t<=8&&clash(bx0,by0);t++){const m=Math.ceil(t/2)*6*(t%2?-1:1);bx0=bx1+(-dy/L)*m;by0=by1+(dx/L)*m;}
     placed.push([bx0,by0]);
     const b=document.createElementNS(NS,'g');b.setAttribute('class','sbadge');b.innerHTML=`<circle cx="${bx0}" cy="${by0}" r="5" fill="#ff5a4f" stroke="#fff" stroke-width="1"/><text x="${bx0}" y="${by0+2.3}" text-anchor="middle" font-size="6.5" font-weight="900" fill="#fff">${i+1}</text>`;badges.appendChild(b);});
   /* 示範筆順：一筆一筆慢慢畫出來；小朋友一摸畫面就停止示範，直接開始描 */
@@ -508,21 +510,24 @@ function traceStroke(host,ch,opt){
   let resolveDone;const doneP=new Promise(r=>resolveDone=r);
   /* 照筆順一筆一筆描：只有「現在這一筆」會算分。
      現在這一筆的中心線沿著走過大約八成就換下一筆（手指放開時六成也算），全部描完才過關。 */
-  const cpts=cl.map(arr=>arr.map(([x,y])=>[ox+x*k,oy+y*k,false])),RC=hw*1.5;
+  const cpts=cl.map(arr=>arr.map(([x,y])=>[ox+x*k,oy+y*k,false])),RC=hw*1.9;
   cv._cl=cpts;
   let curS=0,gestGain=0,missN=0;
   const rate=si=>cpts[si].filter(p=>p[2]).length/cpts[si].length;
   const curLayer=document.createElementNS(NS,'g');g.insertBefore(curLayer,badges);
   function showCur(){curLayer.innerHTML=curS<D.length?`<path class="scur" d="${D[curS]}"/>`:'';[...badges.children].forEach((b,i)=>{b.classList.toggle('now',i===curS);b.classList.toggle('past',i<curS);});}
   showCur();
-  const markC=(x,yv)=>{if(curS>=cpts.length)return;for(const p of cpts[curS]){if(!p[2]&&(p[0]-x)**2+(p[1]-yv)**2<RC*RC){p[2]=true;gestGain++;}}};
+  /* 手指旁邊可以偏一點，但只算手指「最靠近」的那一小段，不會一次算走一大段 */
+  const markC=(x,yv)=>{if(curS>=cpts.length)return;const cp=cpts[curS];let bj=-1,bd=RC*RC;for(let j=0;j<cp.length;j++){const dd=(cp[j][0]-x)**2+(cp[j][1]-yv)**2;if(dd<bd){bd=dd;bj=j;}}if(bj<0)return;for(let j=Math.max(0,bj-1);j<=Math.min(cp.length-1,bj+1);j++)if(!cp[j][2]){cp[j][2]=true;gestGain++;}};
   function complete(){if(finished)return;finished=true;down=false;setTracing(false);bar.firstChild.style.width='100%';curLayer.innerHTML='';tf(ctx);ctx.strokeStyle=col;ctx.lineWidth=SW;ctx.lineCap='round';ctx.lineJoin='round';paths.forEach(p=>ctx.stroke(p));resolveDone();}
   function nextStroke(){curS++;if(curS>=D.length){complete();return;}OPT.pop();showCur();}
   function check(lifted){if(finished)return;const r=rate(curS);
-    bar.firstChild.style.width=Math.min(100,(curS+Math.min(1,r/.8))/D.length*100)+'%';
-    if(r>=.8||(lifted&&r>=.6))nextStroke();}
+    bar.firstChild.style.width=Math.min(100,(curS+Math.min(1,r/.85))/D.length*100)+'%';
+    /* 一定要從頭描到尾（起點、終點附近都要描到），描到八成五才換下一筆；手指放開時八成也算 */
+    const cp=cpts[curS],L=cp.length,endOk=cp.slice(0,3).some(p=>p[2])&&cp.slice(L-3).some(p=>p[2]);
+    if(endOk&&(r>=.85||(lifted&&r>=.8)))nextStroke();}
   function draw(a,b){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.strokeStyle=col;ctx.lineWidth=hw*2.3;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalCompositeOperation='source-atop';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.globalCompositeOperation='source-over';
-    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(RC/2)));for(let i=0;i<=n;i++){markC(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);}
+    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(2*k)));for(let i=0;i<=n;i++){markC(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);}
     check(false);}
   cv.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
   cv.onpointerdown=e=>{e.preventDefault();if(finished||OPT.paused())return;if(demoOn)stopDemo();down=true;gestGain=0;last=pos(e);draw(last,last);cv.setPointerCapture&&cv.setPointerCapture(e.pointerId);};
@@ -645,10 +650,10 @@ const DCOL=['#E8322B','#FF8A1F','#FFD21F','#2BAA4A','#2F7DF6','#8B4FD8','#FF8CC6
 const CHARS=[{e:'🐲',n:'小龍'},{e:'🐻',n:'小熊'},{e:'🦖',n:'小恐龍'},{e:'🐰',n:'小兔子'},{e:'🐱',n:'小貓咪'},{e:'🐼',n:'熊貓'},{e:'🦊',n:'小狐狸'},{e:'🐸',n:'小青蛙'}];
 const S={name:'',char:0,stars:0,voice:true,lock:false,seen:{},mode:'solo',screen:'splash',paused:false};
 let DB={};
-try{DB=JSON.parse(localStorage.getItem('bj4_players')||'{}')||{}}catch(e){DB={}}
+try{DB=JSON.parse(localStorage.getItem('bj4_players_v2')||'{}')||{}}catch(e){DB={}}
 /* 新增「描單字」放在魔王關前面：以前存的魔王關進度往後挪一格 */
-try{let ch=false;Object.values(DB).forEach(r=>{if(r&&Array.isArray(r.shelf)&&!r.v2){r.shelf=r.shelf.map(i=>i>=8?i+1:i);r.v2=1;ch=true}});if(ch)localStorage.setItem('bj4_players',JSON.stringify(DB))}catch(e){}
-const saveDB=()=>{try{localStorage.setItem('bj4_players',JSON.stringify(DB))}catch(e){}};
+try{let ch=false;Object.values(DB).forEach(r=>{if(r&&Array.isArray(r.shelf)&&!r.v2){r.shelf=r.shelf.map(i=>i>=8?i+1:i);r.v2=1;ch=true}});if(ch)localStorage.setItem('bj4_players_v2',JSON.stringify(DB))}catch(e){}
+const saveDB=()=>{try{localStorage.setItem('bj4_players_v2',JSON.stringify(DB))}catch(e){}};
 const me=()=>{const k=S.name||'小朋友';if(!DB[k])DB[k]={char:S.char,shelf:[]};return DB[k]};
 
 /* ---------- speech ---------- */
@@ -819,6 +824,7 @@ $('#goTeam').onclick=()=>{stopTalk();teamSetup()};
 
 /* ---------- map ---------- */
 const ST=[
+ {n:'趣味故事屋',s:'聽課本故事',ic:'📖',prize:'book',story:true,well:'#FFE08A'},
  {n:'顏色展示間',s:'認識顏色',ic:'🎨',prize:'red',well:C.red},
  {n:'字母泡泡',s:'U 到 Z',ic:'🎈',prize:'yellow',well:C.yellow},
  {n:'發音彩虹橋',s:'聽聲音找字母',ic:'🌈',prize:'blue',well:C.blue},
@@ -830,9 +836,11 @@ const ST=[
  {n:'描單字',s:'用手指描',ic:'✏️',prize:'flower',well:'#FFB3D9'},
  {n:'彩虹小龍',s:'魔王關',ic:'🐲',prize:'dragon',well:'#C4C0CC'}
 ];
-const prizePic=p=>p==='flower'?PICS.flower:p==='rainbow'?PICS.rainbow:p==='dragon'?dragon(DCOL):tube(p==='orange'?'#FF8A1F':C[p]);
-const PRIZEN={red:['red','紅色顏料'],yellow:['yellow','黃色顏料'],blue:['blue','藍色顏料'],green:['green','綠色顏料'],pink:['pink','粉紅色顏料'],purple:['purple','紫色顏料'],orange:['orange','橘色顏料'],rainbow:['a rainbow','彩虹'],flower:['a flower','小花'],dragon:['a baby dragon','彩虹小龍']};
-function nextStation(){const sh=me().shelf;for(let i=0;i<ST.length;i++)if(sh.indexOf(i)<0)return i;return -1}
+PICS.book='<svg viewBox="0 0 100 80" style="width:100%;height:100%"><path d="M50 18 Q30 6 6 10 V66 Q30 62 50 72 Q70 62 94 66 V10 Q70 6 50 18Z" fill="#fff8e1" stroke="#1F2A44" stroke-width="4"/><path d="M50 18 V72" stroke="#1F2A44" stroke-width="3"/><path d="M14 24 Q30 21 42 27 M14 36 Q30 33 42 39 M58 27 Q70 21 86 24 M58 39 Q70 33 86 36" stroke="#ff8a65" stroke-width="3" fill="none"/></svg>';
+const prizePic=p=>p==='book'?PICS.book:p==='flower'?PICS.flower:p==='rainbow'?PICS.rainbow:p==='dragon'?dragon(DCOL):tube(p==='orange'?'#FF8A1F':C[p]);
+const PRIZEN={book:['a book','故事書'],red:['red','紅色顏料'],yellow:['yellow','黃色顏料'],blue:['blue','藍色顏料'],green:['green','綠色顏料'],pink:['pink','粉紅色顏料'],purple:['purple','紫色顏料'],orange:['orange','橘色顏料'],rainbow:['a rainbow','彩虹'],flower:['a flower','小花'],dragon:['a baby dragon','彩虹小龍']};
+/* 下一關：從剛玩完的那一關往後找還沒過的關；後面都過了，才回頭找前面沒過的關 */
+function nextStation(){const sh=me().shelf,s0=S.lastDone>=0?S.lastDone+1:0;for(let k=0;k<ST.length;k++){const i=(s0+k)%ST.length;if(sh.indexOf(i)<0)return i}return -1}
 function openMap(){
   S.mode='solo';const r=me(),nx=nextStation();
   $('#mapMe').textContent=CHARS[S.char].e;
@@ -1067,10 +1075,11 @@ function traceStation(){
 
 /* ---------- station flow ---------- */
 function startStation(i){
-  S.traceStep=null;S.trTok=(S.trTok||0)+1;stopTalk();S.mode='solo';S.si=i;S.qi=0;S.lock=false;S.boss=!!ST[i].boss||i===9;S.bossFix=0;
+  if(ST[i].story){startStory(i);return}
+  S.traceStep=null;S.trTok=(S.trTok||0)+1;stopTalk();S.mode='solo';S.si=i;S.qi=0;S.lock=false;S.boss=!!ST[i].boss||i===10;S.bossFix=0;
   show('game');restoreFoot();
   const play=qs=>{S.qs=qs;nextQ()};
-  switch(i){
+  switch(i-1){
     case 0:runCards(colCards(),'認識顏色',()=>stationClear());$('#cSkip').hidden=true;break;
     case 1:play(shuffle(letterQs(4).concat(caseQs(2))));break;
     case 2:runCards(phonCards(),'先認識',()=>play(phonQs(6)));break;
@@ -1097,6 +1106,7 @@ function nextQ(){
   if(q.spell)return renderSpell(q);
   $('#gins').textContent=q.insS;
   $('#gdisp').innerHTML=q.disp();
+  addHeard(q);
   const g=$('#gopts');g.className=q.kind==='txt'?'txt':'';
   g.innerHTML=q.opts.map((o,i)=>`<div class="opt ${q.kind}" role="button" tabindex="0" data-i="${i}"><span class="in">${o.html}</span>${o.say?'<span class="ear" data-ear="'+i+'">聽</span>':''}</div>`).join('');
   checkFit();
@@ -1185,12 +1195,13 @@ function tapDrop(b){
 function stationClear(){
   stopTalk();const st=ST[S.si],r=me();const firstTime=r.shelf.indexOf(S.si)<0;
   if(firstTime){r.shelf.push(S.si);saveDB()}
+  S.lastDone=S.si;
   const nx=nextStation();const last=nx<0;const pn=PRIZEN[st.prize];
-  $('#clBox').innerHTML=`<div class="ovt">${S.si===9?'小龍有顏色了！':'過關了！'}</div><div class="ovpic">${prizePic(st.prize)}</div>
+  $('#clBox').innerHTML=`<div class="ovt">${S.si===10?'小龍有顏色了！':'過關了！'}</div><div class="ovpic">${prizePic(st.prize)}</div>
    <div class="ovs">${firstTime?'顏料盒多了：':'再玩一次，好棒！'}<span class="en">${pn[0]}</span> ${pn[1]}<br>⭐ ${S.stars}</div>
    <div class="ovbtns">${last?'':'<button class="go" id="clNext">下一關</button>'}<button id="clMap">回地圖</button></div>`;
   $('#clear').hidden=false;SFX.fanfare();burst('fire',true);setTimeout(()=>burst('paint',true),600);
-  talk([Z(S.si===9?'哇！小龍變成彩虹小龍了！你全部過關了！':(firstTime?'過關了！你得到':'過關了！')),E(pn[0])]);
+  talk([Z(S.si===10?'哇！小龍變成彩虹小龍了！你全部過關了！':(firstTime?'過關了！你得到':'過關了！')),E(pn[0])]);
   let n=6;const go=()=>{clearTimeout(S.autoT);$('#clear').hidden=true;startStation(nx>=0?nx:0)};
   if(!last){const btn=$('#clNext');const tick=()=>{if(S.paused)return;btn.textContent='下一關（'+n+'）';if(n--<=0){go();return}S.autoT=setTimeout(tick,1000)};tick();btn.onclick=go}
   $('#clMap').onclick=()=>{clearTimeout(S.autoT);$('#clear').hidden=true;openMap()};
@@ -1235,7 +1246,389 @@ function teamEnd(){
   /* 從 LINE 換過來的：不再顯示封面，直接到地圖。手機允許的話馬上出聲；不允許的話，第一次點畫面就會出聲 */
   if(B.go==='start'&&!XLINE){needUnlock=true;readName();S.stars=0;updStars();S.seen={};openMap();return;}
   show('splash');})();
+
+/* 聽力題：聽到的英文顯示在畫面上，可以按「不要顯示句子」藏起來（整次遊戲都記得） */
+window.HIDE_SENT=false;
+function heardHTML(t){return '<div class="heardBox"><div class="heardT '+(HIDE_SENT?'off':'')+'" id="heardT"><span class="tx">'+t+'</span><span class="q">❓ ❓ ❓</span></div><button class="hideBtn" id="hideBtn" type="button">'+(HIDE_SENT?'要顯示句子':'不要顯示句子')+'</button></div>'}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#hideBtn');if(!b)return;e.stopPropagation();HIDE_SENT=!HIDE_SENT;b.textContent=HIDE_SENT?'要顯示句子':'不要顯示句子';var h=document.getElementById('heardT');if(h)h.classList.toggle('off',HIDE_SENT)},true);
+function heardOn(on){var h=document.getElementById('heardT');if(h)h.classList.toggle('shOn',!!on)}
+function HI(t,gap){return {t:t,gap:gap,on:function(){heardOn(1)},off:function(){heardOn(0)}}}
+
+const HEARD_KEYS=["lcol", "lcol2"];
+function addHeard(q){if(S.mode==='team'||HEARD_KEYS.indexOf(q.key)<0)return;const t=(q.askEn||[]).filter(x=>x.l==='en')[0];if(!t)return;
+  $('#gdisp').insertAdjacentHTML('beforeend',heardHTML(t.t));(q.askEn||[]).forEach(x=>{if(x.l==='en'&&x.t===t.t)x.hl=()=>document.getElementById('heardT')})}
+/* 趣味故事屋（第 1 關） */
+function startStory(i){
+  S.traceStep=null;S.trTok=(S.trTok||0)+1;stopTalk();S.mode='solo';S.si=i;S.qi=0;S.lock=false;S.boss=false;
+  StoryHouse.open({title:STORY_DATA['1-4'].title,pages:STORY_DATA['1-4'].pages,backText:'回地圖',
+    onBack:()=>openMap(),
+    onDone:()=>{show('game');restoreFoot();$('#gprog').innerHTML='<span class="sttitle">趣味故事屋</span>';$('#gins').textContent='';$('#gdisp').innerHTML='';$('#gopts').innerHTML='';S.stars+=3;updStars();stationClear()}});
+}
+window.__T={start:startStation,S:()=>S,me:()=>me()};
 })();
+</script>
+<style>.heardBox{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0}
+.heardT{color:#2a2238!important;font:700 clamp(22px,6.5vmin,38px)/1.2 Arial,Helvetica,sans-serif;background:#fffdf6;border:4px solid #2a2238;border-radius:16px;padding:5px 16px;transition:background .2s,transform .2s}
+.heardT.hl,.heardT.shOn{background:#fff3b0;transform:scale(1.05)}
+.heardT .q{display:none;letter-spacing:4px}.heardT.off .tx{display:none}.heardT.off .q{display:inline}
+.hideBtn{font:800 14px/1 inherit;padding:6px 12px;border-radius:12px;border:2.5px solid #2a2238;background:#fffdf6;color:#2a2238;box-shadow:0 3px 0 #2a2238;cursor:pointer}
+</style>
+<script>
+window.STORY_DATA={
+/* ---------- English 1-1 Unit 1 The Birthday Party ---------- */
+'1-1':{title:'The Birthday Party',pages:[
+ {n:0,w:'girl',en:'Shh!',zh:'噓！',tip:'Shh! 是「噓！」，叫大家小聲一點。大家要偷偷幫 Boka 辦一個生日派對（birthday party）。',bg:'party',sfx:'shh',cast:[['girl',90],['jello',190],['kevin',300]],props:[['🎂',140,165,36],['🤫',90,95,30,1]]},
+ {n:1,w:'all',en:'Happy birthday!',zh:'生日快樂！',tip:'birthday 是「生日」。Happy birthday! 是祝別人「生日快樂！」',bg:'party',sfx:'bday',cast:[['girl',70],['jello',150],['kevin',230],['boka',320]],props:[['🎉',230,95,34,1],['🎂',70,120,34]]},
+ {n:2,w:'boka',en:'Thank you.',zh:'謝謝你。',tip:'Thank you. 是「謝謝你」，別人送你東西或祝福你的時候說。',bg:'party',sfx:'gift',cast:[['boka',130],['jello',260]],props:[['🎁',200,175,40,1]]},
+ {n:3,w:'jello',en:"You're welcome.",zh:'不客氣。',tip:"別人跟你說 Thank you. 的時候，要回答 You're welcome.「不客氣」。",bg:'party',sfx:'thanks',cast:[['boka',130],['jello',260]],props:[['🎁',190,175,36]]},
+ {n:4,w:'kevin',en:'How old are you, Boka?',zh:'Boka，你幾歲？',tip:'How old are you? 是問別人「你幾歲？」old 是「年紀」。',bg:'party',sfx:'hmm',cast:[['girl',70],['kevin',150],['boka',290]],props:[['❓',150,85,28,1],['🍰',220,180,30]]},
+ {n:5,w:'boka',en:"I'm one.",zh:'我一歲。',tip:"I'm 是 I am，「我是」。one 是「一」。I'm one. 是「我一歲」。",bg:'party',sfx:'one',cast:[['kevin',110],['boka',260]],props:[['☝️',320,120,34,1],['🕯️',200,175,30]]},
+ {n:6,w:'kevin',en:'One?',zh:'一歲？',tip:'One? 句尾的聲音往上揚，表示很驚訝、不相信：「一歲？」Boka 個子這麼大，竟然才一歲！',bg:'party',sfx:'boing',cast:[['kevin',130],['boka',280]],props:[['😮',130,80,30,1]]},
+ {n:7,w:'boka',en:'How old are you?',zh:'你幾歲？',tip:'How old are you? 是「你幾歲？」換 Boka 問小朋友了。',bg:'party',sfx:'hmm',cast:[['girl',90],['kevin',170],['boka',300]],props:[['❓',300,80,28,1]]},
+ {n:8,w:'girl',en:"I'm eight years old.",zh:'我八歲。',tip:'eight 是「八」，years old 是「……歲」。I\'m eight years old. 是「我八歲」。',bg:'party',sfx:'candle',cast:[['girl',120],['kevin',230]],props:[['8️⃣',60,110,34,1]]},
+ {n:9,w:'kevin',en:"I'm nine.",zh:'我九歲。',tip:"nine 是「九」。說幾歲時，也可以不說 years old，只說 I'm nine.",bg:'party',sfx:'candle',cast:[['girl',120],['kevin',230]],props:[['9️⃣',320,110,34,1]]},
+ {n:10,w:'jello',en:'This is for you.',zh:'這是給你的。',tip:'This is 是「這是」，for you 是「給你的」。把東西送給別人時說 This is for you.',bg:'party',sfx:'gift',cast:[['jello',110],['girl',200],['kevin',300]],props:[['🍰',160,150,32,1]]},
+ {n:11,w:'girl',en:'Thank you.',zh:'謝謝你。',tip:'收到東西要說 Thank you.「謝謝你」。',bg:'party',sfx:'thanks',cast:[['jello',110],['girl',210],['kevin',310]],props:[['🍰',160,150,32]]},
+ {n:0,w:'kevin',en:'Yum!',zh:'好吃！',tip:'Yum! 是吃到好吃的東西時說的話，意思是「好吃！」凱文偷吃了罐子裡的餅乾。',bg:'party',sfx:'chomp',cast:[['boka',110],['kevin',270]],props:[['🍪',230,150,36,1],['🍪',320,175,30]]},
+ {n:12,w:'girl',en:'Oh, no!',zh:'糟糕！',tip:'Oh, no! 是發生不好的事情時說「糟糕！」',bg:'party',sfx:'ohno',cast:[['girl',110],['kevin',270]],props:[['😱',110,80,30,1]]},
+ {n:0,w:'kevin',en:'Ahh!',zh:'啊！',tip:'Ahh! 是嚇一跳時的叫聲。凱文吃了餅乾，身體變小了！',bg:'party',sfx:'shrink',cast:[['girl',100],['kevin',260,.6],['boka',340]],props:[['✨',260,120,30,1]]}
+]},
+/* ---------- English 1-2 Unit 2 Poor Kevin ---------- */
+'1-2':{title:'Poor Kevin',pages:[
+ {n:1,w:'girl',en:'Are you OK?',zh:'你還好嗎？',tip:'OK 是「好、沒問題」。Are you OK? 是關心別人「你還好嗎？」poor 是「可憐的」，凱文變得好小好小。',bg:'party',sfx:'worry',cast:[['boka',80],['girl',170],['kevin',290,.6]],props:[['💧',300,120,20,1]]},
+ {n:2,w:'kevin',en:"Oh, I'm fine.",zh:'噢，我很好。',tip:"fine 是「很好」。I'm fine. 是「我很好」。",bg:'party',sfx:'ok',cast:[['boka',80],['girl',170],['kevin',290,.6]]},
+ {n:3,w:'boka',en:'Are you hungry?',zh:'你餓嗎？',tip:'hungry 是「餓」。Are you…? 是問別人「你……嗎？」',bg:'party',sfx:'stomach',cast:[['boka',110],['kevin',270]],props:[['🍔',300,80,34,1]]},
+ {n:4,w:'kevin',en:'Yes, I am.',zh:'是的，我餓。',tip:'別人問 Are you…? 的時候，「是」要回答 Yes, I am.',bg:'party',sfx:'stomach',cast:[['boka',110],['kevin',270]],props:[['🍔',200,90,30]]},
+ {n:5,w:'girl',en:'Here you are.',zh:'給你。',tip:'Here you are. 是把東西拿給別人時說「給你」。',bg:'party',sfx:'plate',cast:[['girl',120],['kevin',290]],props:[['🍔',200,160,32,1],['🍔',230,150,28,1]]},
+ {n:6,w:'kevin',en:'Thank you.',zh:'謝謝你。',tip:'拿到東西要說 Thank you.「謝謝你」。',bg:'party',sfx:'chomp',cast:[['girl',120],['kevin',290]],props:[['🍔',240,150,30,1]]},
+ {n:7,w:'jello',en:'Are you thirsty?',zh:'你渴嗎？',tip:'thirsty 是「渴」，很想喝水。',bg:'party',sfx:'water',cast:[['jello',120],['kevin',280]],props:[['🥛',280,80,32,1]]},
+ {n:8,w:'kevin',en:'Yes, I am.',zh:'是的，我渴。',tip:'「是」要回答 Yes, I am.',bg:'party',sfx:'water',cast:[['jello',120],['kevin',280]]},
+ {n:9,w:'girl',en:'Oops!',zh:'哎呀！',tip:'Oops! 是不小心做錯事時說「哎呀！」水杯全都打翻了。',bg:'party',sfx:'splash',cast:[['jello',110],['girl',230]],props:[['💦',170,170,34,1],['🥛',300,170,28,1]]},
+ {n:10,w:'kevin',en:"I'm hungry and thirsty. I'm sad.",zh:'我又餓又渴。我很難過。',tip:'and 是「和、而且」。sad 是「難過的」。凱文哭得好傷心。',bg:'party',sfx:'sad',cast:[['kevin',200]],props:[['😭',200,80,30,1],['💧',150,170,24,1],['💧',250,170,24,1]]},
+ {n:11,w:'boka',en:'Drink it.',zh:'把它喝下去。',tip:'drink 是「喝」，it 是「它」。Drink it. 是「把它喝下去」。',bg:'party',sfx:'potion',cast:[['boka',120],['kevin',280,.6]],props:[['🧪',200,140,34,1]]},
+ {n:12,w:'boka',en:'Five, four, three, two, one!',zh:'五、四、三、二、一！',tip:'倒數：five 五、four 四、three 三、two 二、one 一。',bg:'party',sfx:'count',cast:[['girl',70],['kevin',200],['boka',320]],props:[['✨',200,90,30,1]]},
+ {n:13,w:'kevin',en:'Phew!',zh:'呼！',tip:'Phew! 是鬆了一口氣時說「呼！」凱文變回原來的樣子了。',bg:'party',sfx:'phew',cast:[['girl',70],['jello',150],['kevin',240],['boka',330]],props:[['🌟',240,80,30,1]]}
+]},
+/* ---------- English 1-3 Unit 3 At B&J's Toys ---------- */
+'1-3':{title:"At B&J's Toys",pages:[
+ {n:1,w:'boka',en:'Good morning!',zh:'早安！',tip:"morning 是「早上」。Good morning! 是早上見面時說「早安！」B&J's Toys 是 Boka 和 Jello 的玩具工廠。",bg:'factory',sfx:'morning',cast:[['kevin',60],['girl',140],['jello',220],['boka',290]],props:[['☀️',200,60,30,1]]},
+ {n:2,w:'kevin',en:'Good morning!',zh:'早安！',tip:'別人跟你說 Good morning!，你也回答 Good morning!',bg:'factory',sfx:'morning',cast:[['kevin',60],['girl',140],['jello',220],['boka',290]],props:[['👋',60,110,30,1]]},
+ {n:3,w:'girl',en:"What's this?",zh:'這是什麼？',tip:"this 是「這個」，用在離我們比較近的東西。What's this? 是「這是什麼？」",bg:'factory',sfx:'conveyor',cast:[['girl',80],['boka',250]],props:[['🟡',150,148,32,1],['❓',80,90,26,1]]},
+ {n:4,w:'boka',en:"It's a ball.",zh:'它是一顆球。',tip:"ball 是「球」。It's a… 是「它是一個……」。",bg:'factory',sfx:'bounce',cast:[['girl',80],['boka',250]],props:[['⚽',160,140,36,1]]},
+ {n:5,w:'kevin',en:'Cool!',zh:'好酷！',tip:'cool 是「酷」。看到很棒的東西時，可以說 Cool!「好酷！」',bg:'factory',sfx:'wow',cast:[['kevin',110],['jello',260]],props:[['🐙',190,140,40,1]]},
+ {n:6,w:'kevin',en:"What's that?",zh:'那是什麼？',tip:"that 是「那個」，用在離我們比較遠的東西。What's that? 是「那是什麼？」",bg:'factory',sfx:'printer',cast:[['kevin',80]],props:[['👉',140,160,28],['🚗',340,145,30,1]]},
+ {n:7,w:'jello',en:"It's a car.",zh:'它是一輛汽車。',tip:'car 是「汽車」。這裡是 3D printing zone，「3D 列印區」，機器正在印出小汽車。',bg:'factory',sfx:'car',cast:[['kevin',70],['jello',200]],props:[['🚗',300,145,40,1]]},
+ {n:8,w:'boka',en:'Look!',zh:'看！',tip:'Look! 是「看！」，要大家看過來。',bg:'factory',sfx:'sparkle',cast:[['boka',120],['girl',260]],props:[['🎎',200,160,30,1]]},
+ {n:9,w:'girl',en:'So cute!',zh:'好可愛！',tip:'cute 是「可愛的」。So cute! 是「好可愛！」',bg:'factory',sfx:'cute',cast:[['boka',120],['girl',260]],props:[['🎎',200,160,34,1],['💕',260,90,24,1]]},
+ {n:10,w:'jello',en:'Come here.',zh:'過來這裡。',tip:'come 是「來」，here 是「這裡」。Come here. 是叫別人「過來這裡」。',bg:'factory',sfx:'car',cast:[['jello',80],['girl',190],['kevin',290]],props:[['🚗',200,145,40,1]]},
+ {n:11,w:'kevin',en:"Wow! It's a robot!",zh:'哇！是一個機器人！',tip:'Wow! 是驚訝的時候說「哇！」robot 是「機器人」。小汽車變成機器人了！',bg:'factory',sfx:'robot',cast:[['girl',80],['kevin',170]],props:[['🤖',300,140,46,1]]},
+ {n:12,w:'kevin',en:"Oops! I'm sorry.",zh:'哎呀！對不起。',tip:"Oops! 是「哎呀！」。I'm sorry. 是「對不起」，不小心撞到別人時要說。",bg:'factory',sfx:'crash',cast:[['kevin',150],['boka',270]],props:[['💥',210,130,34,1],['📦',330,175,30]]}
+]},
+/* ---------- English 1-4 Unit 4 Baby Dragon's Toys ---------- */
+'1-4':{title:"Baby Dragon's Toys",pages:[
+ {n:1,w:'kevin',en:'Are you OK?',zh:'你還好嗎？',tip:"baby 是「幼小的」，dragon 是「龍」。Baby Dragon 是小龍，它訂了玩具。Are you OK? 是「你還好嗎？」",bg:'factory',sfx:'worry',cast:[['kevin',90],['boka',220],['girl',330]],props:[['📦',290,180,30],['🐲',60,60,30]]},
+ {n:2,w:'boka',en:"I'm fine.",zh:'我很好。',tip:"fine 是「很好」。I'm fine. 是「我很好」。",bg:'factory',sfx:'ok',cast:[['kevin',90],['boka',220],['girl',330]]},
+ {n:3,w:'boka',en:'Uh-oh!',zh:'糟了！',tip:'Uh-oh! 是發現事情不妙時說「糟了！」小龍的玩具箱破掉了。',bg:'factory',sfx:'alarm',cast:[['boka',130],['jello',270]],props:[['📦',200,175,36,1],['⚡',330,70,30,1]]},
+ {n:4,w:'jello',en:'Please get a ball, Boka!',zh:'Boka，請拿一顆球！',tip:'please 是「請」，get 是「拿、取」，ball 是「球」。',bg:'factory',sfx:'bounce',cast:[['jello',90],['boka',250]],props:[['📝',160,110,30],['🟡',330,148,30,1]]},
+ {n:5,w:'boka',en:'What color is it?',zh:'它是什麼顏色？',tip:'color 是「顏色」。What color is it? 是問「它是什麼顏色？」',bg:'factory',sfx:'hmm',cast:[['boka',130],['jello',290]],props:[['🔵',60,148,24],['🟢',100,148,24],['🟡',200,148,24],['🔴',240,148,24],['❓',130,80,26,1]]},
+ {n:6,w:'jello',en:"It's yellow.",zh:'它是黃色的。',tip:'yellow 是「黃色」。',bg:'factory',sfx:'pop',cast:[['boka',130],['jello',290]],props:[['🟡',210,148,34,1]]},
+ {n:7,w:'jello',en:'Please get a kite, Kevin!',zh:'凱文，請拿一個風箏！',tip:'kite 是「風箏」。Please get… 是「請拿……」。',bg:'factory',sfx:'run',cast:[['jello',80],['kevin',250]],props:[['🪁',330,80,36,1]]},
+ {n:8,w:'kevin',en:'What color is it?',zh:'它是什麼顏色？',tip:'color 是「顏色」。風箏有好多顏色，要拿哪一個？',bg:'factory',sfx:'hmm',cast:[['kevin',120],['girl',280]],props:[['🪁',200,70,34]]},
+ {n:9,w:'girl',en:"It's green.",zh:'它是綠色的。',tip:'green 是「綠色」。',bg:'factory',sfx:'pop',cast:[['kevin',120],['girl',280]],props:[['💚',200,80,34,1]]},
+ {n:10,w:'girl',en:'Try again.',zh:'再試一次。',tip:'try 是「試試看」，again 是「再一次」。凱文跳起來還拿不到。',bg:'factory',sfx:'jump',cast:[['kevin',150],['girl',300]],props:[['🪁',150,60,30]]},
+ {n:11,w:'kevin',en:'OK.',zh:'好。',tip:'OK. 是「好」，答應別人的時候說。',bg:'factory',sfx:'ok',cast:[['kevin',150],['girl',300]]},
+ {n:12,w:'girl',en:'Great!',zh:'太棒了！',tip:'Great! 是「太棒了！」凱文拿到風箏了！',bg:'factory',sfx:'clap',cast:[['girl',110],['kevin',250]],props:[['🪁',250,80,34,1]]},
+ {n:13,w:'girl',en:'Good job, everyone!',zh:'大家做得好！',tip:'Good job! 是「做得好！」everyone 是「每個人、大家」。小龍收到玩具好開心！',bg:'factory',sfx:'fanfare',cast:[['girl',60],['kevin',140],['boka',230],['dragon',330]],props:[['❤️',330,110,26,1],['📦',290,185,28]]}
+]},
+/* ---------- English 3-1 Unit 1 The Big Wind ---------- */
+'3-1':{title:'The Big Wind',pages:[
+ {n:1,w:'girl',en:'Kevin, wake up!',zh:'凱文，起床了！',tip:'wake up 是「起床」。',bg:'bedroom',weather:'rain',sfx:'ring',cast:[['jello',210],['girl',310],['kevin',100,.8]],props:[['⏰',350,60,30,1],['💤',120,110,24,1]]},
+ {n:2,w:'girl',en:"Let's go to the park.",zh:'我們去公園吧。',tip:"Let's go 是「我們走吧」，to the park 是「到公園」。park 是「公園」。",bg:'bedroom',weather:'rain',sfx:'step',cast:[['kevin',100],['jello',200],['girl',310]],props:[['🌳',350,80,30]]},
+ {n:3,w:'kevin',en:"How's the weather?",zh:'天氣怎麼樣？',tip:"weather 是「天氣」。How's the weather? 是問「天氣怎麼樣？」",bg:'bedroom',weather:'rain',sfx:'hmm',cast:[['kevin',110],['jello',210],['girl',310]],props:[['❓',110,80,26,1]]},
+ {n:4,w:'girl',en:"It's sunny.",zh:'是晴天。',tip:'sunny 是「晴朗的」，有大太陽。',bg:'bedroom',sfx:'birds',cast:[['jello',210],['girl',310]],props:[['☀️',95,70,40,1]]},
+ {n:5,w:'kevin',en:"No, it's rainy.",zh:'不，是下雨天。',tip:'rainy 是「下雨的」。',bg:'bedroom',weather:'rain',sfx:'rain',cast:[['kevin',220],['girl',320]],props:[['🌧️',95,75,40,1]]},
+ {n:6,w:'girl',en:'How come?',zh:'怎麼會這樣？',tip:'How come? 是覺得奇怪的時候說「怎麼會這樣？」怎麼一邊晴天、一邊下雨？',bg:'bedroom',weather:'rain',sfx:'hmm',cast:[['jello',200],['girl',310]],props:[['🤔',310,80,28,1]]},
+ {n:7,w:'kevin',en:"Look! It's Boka!",zh:'看！是 Boka！',tip:'Look! 是「看！」。原來是 Boka 在窗外幫花澆水，看起來像在下雨。',bg:'bedroom',sfx:'spray',cast:[['boka',95,.7],['kevin',230],['girl',320]],props:[['🌻',60,120,26],['💦',130,90,26,1]]},
+ {n:8,w:'girl',en:"Let's go, Kevin.",zh:'凱文，我們走吧。',tip:"Let's go. 是「我們走吧」。",bg:'home',sfx:'step',cast:[['kevin',80],['girl',190],['boka',300]],props:[['🧢',80,120,24]]},
+ {n:9,w:'boka',en:'Line up, please.',zh:'請排好隊。',tip:'line up 是「排隊」，please 是「請」。',bg:'park',weather:'sunny',sfx:'whistle',cast:[['boka',70],['jello',160],['girl',245],['kevin',325]],props:[['📣',110,110,24,1]]},
+ {n:10,w:'girl',en:"Look! It's cloudy.",zh:'看！是陰天。',tip:'cloudy 是「多雲的、陰天」，天上有好多雲。',bg:'park',weather:'cloudy',sfx:'wind',cast:[['boka',80],['girl',230],['kevin',320]],props:[['☁️',230,60,30,1]]},
+ {n:11,w:'jello',en:"It's windy.",zh:'風好大。',tip:'windy 是「刮風的」，風很大。',bg:'park',weather:'windy',sfx:'wind',cast:[['jello',90],['boka',190],['kevin',320]],props:[['🍃',260,90,24,1],['🍃',300,120,20,1]]},
+ {n:12,w:'kevin',en:'Oh, no! My cap!',zh:'糟糕！我的帽子！',tip:'my 是「我的」，cap 是「（有帽舌的）帽子」。凱文的帽子被風吹走了！',bg:'park',weather:'windy',sfx:'wind',cast:[['kevin',150],['girl',260]],props:[['🧢',330,70,32,1]]},
+ {n:13,w:'kevin',en:"What's going on?",zh:'發生什麼事了？',tip:"What's going on? 是「發生什麼事了？」大家都被大風吹起來了！",bg:'park',weather:'windy',sfx:'bigwind',cast:[['boka',90],['jello',180],['kevin',260,.9],['girl',340,.9]],props:[['🌪️',200,80,40,1]]}
+]}
+};
+/* 每個故事第一次出現「!」的那一頁，解說加上：「！」是驚嘆號 */
+(function(){var D=window.STORY_DATA;for(var k in D){var ps=D[k].pages;for(var i=0;i<ps.length;i++){if(ps[i].en.indexOf('!')>=0){ps[i].tip+='句子後面的「！」叫做驚嘆號，表示說話的人很興奮、很驚訝，或是很用力地說。';break}}}})();
+
+/* ================= 趣味故事屋（一句英文、一張圖、中文意思、單字解說、音效） ================= */
+(function(){
+var K='#2a2238';
+function $s(q){return document.querySelector(q)}
+function $$s(q){return Array.prototype.slice.call(document.querySelectorAll(q))}
+/* ---------- 語音 ---------- */
+var SH={rate:1,tok:0,ptok:0,paused:false,page:0,pages:null,opt:null,sndUntil:0,vEn:null,vZh:null,seen:false};
+var synth=window.speechSynthesis||null;
+function pickVoices(){try{var vs=synth.getVoices()||[];
+  SH.vEn=vs.filter(function(v){return /en[-_]US/i.test(v.lang)})[0]||vs.filter(function(v){return /^en/i.test(v.lang)})[0]||null;
+  SH.vZh=vs.filter(function(v){return /zh[-_]TW/i.test(v.lang)})[0]||vs.filter(function(v){return /zh[-_](HK|Hant)/i.test(v.lang)})[0]||vs.filter(function(v){return /^zh/i.test(v.lang)})[0]||null}catch(e){}}
+if(synth){pickVoices();try{synth.addEventListener('voiceschanged',pickVoices)}catch(e){}}
+function hush(){SH.tok++;try{synth&&synth.cancel()}catch(e){}}
+function say(items,done){
+  var tok=++SH.tok,i=0;try{synth&&synth.cancel()}catch(e){}
+  function next(){
+    if(tok!==SH.tok)return;
+    if(SH.paused){setTimeout(next,300);return}
+    if(i>=items.length){done&&done();return}
+    var it=items[i++];it.on&&it.on();
+    var zh=it.lang==='zh',gap=it.gap===undefined?450:it.gap,fired=false,tm;
+    function fin(){if(fired)return;fired=true;clearTimeout(tm);it.off&&it.off();setTimeout(next,gap/SH.rate)}
+    if(!synth){setTimeout(fin,600+it.t.length*(zh?250:90));return}
+    var u=new SpeechSynthesisUtterance(it.t);u.lang=zh?'zh-TW':'en-US';var v=zh?SH.vZh:SH.vEn;if(v)u.voice=v;
+    u.rate=Math.max(.4,Math.min(1.6,(zh?.95:.8)*(it.r||1)*SH.rate));u.onend=fin;u.onerror=fin;
+    tm=setTimeout(fin,(1500+it.t.length*(zh?380:150))/SH.rate);
+    try{synth.speak(u)}catch(e){fin()}
+  }
+  setTimeout(next,120);
+}
+/* 解說裡的英文用英文聲音唸，中文用中文聲音唸 */
+function tipItems(tip){
+  var parts=tip.split(/([A-Za-z][A-Za-z'’ ,.!?…&]*[A-Za-z.!?…]|[A-Za-z])/).map(function(x){return x.trim()}).filter(function(x){return x&&!/^[，。、「」：；…（）\s]+$/.test(x)});
+  return parts.map(function(x,i){var en=/[A-Za-z]/.test(x);var it=en?{t:x.replace(/…/g,''),lang:'en',r:.9,gap:120}:{t:x,lang:'zh',gap:120};
+    if(i===0)it.on=function(){var b=$s('#shTip');b&&b.classList.add('shOn')};
+    if(i===parts.length-1){it.off=function(){var b=$s('#shTip');b&&b.classList.remove('shOn')};it.gap=500}return it})}
+/* ---------- 音效（WebAudio 現場合成） ---------- */
+var AC=null;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state!=='running'){try{AC.resume()}catch(e){}}return AC}
+function tone(f,t0,d,type,v,f2){var a=ac();if(!a)return;type=type||'sine';v=v||.16;var t=a.currentTime+t0,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05)}
+function noise(t0,d,v,freq){var a=ac();if(!a)return;var b=a.createBuffer(1,Math.max(1,a.sampleRate*d|0),a.sampleRate),ch=b.getChannelData(0);for(var i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/ch.length,3);var s=a.createBufferSource();s.buffer=b;var f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||1800;var g=a.createGain();g.gain.value=v;s.connect(f);f.connect(g);g.connect(a.destination);s.start(a.currentTime+t0)}
+function lnoise(t0,d,v,freq){var a=ac();if(!a)return;var b=a.createBuffer(1,Math.max(1,a.sampleRate*d|0),a.sampleRate),ch=b.getChannelData(0);for(var i=0;i<ch.length;i++){var e=i/ch.length;ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*e)}var s=a.createBufferSource();s.buffer=b;var f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=freq||800;var g=a.createGain();g.gain.value=v;s.connect(f);f.connect(g);g.connect(a.destination);s.start(a.currentTime+t0)}
+function notes(list,type,v){var t=0;list.forEach(function(n){if(n[0])tone(n[0],t,n[1]*1.05,type||'triangle',v||.14);t+=n[1]});return t}
+var SFX={
+  shh:function(){lnoise(0,1.2,.25,3000);return 1.4},
+  bday:function(){var C=523,D=587,E=659,F=698,G=392;tone(1200,0,.5,'sawtooth',.05,1600);return .5+notes([[G,.3],[G,.15],[392*1.125,.45],[G,.45],[C,.45],[494,.8]],'triangle',.14)},
+  gift:function(){tone(988,0,.2);tone(1319,.12,.4);tone(1568,.26,.5);return 1},
+  sparkle:function(){[1568,1760,2093,2349,2637].forEach(function(f,i){tone(f,i*.08,.3,'sine',.08)});return 1},
+  one:function(){tone(784,0,.15,'sine',.15);tone(1047,.15,.5,'sine',.15);return .8},
+  boing:function(){tone(180,0,.45,'triangle',.18,560);return .7},
+  hmm:function(){tone(330,0,.35,'triangle',.12,392);tone(330,.45,.4,'triangle',.12,440);return 1},
+  candle:function(){for(var i=0;i<3;i++)tone(880+i*220,i*.18,.25,'sine',.12);return .9},
+  chomp:function(){[0,.25,.5].forEach(function(t){noise(t,.09,.6,500);noise(t+.1,.06,.4,900)});return 1},
+  ohno:function(){[[392,0,.35],[370,.4,.35],[311,.8,1.1]].forEach(function(n){tone(n[0],n[1],n[2],'triangle',.18)});return 2},
+  shrink:function(){tone(1400,0,1.2,'sine',.14,200);return 1.4},
+  worry:function(){tone(440,0,.3,'triangle',.12,392);tone(392,.35,.5,'triangle',.12,330);return 1},
+  stomach:function(){tone(90,0,.5,'sawtooth',.08,60);tone(110,.55,.4,'sawtooth',.07,70);return 1.1},
+  plate:function(){noise(0,.05,.5,3000);tone(1200,0,.4,'sine',.06);return .6},
+  water:function(){for(var i=0;i<6;i++)tone(600+Math.random()*500,i*.12,.12,'sine',.1,1200);return 1},
+  splash:function(){noise(0,.6,.5,1200);noise(.1,.5,.3,500);for(var i=0;i<5;i++)tone(900+Math.random()*700,.2+i*.07,.08,'sine',.06);return 1},
+  sad:function(){notes([[392,.4],[349,.4],[311,.4],[294,.9]],'triangle',.12);return 2.2},
+  potion:function(){for(var i=0;i<6;i++)tone(300+i*80,i*.1,.15,'sine',.1,500+i*80);return 1},
+  count:function(){for(var i=0;i<5;i++)tone(660,i*.55,.12,'square',.05);tone(1320,2.75,.5,'square',.06);return 3.4},
+  phew:function(){SFX.sparkle();lnoise(.9,.8,.22,1200);return 1.9},
+  morning:function(){[0,.18,.9,1.05].forEach(function(t,i){tone(2600+i*300,t,.09,'sine',.09,4200)});notes([[523,.25],[659,.25],[784,.5]],'sine',.1);return 1.6},
+  conveyor:function(){for(var i=0;i<8;i++)noise(i*.15,.05,.3,600);tone(110,0,1.2,'sawtooth',.03);return 1.3},
+  bounce:function(){[0,.35,.6,.78].forEach(function(t,i){tone(300-i*30,t,.15,'sine',.18,150)});return 1.1},
+  wow:function(){tone(523,0,.5,'sine',.12,1047);tone(659,.05,.5,'sine',.08,1319);return .8},
+  car:function(){tone(440,0,.18,'square',.06);tone(440,.25,.25,'square',.06);tone(80,0,1,'sawtooth',.05,140);return 1.2},
+  printer:function(){for(var i=0;i<10;i++)tone(800+(i%2)*400,i*.09,.06,'square',.03);return 1},
+  cute:function(){notes([[1047,.15],[1319,.15],[1568,.3]],'sine',.1);return .8},
+  whistle:function(){tone(1800,0,.25,'sine',.1);tone(1800,.3,.5,'sine',.1);return .9},
+  robot:function(){[0,.15,.3,.45].forEach(function(t,i){tone(200+i*120,t,.12,'square',.06)});noise(.6,.2,.3,2000);tone(400,.8,.4,'sawtooth',.05,900);return 1.4},
+  crash:function(){noise(0,.5,.7,400);noise(.05,.3,.4,2000);tone(120,0,.4,'triangle',.18,60);return .9},
+  alarm:function(){for(var i=0;i<12;i++)tone(i%2?1100:880,i*.1,.09,'square',.05);return 1.4},
+  ring:function(){for(var i=0;i<16;i++)tone(i%2?1900:1500,i*.07,.06,'square',.04);return 1.3},
+  birds:function(){[0,.18,.9,1.05,1.2].forEach(function(t,i){tone(2600+(i%3)*300,t,.09,'sine',.09,4200)});return 1.6},
+  rain:function(){lnoise(0,2.2,.25,2500);for(var i=0;i<14;i++)tone(1500+Math.random()*1500,Math.random()*2,.03,'sine',.05);return 2.3},
+  wind:function(){var a=ac();if(!a)return 0;lnoise(0,2.4,.35,500);lnoise(.4,2,.25,900);return 2.5},
+  bigwind:function(){lnoise(0,2.6,.45,400);lnoise(.3,2.2,.35,900);tone(200,.2,1.6,'sine',.05,500);return 2.7},
+  spray:function(){noise(0,1,.25,4000);return 1.1},
+  step:function(){for(var i=0;i<6;i++){noise(i*.3,.07,.35,i%2?260:340);tone(70,i*.3,.08,'sine',.12)}return 1.9},
+  run:function(){for(var i=0;i<10;i++){noise(i*.18,.06,.3,300);tone(70,i*.18,.06,'sine',.1)}return 2},
+  pop:function(){tone(500,0,.1,'sine',.2,1500);return .4},
+  jump:function(){tone(300,0,.3,'triangle',.15,900);tone(900,.35,.3,'triangle',.12,300);return .8},
+  ok:function(){tone(660,0,.15,'sine',.12);tone(880,.15,.25,'sine',.12);return .5},
+  fanfare:function(){[[523,0],[659,.12],[784,.24],[1047,.4],[784,.58],[1047,.7]].forEach(function(n){tone(n[0],n[1],.35,'triangle',.15)});for(var i=0;i<16;i++)noise(.9+i*.055+Math.random()*.04,.09,.5,1500+Math.random()*900);return 2},
+  clap:function(){for(var i=0;i<16;i++)noise(i*.055+Math.random()*.04,.09,.55,1500+Math.random()*900);return 1.2},
+  thanks:function(){notes([[659,.2],[784,.35]],'sine',.12);return .7},
+  dragon:function(){tone(160,0,.6,'sawtooth',.1,90);tone(240,.1,.5,'square',.04,120);return .9}
+};
+/* iPhone 靜音鍵開著時，音效也要聽得到 */
+var silentEl=null;
+function silentWav(){var n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer);function w(o,s){for(var i=0;i<s.length;i++)b[o+i]=s.charCodeAt(i)}
+  w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
+  for(var i=44;i<b.length;i++)b[i]=128;var s='';for(var j=0;j<b.length;j++)s+=String.fromCharCode(b[j]);return 'data:audio/wav;base64,'+btoa(s)}
+function audioWake(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
+  try{if(!silentEl){silentEl=document.createElement('audio');silentEl.setAttribute('playsinline','');silentEl.loop=true;silentEl.src=silentWav()}if(silentEl.paused){var p=silentEl.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}ac()}
+['touchend','click'].forEach(function(t){document.addEventListener(t,audioWake,{capture:true,passive:true})});
+function playSfx(cb){
+  var pg=SH.pages[SH.page],k=pg.sfx,sc=$s('#shScene');
+  if(!k||!SFX[k]||!ac()){cb&&cb();return}
+  sc.classList.remove('snd');void sc.offsetWidth;sc.classList.add('snd');
+  var d=SFX[k]()||1,m=SH.ptok;sceneFx();SH.sndUntil=Date.now()+d*1000;
+  setTimeout(function(){sc.classList.remove('snd');if(m===SH.ptok&&cb&&!SH.closed)cb()},Math.round(d*1000)+250)}
+
+/* ---------- 特效：彩帶、愛心、星星、雨滴、樹葉、驚嘆號……都在圖上跳出來 ---------- */
+var FXMAP={shh:['zzz'],bday:['confetti','🎉'],gift:['burst','✨'],thanks:['rise','💖'],hmm:['rise','❓'],one:['pop','1️⃣'],boing:['shock','❗'],candle:['burst','✨'],chomp:['burst','🍪'],
+  ohno:['shock','💦'],shrink:['shrink'],worry:['rise','💧'],ok:['rise','👍'],stomach:['rise','🍔'],plate:['burst','🍔'],water:['rise','💧'],splash:['burst','💦'],sad:['fall','💧'],
+  potion:['rise','✨'],count:['count'],phew:['burst','🌟'],morning:['rise','🎵'],conveyor:['rise','⚙️'],bounce:['bounce','⚽'],wow:['burst','⭐'],car:['dash','💨'],printer:['burst','✨'],
+  cute:['rise','💕'],whistle:['rise','🎵'],robot:['burst','⚡'],crash:['shock','💥'],alarm:['shock','⚠️'],ring:['shock','⏰'],birds:['rise','🎵'],rain:['fall','💧'],wind:['wind','🍃'],
+  bigwind:['wind','🍃'],spray:['fall','💧'],step:['dash','💨'],run:['dash','💨'],pop:['burst','🎨'],jump:['burst','⭐'],clap:['confetti','👏'],fanfare:['confetti','🎉'],dragon:['rise','🔥']};
+function fxLayer(){var sv=$s('#shScene svg');if(!sv)return null;var g=sv.querySelector('#shFx');if(!g){g=document.createElementNS('http://www.w3.org/2000/svg','g');g.id='shFx';sv.appendChild(g)}return g}
+function pt(g,ch,x,y,size,cls,delay,vars){var t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('font-size',size);t.setAttribute('text-anchor','middle');t.setAttribute('class','pf '+cls);t.textContent=ch;
+  t.style.animationDelay=(delay||0)+'ms';if(vars)for(var k in vars)t.style.setProperty(k,vars[k]);g.appendChild(t);setTimeout(function(){t.remove()},4200+(delay||0))}
+function spk(){var pg=SH.pages[SH.page],c=(pg.cast||[]).filter(function(c){return c[0]===pg.w})[0];return c?[c[1],160]:[200,140]}
+function fx(kind,ch){var g=fxLayer();if(!g)return;var sc=$s('#shScene'),p=spk(),i;
+  if(kind==='confetti'){var cols=['#ff5a7a','#ffd23f','#4aa3e0','#7cc35a','#c084fc','#ff9f43'];for(i=0;i<26;i++){var r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',10+Math.random()*380);r.setAttribute('y',-10);r.setAttribute('width',8);r.setAttribute('height',12);r.setAttribute('fill',cols[i%6]);r.setAttribute('class','pf pfFall');r.style.animationDelay=(Math.random()*700|0)+'ms';r.style.setProperty('--r',(Math.random()*720-360|0)+'deg');g.appendChild(r);(function(r){setTimeout(function(){r.remove()},3500)})(r)}
+    if(ch)for(i=0;i<3;i++)pt(g,ch,80+i*120,120,34,'pfPop',i*200);return}
+  if(kind==='burst'){for(i=0;i<9;i++){var a=i/9*Math.PI*2;pt(g,ch,p[0],p[1]-30,24,'pfBurst',i*30,{'--dx':(Math.cos(a)*90|0)+'px','--dy':(Math.sin(a)*70|0)+'px'})}return}
+  if(kind==='rise'){for(i=0;i<6;i++)pt(g,ch,p[0]-50+Math.random()*100,p[1],22+Math.random()*12,'pfRise',i*220);return}
+  if(kind==='fall'){for(i=0;i<14;i++)pt(g,ch,20+Math.random()*360,0,18+Math.random()*10,'pfFall2',i*120);return}
+  if(kind==='pop'){pt(g,ch,p[0],p[1]-60,56,'pfPop',0);return}
+  if(kind==='shock'){pt(g,ch,p[0],p[1]-50,48,'pfPop',0);pt(g,ch,p[0]-60,p[1]-20,30,'pfPop',150);pt(g,ch,p[0]+60,p[1]-20,30,'pfPop',300);sc.classList.remove('shShake');void sc.offsetWidth;sc.classList.add('shShake');return}
+  if(kind==='zzz'){pt(g,'🤫',p[0],p[1]-40,40,'pfPop',0);for(i=0;i<4;i++)pt(g,'…',p[0]+20+i*10,p[1]-60,26,'pfRise',300+i*250);return}
+  if(kind==='count'){['5️⃣','4️⃣','3️⃣','2️⃣','1️⃣'].forEach(function(n,k){pt(g,n,200,120,70,'pfCount',k*550)});setTimeout(function(){fx('confetti','✨')},2750);return}
+  if(kind==='shrink'){pt(g,'✨',p[0],p[1]-30,40,'pfPop',0);var w=$s('#shScene .who[data-who="'+SH.pages[SH.page].w+'"]');if(w){w.classList.remove('shShrink');void w.getBoundingClientRect();w.classList.add('shShrink')}return}
+  if(kind==='bounce'){for(i=0;i<3;i++)pt(g,ch,120+i*80,150,34,'pfBounce',i*250);return}
+  if(kind==='dash'){for(i=0;i<5;i++)pt(g,ch,p[0]-30,p[1]+20,24,'pfDash',i*200);return}
+  if(kind==='wind'){for(i=0;i<10;i++)pt(g,ch,-10,40+Math.random()*150,22+Math.random()*12,'pfWind',i*180);return}
+}
+function sceneFx(){var pg=SH.pages[SH.page],f=pg.fx||FXMAP[pg.sfx];if(f)fx(f[0],f[1])}
+/* 唸英文時，一個字一個字亮起來 */
+function karaoke(){var ws=$$s('#shText .shW');if(!ws.length)return;var per=Math.max(260,520/SH.rate),m=SH.ptok;
+  ws.forEach(function(w,k){setTimeout(function(){if(m!==SH.ptok)return;ws.forEach(function(x){x.classList.remove('shOn')});w.classList.add('shOn')},k*per)});
+  setTimeout(function(){if(m===SH.ptok)ws.forEach(function(x){x.classList.remove('shOn')})},ws.length*per+300)}
+/* ---------- 圖 ---------- */
+function blob(kind,x,y){
+  if(kind==='boka')return '<g transform="translate('+x+' '+y+')"><path d="M-22 -30 l-8 -16 l14 9Z M22 -30 l8 -16 l-14 9Z" fill="#f2a01e" stroke="'+K+'" stroke-width="2"/><ellipse cx="0" cy="0" rx="34" ry="36" fill="#4aa3e0" stroke="'+K+'" stroke-width="3"/><circle cx="-6" cy="-14" r="4" fill="#7cc4f0"/><circle cx="18" cy="10" r="5" fill="#7cc4f0"/><circle cx="-11" cy="-6" r="8" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><circle cx="11" cy="-6" r="8" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><circle cx="-10" cy="-5" r="3.5" fill="'+K+'"/><circle cx="12" cy="-5" r="3.5" fill="'+K+'"/><path d="M-4 3 L4 3 L0 12Z" fill="#2f6db5"/><path d="M-10 16 q10 9 20 0" fill="none" stroke="'+K+'" stroke-width="2.5" stroke-linecap="round"/><path d="M-6 26 l6 5 l6 -5 l-6 -2Z" fill="#e2513c"/><circle cx="-22" cy="8" r="5" fill="#ff8a8a" opacity=".55"/><circle cx="22" cy="8" r="5" fill="#ff8a8a" opacity=".55"/></g>';
+  if(kind==='jello')return '<g transform="translate('+x+' '+y+')"><path d="M-26 28 Q-30 -26 0 -30 Q30 -26 26 28 Q0 36 -26 28Z" fill="#f7a8c8" stroke="'+K+'" stroke-width="3"/><circle cx="-12" cy="-12" r="4" fill="#fbc9de"/><circle cx="14" cy="14" r="4" fill="#fbc9de"/><ellipse cx="-9" cy="-4" rx="6" ry="7" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><ellipse cx="9" cy="-4" rx="6" ry="7" fill="#fff" stroke="'+K+'" stroke-width="1.5"/><circle cx="-8" cy="-3" r="3" fill="#2f6db5"/><circle cx="10" cy="-3" r="3" fill="#2f6db5"/><path d="M-7 8 q7 8 14 0" fill="#e2513c" stroke="'+K+'" stroke-width="2"/><rect x="-7" y="14" width="14" height="10" rx="2" fill="#fff" stroke="'+K+'" stroke-width="1.5"/></g>';
+  if(kind==='dragon')return '<g transform="translate('+x+' '+y+')"><path d="M-30 -2 l-14 -14 l6 18Z M30 -2 l14 -14 l-6 18Z" fill="#ff8a65" stroke="'+K+'" stroke-width="2"/><ellipse cx="0" cy="4" rx="28" ry="30" fill="#e74c3c" stroke="'+K+'" stroke-width="3"/><ellipse cx="0" cy="14" rx="15" ry="16" fill="#ffd28a"/><path d="M-12 -24 l4 -10 l4 8 l4 -8 l4 8 l4 -10 l2 12Z" fill="#ffd28a" stroke="'+K+'" stroke-width="1.5"/><circle cx="-10" cy="-8" r="8" fill="#9be36b" stroke="'+K+'" stroke-width="1.5"/><circle cx="10" cy="-8" r="8" fill="#9be36b" stroke="'+K+'" stroke-width="1.5"/><circle cx="-9" cy="-7" r="3.5" fill="'+K+'"/><circle cx="11" cy="-7" r="3.5" fill="'+K+'"/><path d="M-8 6 q8 6 16 0" fill="none" stroke="'+K+'" stroke-width="2.5"/></g>';
+  return '';
+}
+var EMO={kevin:'👦',girl:'👧',man:'👨',mom:'👩',baby:'👶'};
+var WHO={kevin:'Kevin',girl:'女孩',boka:'Boka',jello:'Jello',dragon:'小龍',all:'大家',man:'叔叔',mom:'媽媽'};
+function whoIcon(w){if(w==='boka'||w==='jello'||w==='dragon')return '<svg viewBox="-46 -50 92 92" style="width:1.25em;height:1.25em;vertical-align:middle">'+blob(w,0,0)+'</svg>';if(w==='all')return '🎉';return EMO[w]||'🙂'}
+function bg(kind,pg){
+  var s='';
+  if(kind==='party'){s='<rect width="400" height="240" fill="#ffe1ec"/><rect y="175" width="400" height="65" fill="#e9a66b"/><path d="M0 18 Q100 50 200 18 Q300 50 400 18" fill="none" stroke="'+K+'" stroke-width="2"/>';
+    var c=['#ff5a7a','#ffd23f','#4aa3e0','#7cc35a','#c084fc'];for(var i=0;i<9;i++){var x=10+i*45,y=24+Math.abs(4-i)*-2+12;s+='<path d="M'+x+' '+(y-8)+' l14 0 l-7 16Z" fill="'+c[i%5]+'"/>'}
+    s+='<g><line x1="40" y1="95" x2="44" y2="140" stroke="'+K+'"/><ellipse cx="40" cy="80" rx="15" ry="19" fill="#ff8fa3" stroke="'+K+'" stroke-width="2"/></g><g><line x1="362" y1="95" x2="358" y2="140" stroke="'+K+'"/><ellipse cx="362" cy="80" rx="15" ry="19" fill="#8fd3ff" stroke="'+K+'" stroke-width="2"/></g>'}
+  else if(kind==='factory'){s='<rect width="400" height="240" fill="#e8f1ff"/><rect y="182" width="400" height="58" fill="#c9d6ea"/><rect x="0" y="150" width="400" height="22" rx="8" fill="#5b6b8c" stroke="'+K+'" stroke-width="2"/>';
+    for(var j=0;j<10;j++)s+='<circle cx="'+(20+j*40)+'" cy="161" r="6" fill="#9fb0cc" stroke="'+K+'" stroke-width="1.5"/>';
+    s+='<rect x="300" y="40" width="80" height="100" rx="8" fill="#4a90e2" stroke="'+K+'" stroke-width="3"/><rect x="312" y="52" width="56" height="40" rx="4" fill="#bfe6ff" stroke="'+K+'" stroke-width="2"/><circle cx="326" cy="112" r="6" fill="#ff5a4f"/><circle cx="346" cy="112" r="6" fill="#ffd23f"/><circle cx="366" cy="112" r="6" fill="#7cc35a"/><text x="20" y="40" font-size="20" font-weight="900" fill="#e2513c" font-family="Arial">B&amp;J\'s TOYS</text>'}
+  else if(kind==='bedroom'){var rainy=pg.weather==='rain';s='<rect width="400" height="240" fill="#c8b8f0"/><rect y="180" width="400" height="60" fill="#e8d3b0"/><rect x="40" y="30" width="110" height="100" rx="40" fill="'+(rainy?'#9fc3e6':'#bfe6ff')+'" stroke="'+K+'" stroke-width="4"/>'+(rainy?'':'<circle cx="95" cy="70" r="18" fill="#ffd54a"/>')+'<rect x="20" y="150" width="140" height="40" rx="10" fill="#7fb5ff" stroke="'+K+'" stroke-width="3"/>';
+    if(rainy)for(var r=0;r<8;r++)s+='<line x1="'+(55+r*12)+'" y1="'+(45+(r%3)*20)+'" x2="'+(51+r*12)+'" y2="'+(57+(r%3)*20)+'" stroke="#2f6db5" stroke-width="2.5"/>'}
+  else if(kind==='park'){var sky=pg.weather==='cloudy'||pg.weather==='windy'?'#c9d8e6':'#bfe6ff';s='<rect width="400" height="240" fill="'+sky+'"/><rect y="172" width="400" height="68" fill="#8fcf6a"/><path d="M230 172 q40 -70 80 0" fill="none" stroke="#f2b632" stroke-width="14"/>'+(pg.weather==='sunny'||!pg.weather?'<circle cx="350" cy="40" r="22" fill="#ffd54a"/>':'')+'<text x="20" y="168" font-size="46">🌳</text>';
+    if(pg.weather==='cloudy'||pg.weather==='windy')s+='<g fill="#fff" stroke="#9fb0cc" stroke-width="2"><ellipse cx="90" cy="45" rx="45" ry="20"/><ellipse cx="260" cy="35" rx="55" ry="22"/></g>';
+    if(pg.weather==='windy')s+='<g stroke="#5b8bd6" stroke-width="3" fill="none" stroke-linecap="round" class="wind"><path d="M20 90 q60 -20 120 0"/><path d="M160 110 q70 -20 140 0"/><path d="M60 130 q50 -14 100 0"/></g>'}
+  else if(kind==='home'){s='<rect width="400" height="240" fill="#ffd9a8"/><rect y="180" width="400" height="60" fill="#8fcf6a"/><rect x="200" y="70" width="160" height="110" fill="#fff1d6" stroke="'+K+'" stroke-width="4"/><path d="M190 74 L280 22 L370 74Z" fill="#d9533c" stroke="'+K+'" stroke-width="4"/><rect x="262" y="120" width="36" height="60" fill="#a8693f" stroke="'+K+'" stroke-width="3"/>'}
+  else s='<rect width="400" height="240" fill="#bfe6ff"/><rect y="175" width="400" height="65" fill="#8fcf6a"/>';
+  return s}
+function scene(pg){
+  var s=bg(pg.bg,pg);
+  (pg.props||[]).forEach(function(p){s+='<text class="'+(p[4]?'act':'')+'" x="'+p[1]+'" y="'+p[2]+'" font-size="'+(p[3]||40)+'" text-anchor="middle">'+p[0]+'</text>'});
+  (pg.cast||[]).forEach(function(c){var w=c[0],x=c[1],sz=c[2]||1;
+    var inner=(w==='boka'||w==='jello'||w==='dragon')?blob(w,0,0):'<text x="0" y="30" font-size="58" text-anchor="middle">'+(EMO[w]||'🙂')+'</text>';
+    s+='<g class="who" data-who="'+w+'"><g transform="translate('+x+' 190) scale('+sz+')">'+inner+'</g></g>'});
+  var sp=(pg.cast||[]).filter(function(c){return c[0]===pg.w})[0];
+  if(sp&&pg.n){var x=sp[1],y=120-(sp[2]||1)*20;s+='<g id="shBub"><path d="M'+(x-16)+' '+y+' h32 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 h-10 l-6 9 l-6 -9 h-10 a8 8 0 0 1 -8 -8 v-18 a8 8 0 0 1 8 -8Z" fill="#fff" stroke="'+K+'" stroke-width="3"/><text x="'+x+'" y="'+(y+24)+'" font-size="18" font-weight="900" text-anchor="middle" fill="#d9533c" font-family="Arial">'+pg.n+'</text></g>'}
+  if(pg.weather==='rain'&&pg.bg!=='bedroom'){for(var r=0;r<16;r++)s+='<line class="drop" x1="'+(15+r*25)+'" y1="'+(10+(r%4)*25)+'" x2="'+(11+r*25)+'" y2="'+(24+(r%4)*25)+'" stroke="#2f6db5" stroke-width="2.5"/>'}
+  return '<svg viewBox="0 0 400 240">'+s+'</svg>'}
+/* ---------- 畫面 ---------- */
+var CSS='#shRoot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;background:#fff6e6;display:flex;flex-direction:column;font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;color:#2a2238;-webkit-user-select:none;user-select:none}'+
+'#shRoot[hidden]{display:none!important}'+
+'#shBar{flex:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;padding:7px 8px calc(7px + 0px);background:#8a5a3c;padding-top:calc(7px + env(safe-area-inset-top,0px))}'+
+'#shRoot button{font:800 15px/1 inherit;font-family:inherit;padding:9px 12px;border-radius:14px;border:2.5px solid #2a2238;background:#fffdf6;color:#2a2238;box-shadow:0 3px 0 #2a2238;cursor:pointer}'+
+'#shRoot button:active{transform:translateY(2px);box-shadow:0 1px 0 #2a2238}#shRoot button[disabled]{opacity:.35}'+
+'#shRoot .back{background:#e2513c;color:#fff}#shRoot .pz{background:#f2b632}#shRoot .big{font-size:18px;padding:11px 18px}'+
+'#shTop{flex:none;text-align:center;font-weight:900;padding:6px 4px 0;font-size:16px}'+
+'#shMain{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 10px}'+
+'#shScene{flex:1 1 auto;min-height:110px;display:flex;justify-content:center;align-items:center;width:100%;cursor:pointer}'+
+'#shScene svg{width:100%;height:auto;max-height:100%;aspect-ratio:5/3;border:5px solid #2a2238;border-radius:22px;background:#bfe6ff;box-sizing:border-box}'+
+'#shText{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}'+
+'.shLine{color:#2a2238!important;display:flex;align-items:center;gap:10px;background:#fffdf6;border:3px solid #2a2238;border-radius:18px;padding:8px 14px 8px 8px;width:min(94vw,600px);transition:transform .2s}'+
+'.shLine.shOn{background:#fff3b0;transform:scale(1.03)}'+
+'.shNo{flex:none;min-width:30px;height:30px;border-radius:15px;background:#e2513c;color:#fff;font:900 16px/30px Arial,sans-serif;text-align:center;padding:0 4px}'+
+'.shNo.star{background:#f2b632;color:#2a2238}'+
+'.shWho{flex:none;font-size:clamp(28px,7vmin,40px);line-height:1}'+
+'.shEn{color:#2a2238!important;font:700 clamp(24px,7vmin,40px)/1.2 "Arial Rounded MT Bold","Nunito",Arial,sans-serif}'+
+'.shEn .shW{display:inline-block;padding:0 2px;border-radius:6px;cursor:pointer}.shEn .shW.shOn{background:#ffd54a}'+
+'.shZh{color:#5a3b22!important;font-weight:900;font-size:clamp(17px,5vmin,26px);color:#5a3b22}'+
+'#shTip{color:#6b4226!important;font-weight:800;font-size:clamp(14px,3.9vmin,18px);color:#6b4226;background:#fff3c4;border-radius:12px;padding:6px 12px;width:min(94vw,600px);line-height:1.5;box-sizing:border-box}'+
+'#shTip.shOn{background:#ffe28a}'+
+'#shNav{flex:none;display:flex;gap:8px;justify-content:center;padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px))}'+
+'#shScene .who{transform-box:fill-box;transform-origin:50% 100%}#shScene .who.talk{animation:shHop .35s ease-in-out infinite alternate}'+
+'#shScene .act{transform-box:fill-box;transform-origin:50% 100%}#shScene.snd .act{animation:shHop .45s ease-in-out infinite alternate}'+
+'#shScene.snd .wind{animation:shWind .6s linear infinite}#shScene .drop{animation:shDrop .8s linear infinite}'+
+'@keyframes shHop{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-8px) rotate(5deg)}}'+
+'@keyframes shWind{from{transform:translateX(-10px)}to{transform:translateX(10px)}}@keyframes shDrop{from{transform:translateY(-6px)}to{transform:translateY(8px)}}'+
+'#shScene svg{animation:shIn .45s ease-out}'+
+'#shScene .pf{pointer-events:none;transform-box:fill-box;transform-origin:50% 50%}'+
+'.pfFall{animation:pfFall 2.6s ease-in forwards}@keyframes pfFall{from{transform:translateY(0) rotate(0)}to{transform:translateY(270px) rotate(var(--r,360deg))}}'+
+'.pfFall2{animation:pfFall2 2.2s ease-in forwards;opacity:0}@keyframes pfFall2{0%{opacity:0;transform:translateY(0)}10%{opacity:1}100%{opacity:.8;transform:translateY(240px)}}'+
+'.pfBurst{animation:pfBurst 1.3s ease-out forwards;opacity:0}@keyframes pfBurst{0%{opacity:0;transform:translate(0,0) scale(.3)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.2)}}'+
+'.pfRise{animation:pfRise 2s ease-out forwards;opacity:0}@keyframes pfRise{0%{opacity:0;transform:translateY(0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translateY(-110px) scale(1.2)}}'+
+'.pfPop{animation:pfPop 1.6s ease-out forwards;opacity:0}@keyframes pfPop{0%{opacity:0;transform:scale(.2)}25%{opacity:1;transform:scale(1.35)}45%{transform:scale(1)}85%{opacity:1}100%{opacity:0;transform:scale(1.1)}}'+
+'.pfCount{animation:pfCount .55s ease-out forwards;opacity:0}@keyframes pfCount{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:scale(1.3)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.8)}}'+
+'.pfBounce{animation:pfBounce 1.8s ease-out forwards;opacity:0}@keyframes pfBounce{0%{opacity:1;transform:translateY(-80px)}30%{transform:translateY(0)}50%{transform:translateY(-40px)}70%{transform:translateY(0)}85%{transform:translateY(-12px)}100%{opacity:1;transform:translateY(0)}}'+
+'.pfDash{animation:pfDash 1s ease-out forwards;opacity:0}@keyframes pfDash{0%{opacity:0;transform:translateX(0)}20%{opacity:1}100%{opacity:0;transform:translateX(-80px) scale(1.4)}}'+
+'.pfWind{animation:pfWind 2.2s linear forwards;opacity:0}@keyframes pfWind{0%{opacity:0;transform:translate(0,0) rotate(0)}10%{opacity:1}100%{opacity:.9;transform:translate(430px,-40px) rotate(540deg)}}'+
+'#shScene.shShake svg{animation:shShake .5s}@keyframes shShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-1deg)}40%{transform:translateX(8px) rotate(1deg)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}'+
+'@keyframes shIn{from{opacity:0;transform:scale(.92) translateY(10px)}to{opacity:1;transform:none}}'+
+'#shScene .who.shJump{animation:shJump .6s ease-out}@keyframes shJump{0%{transform:translateY(0)}35%{transform:translateY(-34px) scale(1.08)}60%{transform:translateY(0) scaleY(.9)}100%{transform:none}}'+
+'#shScene .who.shShrink{animation:shShrink 1.4s ease-in-out}@keyframes shShrink{0%{transform:scale(1.4)}50%{transform:scale(.6) rotate(10deg)}75%{transform:scale(1.1) rotate(-6deg)}100%{transform:none}}'+
+'#shBub{transform-box:fill-box;transform-origin:50% 100%}#shBub.shPop{animation:shBubPop .5s ease-out}@keyframes shBubPop{0%{transform:scale(.4)}60%{transform:scale(1.35)}100%{transform:scale(1)}}'+
+'.shEn .shW{transition:transform .15s,background .15s}.shEn .shW.shOn{transform:translateY(-4px) scale(1.12)}'+
+'.shZh{animation:shFade .6s ease-out}@keyframes shFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}'+
+'#shPause{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9100;background:rgba(40,20,10,.55);display:flex;align-items:center;justify-content:center}#shPause[hidden]{display:none!important}'+
+'#shPause div{background:#fffdf6;border:4px solid #2a2238;border-radius:22px;padding:22px;text-align:center;font-weight:900;font-size:24px}'+
+'@media (orientation:landscape) and (max-height:540px){#shMain{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:minmax(0,1fr);gap:10px;align-items:center}#shScene{min-height:0;height:100%}#shText{justify-content:center}.shLine{width:100%;box-sizing:border-box;padding:4px 10px 4px 6px}.shEn{font-size:clamp(18px,6.5vh,30px)}.shZh{font-size:clamp(13px,4.4vh,19px)}#shTip{width:100%;font-size:clamp(12px,3.8vh,16px);padding:4px 8px;line-height:1.35}#shTop{padding-top:2px;font-size:14px}#shRoot button{padding:6px 10px;font-size:14px}#shNav{padding-bottom:4px}}';
+function build(){
+  if($s('#shRoot'))return;
+  var st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
+  var d=document.createElement('div');d.id='shRoot';d.hidden=true;
+  d.innerHTML='<div id="shBar"><button class="back" id="shBack">回闖關地圖</button><button class="pz" id="shPz">暫停</button><button id="shSlow">唸慢一點</button><button id="shFast">唸快一點</button></div>'+
+   '<div id="shTop"></div><div id="shMain"><div id="shScene"></div><div id="shText"></div></div>'+
+   '<div id="shNav"><button id="shPrev">上一頁</button><button class="big" id="shAgain">再聽一次</button><button id="shNext">下一頁</button></div>'+
+   '<div id="shPause" hidden><div><div style="font-size:54px">📖</div>休息一下<br><button class="big" id="shGo" style="margin-top:14px;background:#2bb673;color:#fff">繼續聽故事</button></div></div>';
+  document.body.appendChild(d);
+  $s('#shBack').onclick=function(){close();SH.opt.onBack&&SH.opt.onBack()};
+  $s('#shPz').onclick=function(){SH.paused=true;SH.ptok++;hush();$s('#shPause').hidden=false};
+  $s('#shGo').onclick=function(){SH.paused=false;$s('#shPause').hidden=true;showPage(SH.page)};
+  $s('#shSlow').onclick=function(){SH.rate=Math.max(.6,+(SH.rate-.15).toFixed(2));showPage(SH.page)};
+  $s('#shFast').onclick=function(){SH.rate=Math.min(1.45,+(SH.rate+.15).toFixed(2));showPage(SH.page)};
+  $s('#shPrev').onclick=function(){if(SH.page>0)showPage(SH.page-1)};
+  $s('#shNext').onclick=function(){go(1)};
+  $s('#shAgain').onclick=function(){showPage(SH.page)};
+}
+function read(){
+  var pg=SH.pages[SH.page],m=++SH.ptok,row=$s('#shText .shLine');
+  function talk(on){$$s('#shScene .who').forEach(function(g){g.classList.toggle('talk',on&&g.getAttribute('data-who')===pg.w)})}
+  var items=[];
+  if(SH.page===0&&!SH.seen){SH.seen=true;items.push({t:'歡迎來到趣味故事屋，我們來聽故事。',lang:'zh',gap:400})}
+  items.push({t:pg.en,lang:'en',r:.85,gap:600,on:function(){row.classList.add('shOn');talk(true);karaoke();var b=$s('#shBub');if(b){b.classList.remove('shPop');void b.getBoundingClientRect();b.classList.add('shPop')}},off:function(){talk(false)}},
+    {t:pg.zh,lang:'zh',gap:600,off:function(){row.classList.remove('shOn')}});
+  items=items.concat(tipItems(pg.tip));
+  function after(){if(m!==SH.ptok||SH.closed)return;setTimeout(function(){if(m===SH.ptok&&!SH.closed&&!SH.paused)go(1)},1300)}
+  playSfx(function(){if(m!==SH.ptok)return;say(items,after)})}
+function showPage(i){
+  hush();SH.page=i;var pg=SH.pages[i];
+  $s('#shTop').textContent=SH.opt.title+'　第 '+(i+1)+' 頁 / 共 '+SH.pages.length+' 頁';
+  $s('#shScene').innerHTML=scene(pg);
+  $s('#shScene').onclick=function(e){var w=e.target.closest&&e.target.closest('.who');
+    if(w){if(Date.now()<(SH.tapUntil||0))return;SH.tapUntil=Date.now()+900;w.classList.remove('shJump');void w.getBoundingClientRect();w.classList.add('shJump');SFX.boing();var g=fxLayer();if(g){var bb=w.getBBox();for(var k=0;k<5;k++){var a=k/5*Math.PI*2;pt(g,'⭐',bb.x+bb.width/2,bb.y,18,'pfBurst',k*40,{'--dx':(Math.cos(a)*50|0)+'px','--dy':(Math.sin(a)*40|0)+'px'})}}return}
+    if(Date.now()<SH.sndUntil)return;playSfx(null)};
+  $s('#shText').innerHTML='<div class="shLine"><span class="shNo '+(pg.n?'':'star')+'">'+(pg.n||'★')+'</span><span class="shWho">'+whoIcon(pg.w)+'</span><div><div class="shEn">'+pg.en.split(' ').map(function(w){return '<span class="shW">'+w+'</span>'}).join(' ')+'</div><div class="shZh">'+pg.zh+'</div></div></div><div id="shTip">💡 '+pg.tip+'</div>';
+  $$s('#shText .shW').forEach(function(sp){sp.onclick=function(e){e.stopPropagation();SH.ptok++;hush();var w=sp.textContent.replace(/[.,!?]/g,'');sp.classList.add('shOn');say([{t:w,lang:'en',r:.8}],function(){sp.classList.remove('shOn')})}});
+  $s('#shPrev').disabled=i===0;$s('#shNext').textContent=i===SH.pages.length-1?'看完了':'下一頁';
+  if(!SH.paused)read()}
+function go(d){var n=SH.page+d;if(n<0)return;if(n>=SH.pages.length){close();SH.opt.onDone&&SH.opt.onDone();return}showPage(n)}
+function close(){SH.closed=true;SH.ptok++;hush();var r=$s('#shRoot');if(r)r.hidden=true}
+window.StoryHouse={
+  open:function(opt){build();SH.opt=opt;SH.pages=opt.pages;SH.closed=false;SH.paused=false;$s('#shPause').hidden=true;
+    $s('#shBack').textContent=opt.backText||'回闖關地圖';$s('#shRoot').hidden=false;audioWake();pickVoices();showPage(0)},
+  close:close,isOpen:function(){var r=$s('#shRoot');return !!(r&&!r.hidden)},_SH:SH,_SFX:SFX,_tip:tipItems
+};
+})();
+
 </script>
 </body>
 </html>
