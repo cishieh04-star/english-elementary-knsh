@@ -1247,6 +1247,8 @@ function teamEnd(){
   if(B.go==='start'&&!XLINE){needUnlock=true;readName();S.stars=0;updStars();S.seen={};openMap();return;}
   show('splash');})();
 
+/* OK_FIX：英文的 OK 改唸 okay，iPhone 才不會唸得很奇怪 */
+(function(){var O=window.SpeechSynthesisUtterance;if(!O||O.__okfix)return;var U=function(t){return new O(String(t==null?'':t).replace(/\bOK\b/g,'okay'))};U.prototype=O.prototype;U.__okfix=1;window.SpeechSynthesisUtterance=U})();
 /* 聽力題：聽到的英文顯示在畫面上，可以按「不要顯示句子」藏起來（整次遊戲都記得） */
 window.HIDE_SENT=false;
 function heardHTML(t){return '<div class="heardBox"><div class="heardT '+(HIDE_SENT?'off':'')+'" id="heardT"><span class="tx">'+t+'</span><span class="q">❓ ❓ ❓</span></div><button class="hideBtn" id="hideBtn" type="button">'+(HIDE_SENT?'要顯示句子':'不要顯示句子')+'</button></div>'}
@@ -1404,7 +1406,7 @@ function say(items,done){
     var zh=it.lang==='zh',gap=it.gap===undefined?450:it.gap,fired=false,tm;
     function fin(){if(fired)return;fired=true;clearTimeout(tm);it.off&&it.off();setTimeout(next,gap/SH.rate)}
     if(!synth){setTimeout(fin,600+it.t.length*(zh?250:90));return}
-    var u=new SpeechSynthesisUtterance(it.t);u.lang=zh?'zh-TW':'en-US';var v=zh?SH.vZh:SH.vEn;if(v)u.voice=v;
+    var u=new SpeechSynthesisUtterance(zh?it.t:it.t.replace(/\bOK\b/g,'okay'));u.lang=zh?'zh-TW':'en-US';var v=zh?SH.vZh:SH.vEn;if(v)u.voice=v;
     u.rate=Math.max(.4,Math.min(1.6,(zh?.95:.8)*(it.r||1)*SH.rate));u.onend=fin;u.onerror=fin;
     tm=setTimeout(fin,(1500+it.t.length*(zh?380:150))/SH.rate);
     try{synth.speak(u)}catch(e){fin()}
@@ -1480,8 +1482,7 @@ var silentEl=null;
 function silentWav(){var n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer);function w(o,s){for(var i=0;i<s.length;i++)b[o+i]=s.charCodeAt(i)}
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
   for(var i=44;i<b.length;i++)b[i]=128;var s='';for(var j=0;j<b.length;j++)s+=String.fromCharCode(b[j]);return 'data:audio/wav;base64,'+btoa(s)}
-function audioWake(){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
-  try{if(!silentEl){silentEl=document.createElement('audio');silentEl.setAttribute('playsinline','');silentEl.loop=true;silentEl.src=silentWav()}if(silentEl.paused){var p=silentEl.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}ac()}
+function audioWake(){ac()}
 ['touchend','click'].forEach(function(t){document.addEventListener(t,audioWake,{capture:true,passive:true})});
 function playSfx(cb){
   var pg=SH.pages[SH.page],k=pg.sfx,sc=$s('#shScene');
@@ -1501,11 +1502,11 @@ function pt(g,ch,x,y,size,cls,delay,vars){var t=document.createElementNS('http:/
   t.style.animationDelay=(delay||0)+'ms';if(vars)for(var k in vars)t.style.setProperty(k,vars[k]);g.appendChild(t);setTimeout(function(){t.remove()},4200+(delay||0))}
 function spk(){var pg=SH.pages[SH.page],c=(pg.cast||[]).filter(function(c){return c[0]===pg.w})[0];return c?[c[1],160]:[200,140]}
 function fx(kind,ch){var g=fxLayer();if(!g)return;var sc=$s('#shScene'),p=spk(),i;
-  if(kind==='confetti'){var cols=['#ff5a7a','#ffd23f','#4aa3e0','#7cc35a','#c084fc','#ff9f43'];for(i=0;i<26;i++){var r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',10+Math.random()*380);r.setAttribute('y',-10);r.setAttribute('width',8);r.setAttribute('height',12);r.setAttribute('fill',cols[i%6]);r.setAttribute('class','pf pfFall');r.style.animationDelay=(Math.random()*700|0)+'ms';r.style.setProperty('--r',(Math.random()*720-360|0)+'deg');g.appendChild(r);(function(r){setTimeout(function(){r.remove()},3500)})(r)}
+  if(kind==='confetti'){var cols=['#ff5a7a','#ffd23f','#4aa3e0','#7cc35a','#c084fc','#ff9f43'];for(i=0;i<14;i++){var r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',10+Math.random()*380);r.setAttribute('y',-10);r.setAttribute('width',8);r.setAttribute('height',12);r.setAttribute('fill',cols[i%6]);r.setAttribute('class','pf pfFall');r.style.animationDelay=(Math.random()*700|0)+'ms';r.style.setProperty('--r',(Math.random()*720-360|0)+'deg');g.appendChild(r);(function(r){setTimeout(function(){r.remove()},3500)})(r)}
     if(ch)for(i=0;i<3;i++)pt(g,ch,80+i*120,120,34,'pfPop',i*200);return}
   if(kind==='burst'){for(i=0;i<9;i++){var a=i/9*Math.PI*2;pt(g,ch,p[0],p[1]-30,24,'pfBurst',i*30,{'--dx':(Math.cos(a)*90|0)+'px','--dy':(Math.sin(a)*70|0)+'px'})}return}
   if(kind==='rise'){for(i=0;i<6;i++)pt(g,ch,p[0]-50+Math.random()*100,p[1],22+Math.random()*12,'pfRise',i*220);return}
-  if(kind==='fall'){for(i=0;i<14;i++)pt(g,ch,20+Math.random()*360,0,18+Math.random()*10,'pfFall2',i*120);return}
+  if(kind==='fall'){for(i=0;i<8;i++)pt(g,ch,20+Math.random()*360,0,18+Math.random()*10,'pfFall2',i*120);return}
   if(kind==='pop'){pt(g,ch,p[0],p[1]-60,56,'pfPop',0);return}
   if(kind==='shock'){pt(g,ch,p[0],p[1]-50,48,'pfPop',0);pt(g,ch,p[0]-60,p[1]-20,30,'pfPop',150);pt(g,ch,p[0]+60,p[1]-20,30,'pfPop',300);sc.classList.remove('shShake');void sc.offsetWidth;sc.classList.add('shShake');return}
   if(kind==='zzz'){pt(g,'🤫',p[0],p[1]-40,40,'pfPop',0);for(i=0;i<4;i++)pt(g,'…',p[0]+20+i*10,p[1]-60,26,'pfRise',300+i*250);return}
@@ -1513,8 +1514,8 @@ function fx(kind,ch){var g=fxLayer();if(!g)return;var sc=$s('#shScene'),p=spk(),
   if(kind==='shrink'){pt(g,'✨',p[0],p[1]-30,40,'pfPop',0);var w=$s('#shScene .who[data-who="'+SH.pages[SH.page].w+'"]');if(w){w.classList.remove('shShrink');void w.getBoundingClientRect();w.classList.add('shShrink')}return}
   if(kind==='bounce'){for(i=0;i<3;i++)pt(g,ch,120+i*80,150,34,'pfBounce',i*250);return}
   if(kind==='dash'){for(i=0;i<5;i++)pt(g,ch,p[0]-30,p[1]+20,24,'pfDash',i*200);return}
-  if(kind==='snow'){for(i=0;i<16;i++)pt(g,'❄️',20+Math.random()*360,0,14+Math.random()*12,'pfFall2',i*140);if(ch)pt(g,'🎄',p[0],p[1]-50,40,'pfPop',200);return}
-  if(kind==='wind'){for(i=0;i<10;i++)pt(g,ch,-10,40+Math.random()*150,22+Math.random()*12,'pfWind',i*180);return}
+  if(kind==='snow'){for(i=0;i<9;i++)pt(g,'❄️',20+Math.random()*360,0,14+Math.random()*12,'pfFall2',i*140);if(ch)pt(g,'🎄',p[0],p[1]-50,40,'pfPop',200);return}
+  if(kind==='wind'){for(i=0;i<6;i++)pt(g,ch,-10,40+Math.random()*150,22+Math.random()*12,'pfWind',i*180);return}
 }
 function sceneFx(){var pg=SH.pages[SH.page],f=pg.fx||FXMAP[pg.sfx];if(f)fx(f[0],f[1])}
 /* 唸英文時，一個字一個字亮起來 */
@@ -1585,7 +1586,7 @@ var CSS='#shRoot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;backg
 '#shNav{flex:none;display:flex;gap:8px;justify-content:center;padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px))}'+
 '#shScene .who{transform-box:fill-box;transform-origin:50% 100%}#shScene .who.talk{animation:shHop .35s ease-in-out infinite alternate}'+
 '#shScene .act{transform-box:fill-box;transform-origin:50% 100%}#shScene.snd .act{animation:shHop .45s ease-in-out infinite alternate}'+
-'#shScene.snd .wind{animation:shWind .6s linear infinite}#shScene .drop{animation:shDrop .8s linear infinite}#shScene .flake{animation:shDrop 2.4s ease-in-out infinite alternate}'+
+'#shScene.snd .wind{animation:shWind .6s linear infinite}#shScene.snd .drop{animation:shDrop .8s linear infinite}'+
 '@keyframes shHop{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-8px) rotate(5deg)}}'+
 '@keyframes shWind{from{transform:translateX(-10px)}to{transform:translateX(10px)}}@keyframes shDrop{from{transform:translateY(-6px)}to{transform:translateY(8px)}}'+
 '#shScene svg{animation:shIn .45s ease-out}'+
