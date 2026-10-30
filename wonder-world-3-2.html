@@ -434,11 +434,7 @@ let silentEl=null;
 function silentWav(){const n=4000,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o,s)=>{for(let i=0;i<s.length;i++)b[o+i]=s.charCodeAt(i)};
   w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
   for(let i=44;i<b.length;i++)b[i]=128;let s='';for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return 'data:audio/wav;base64,'+btoa(s)}
-function audioWake(){
-  try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
-  try{if(!silentEl){silentEl=document.createElement('audio');silentEl.setAttribute('playsinline','');silentEl.loop=true;silentEl.src=silentWav()}
-    if(silentEl.paused){const p=silentEl.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}
-  try{const a=ac();if(a&&a.state!=='running')a.resume()}catch(e){}}
+function audioWake(){try{const a=ac();if(a&&a.state!=='running')a.resume()}catch(e){}}
 ['touchend','click'].forEach(t=>document.addEventListener(t,audioWake,{capture:true,passive:true}));
 function say(items,done){
   if(!synth){if(done)setTimeout(done,400);return}
@@ -775,8 +771,8 @@ function traceWord(item,lead,onDone){
 /* ================= 關卡用到的資料（課本＋兩份考卷） ================= */
 const NUMQ=[{w:'thirty',n:30,o:[30,13,40]},{w:'fifty',n:50,o:[50,15,5]},{w:'forty',n:40,o:[40,14,50]},{w:'fifteen',n:15,o:[15,50,25]},{w:'twenty',n:20,o:[20,12,25]},{w:'twenty-five',n:25,o:[25,20,15]}];
 const NUMWORD={5:'five',12:'twelve',13:'thirteen',14:'fourteen',15:'fifteen',20:'twenty',25:'twenty-five',30:'thirty',40:'forty',50:'fifty'};
-const PAIRS=[['kit','kite'],['pin','pine'],['Tim','time'],['rid','ride'],['bit','bite'],['fin','fine'],['sit','site'],['rip','ripe'],['pip','pipe'],['win','wine']];
-const PZH={kit:'工具包',kite:'風箏',pin:'圖釘',pine:'松樹',Tim:'提姆（名字）',time:'時間',rid:'擺脫',ride:'騎',bit:'一點點',bite:'咬',fin:'魚鰭',fine:'很好',sit:'坐',site:'地點',rip:'撕破',ripe:'成熟的',pip:'果核',pipe:'管子',win:'贏',wine:'葡萄酒'};
+const PAIRS=[['kit','kite'],['pin','pine'],['Tim','time'],['rid','ride'],['bit','bite'],['fin','fine'],['sit','site'],['rip','ripe'],['pip','pipe'],['win','wine'],['dim','dime']];
+const PZH={dim:'昏暗的',dime:'一角硬幣',kit:'工具包',kite:'風箏',pin:'圖釘',pine:'松樹',Tim:'提姆（名字）',time:'時間',rid:'擺脫',ride:'騎',bit:'一點點',bite:'咬',fin:'魚鰭',fine:'很好',sit:'坐',site:'地點',rip:'撕破',ripe:'成熟的',pip:'果核',pipe:'管子',win:'贏',wine:'葡萄酒'};
 const SCHED=[{e:'⏰',t:'7:00',z:'起床'},{e:'🏫',t:'7:25',z:'上學'},{e:'🏠',t:'4:15',z:'回家'},{e:'📝',t:'8:40',z:'寫作業'},{e:'🛏️',t:'9:30',z:'睡覺'}];
 const TALK=[
  {who:'👧',line:'What time is it?',lz:'現在幾點？',pic:clockSVG(12,15,{cls:'sm',light:1}),ok:"It's twelve fifteen.",bad:["It's windy.","It's blue."]},
@@ -798,6 +794,24 @@ G.peek={};
 function peekHTML(key,text,what){const on=!!G.peek[key];return `<div class="peekBox" data-key="${key}" data-what="${what}"><div class="peek en ${on?'':'off'}">${text}</div><button class="tb sm peekBtn">${on?'不要顯示'+what:'顯示'+what}</button></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.peekBtn');if(!b)return;const box=b.parentNode,k=box.getAttribute('data-key'),w=box.getAttribute('data-what');
   G.peek[k]=!G.peek[k];box.querySelector('.peek').classList.toggle('off',!G.peek[k]);b.textContent=G.peek[k]?'不要顯示'+w:'顯示'+w;FX.pop();fitCheck()});
+/* 考考你：兩份考卷的題目 */
+const EX=(ins,p,o,ans,lead,read)=>({ins,p:`<div class="speech" style="font-size:clamp(17px,4.8vmin,26px);line-height:1.5;text-align:left;max-width:92vw">${p}</div>`,
+  lead:lead?[{t:lead,r:.85,gap:500}]:[],read:read===false?0:1,cls:'sent',o:shuffle(o).map(x=>({h:x,s:x,ok:x===ans}))});
+const EXAM2=[
+ ()=>EX('朋友說「八點了」，你要說什麼？',"Oh, no! It's eight o'clock.",["Hurry up! You're late for school.","Listen! It's a frog.","Great! It's hot."],"Hurry up! You're late for school.","Oh, no! It's eight o'clock."),
+ ()=>EX('朋友問現在幾點，選出對的回答。','What time is it?',["It's twelve fifteen.","It's windy.","It's blue."],"It's twelve fifteen.",'What time is it?'),
+ ()=>EX('朋友問現在幾點，選出對的回答。','What time is it?',["It's eleven thirty.","It's cold.","I'm eleven."],"It's eleven thirty.",'What time is it?'),
+ ()=>EX('空格要填哪一個？',"A: ____ It's the school bell.<br>B: It's four o'clock. Time to go home.",['Listen!',"Sorry, I'm late.",'Line up, please.'],'Listen!',"It's the school bell. It's four o'clock. Time to go home."),
+ ()=>EX('空格要填哪一個？',"A: What ____ is it?<br>B: It's ten thirty-five.",['time','color','weather'],'time',"What, blank, is it? It's ten thirty-five."),
+ ()=>EX('空格要填哪一個？',"____ is one twenty.",['It','I','He'],'It',"blank, is one twenty."),
+ ()=>EX('空格要填哪一個？',"It ____ two o'clock.",['is','am','are'],'is',"It, blank, two o'clock."),
+ ()=>EX('快遲到了，要去上學，空格要填哪一個？','A: Hurry up! ____<br>B: Time to go to school.',["It's seven thirty.","How's the weather?","It's sunny."],"It's seven thirty.",'Hurry up! Time to go to school.'),
+ ()=>EX('媽媽叫你起床，她會說什麼？','😴⏰ 9:20',["Wake up! It's nine twenty.","Hurry up! It's nine twenty-five.","Oh, no! It's eight forty."],"Wake up! It's nine twenty.",null),
+ ()=>EX('讀一讀：Mike 幾點寫作業？',"Mike: At eight o'clock, I will do my homework. At eleven thirty, I will go to the park.",["At eight o'clock.",'At eleven thirty.','At nine fifteen.'],"At eight o'clock.","At eight o'clock, I will do my homework. At eleven thirty, I will go to the park."),
+ ()=>EX('讀一讀：東京現在幾點？',"Lily: What time is it in Tokyo?<br>Grandma: It's ten thirty now.",["It's ten thirty.","It's nine thirty.","It's ten twenty-five."],"It's ten thirty.","What time is it in Tokyo? It's ten thirty now."),
+ ()=>EX("o'clock 要有小撇號，字和字中間要空格。選出寫對的句子。",'哪一句寫對了？',["It's seven o'clock.","It's six oclock.","It's fivefifteen."],"It's seven o'clock.",null,false),
+ ()=>EX('問時間要用 What，問號要緊跟著字。選出寫對的句子。','哪一句寫對了？',['What time is it?','How time is it?','What time is it  ?'],'What time is it?',null,false),
+ ()=>EX("It is 的縮寫是 It's。選出寫對的句子。",'哪一句寫對了？',["It's twelve fifty.","Its five fifty-five.","It's threeforty."],"It's twelve fifty.",null,false)];
 /* 時間題目：不同的時間組合 */
 function randTime(){const m=rnd([0,...MINS]);return [rh(),m]}
 function timeOpts(h,m){const set=[[h,m]];const k=t=>t[0]+':'+t[1];
@@ -934,6 +948,7 @@ const LV=[
   if(q.ask)lead.push({t:q.ask,mean:1,gap:400});
   begin([instrItem('L9','選出最合適的英文。','選出最合適的英文。')],[...lead,...readOpts(bs)])}},
 
+/* 📝 */ {name:'考考你',icon:'📝',gen:()=>shuffle(EXAM2).slice(0,6).map(f=>f()),show(q){P().innerHTML='';cardQ(q)}},
 /* 10 */ {name:'修好大時鐘',icon:'🔧',boss:1,gen:()=>shuffle(['listenClock','lookSent','num','phon','reply','minute']).map(t=>mixQ([t])),show(q){
   P().innerHTML=`<div class="bossTop"><div style="width:clamp(90px,22vmin,140px)">${cuckooHouse(4,0,false)}</div><div><div class="zhLine">修好大時鐘</div><div class="gears">${Array.from({length:6},(_,i)=>i<G.qi?'✅':'⚙️').join('')}</div></div></div>`;
   cardQ(q,()=>{const g=$('.gears');if(g)g.textContent=Array.from({length:6},(_,i)=>i<=G.qi?'✅':'⚙️').join('')})}}
@@ -1006,7 +1021,7 @@ function showMap(auto){
   if(nx<0){gb.textContent='全部過關！再玩一次';gb.onclick=()=>{G.cleared={};G.lastDone=-1;showMap(true)}}
   else{gb.textContent=`開始第 ${nx+1} 關`;gb.onclick=()=>{hush();startLevel(nx)};
     if(auto){let c=3;const lab=()=>gb.textContent=`${c} 秒後開始第 ${nx+1} 關`;const tick=()=>{c--;if(c<=0){startLevel(nx);return}lab();later(tick,1000)};G.mapTick=()=>{G.mapTick=null;lab();later(tick,1000)}}}
-  G.promptItems=[{t:auto?`${who}，這是闖關地圖。時鐘屋有十一扇窗，一扇窗就是一關。馬上開始囉！`:'這是闖關地圖。點一下要玩的窗戶，或是按上面的回首頁。',zh:1}];
+  G.promptItems=[{t:auto?`${who}，這是闖關地圖。時鐘屋有十二扇窗，一扇窗就是一關。馬上開始囉！`:'這是闖關地圖。點一下要玩的窗戶，或是按上面的回首頁。',zh:1}];
   if(!auto)G.mapTick=null;G.onReplay=()=>say(G.promptItems,()=>{if(G.mapTick)later(G.mapTick,300)});G.onReplay();fitCheck()}
 
 /* ================= 暫停、上方按鈕 ================= */
@@ -1049,27 +1064,28 @@ function sceneSVG(pg){
   let s=bgSVG(pg.bg,pg);
   (pg.props||[]).forEach(p=>{s+=`<text class="${p[4]?'act':''}" x="${p[1]}" y="${p[2]}" font-size="${p[3]||40}" text-anchor="middle">${p[0]}</text>`});
   (pg.cast||[]).forEach(c=>{const [w,x]=c;
-    if(w===pg.w)s+=`<g><path d="M${x-16} 120 h32 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 h-10 l-6 9 l-6 -9 h-10 a8 8 0 0 1 -8 -8 v-18 a8 8 0 0 1 8 -8Z" fill="#fff" stroke="${K}" stroke-width="3"/><text x="${x}" y="144" font-size="18" font-weight="900" text-anchor="middle" fill="#d9533c">${pg.n}</text></g>`;
+    if(w===pg.w)s+=`<g><path d="M${x-16} 120 h32 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 h-10 l-6 9 l-6 -9 h-10 a8 8 0 0 1 -8 -8 v-18 a8 8 0 0 1 8 -8Z" fill="#fff" stroke="${K}" stroke-width="3"/><text x="${x}" y="144" font-size="18" font-weight="900" text-anchor="middle" fill="#d9533c">${pg.n||"★"}</text></g>`;
     s+=`<g class="who" data-who="${w}">`+((w==='blue'||w==='pink')?blobG(w,x,192):`<text x="${x}" y="226" font-size="54" text-anchor="middle">${WHO[w]}</text>`)+'</g>'});
   if(pg.clock)s+=`<g class="${pg.actClock?'actC':''}"><rect x="290" y="6" width="104" height="134" rx="16" fill="#fff8ea" stroke="${K}" stroke-width="4"/>${clockG(pg.clock[0],pg.clock[1],342,56,46,{light:1})}${digiG(pg.clock[0],pg.clock[1],342,106,.8)}</g>`;
   return `<svg viewBox="0 0 400 240">${s}</svg>`}
 /* 課本第 30～33 頁，故事 1～15 句 */
 /* 課本第 30～33 頁：一句英文、一張圖 */
 const STORY=[
- {n:1,tip:"We're 就是 We are，意思是「我們是」。back 是「回到原來的地方」。",w:'boy',en:"We're back.",zh:'我們回來了。',bg:'school',sfx:'steps',cast:[['boy',80],['girl',150],['pink',230],['blue',305]]},
- {n:2,tip:'Great! 是稱讚別人的話，意思是「太好了、太棒了」。',w:'girl',en:'Great!',zh:'太好了！',bg:'school',sfx:'clap',cast:[['boy',80],['girl',150],['pink',230],['blue',305]],props:[['👍',190,150,36,1]]},
+ {n:0,tip:'Ahh! 是嚇一跳時的叫聲。大風（the big wind）把大家吹得好遠，咚！一起掉回學校的操場了！',w:'boy',en:'Ahh!',zh:'啊！',bg:'school',sfx:'windCrash',cast:[['girl',90],['boy',170],['pink',250],['blue',330]],props:[['🌪️',200,70,40,1],['🧢',60,110,26,1]]},
+ {n:1,tip:"We're 就是 We are，意思是「我們是」。back 是「回到原來的地方」。",w:'boy',en:"We're back.",zh:'我們回來了。',bg:'school',sfx:'landGiggle',cast:[['boy',80],['girl',150],['pink',230],['blue',305]]},
+ {n:2,tip:'Great! 是稱讚別人的話，意思是「太好了、太棒了」。',w:'girl',en:'Great!',zh:'太好了！',bg:'school',sfx:'greatClap',cast:[['boy',80],['girl',150],['pink',230],['blue',305]],props:[['👍',190,150,36,1]]},
  {n:3,tip:'Listen! 是「聽！」，要大家注意聽。',w:'blue',en:'Listen!',zh:'聽！',bg:'school',sfx:'bell',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1],['👂',250,175,26,1]]},
  {n:4,tip:"It's 就是 It is，「它是」。school 是學校，bell 是鐘、鐘聲。",w:'girl',en:"It's the school bell.",zh:'是學校的鐘聲。',bg:'school',sfx:'bellShort',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1]]},
  {n:5,tip:"o'clock 是「剛好幾點鐘」，four o'clock 就是四點鐘。Time to go home. 是「該回家了」。",w:'boy',en:"Oh, it's four o'clock. Time to go home.",zh:'噢，四點鐘了。該回家了。',bg:'school',sfx:'cuckoo4',actClock:1,clock:[4,0],cast:[['boy',70],['girl',135],['blue',210],['pink',275]]},
  {n:6,tip:'Look! 是「看！」，要大家看過來。',w:'pink',en:'Look!',zh:'看！',bg:'path',sfx:'birds',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['👉',95,170,26],['🐦',70,80,40,1]]},
- {n:7,tip:"bird 是鳥。It's a… 是「它是一個……」。",w:'girl',en:"It's a bird.",zh:'是一隻鳥。',bg:'path',sfx:'birds',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['🐦',90,75,56,1]]},
- {n:8,tip:"frog 是青蛙。距離我們比較遠的東西，要說 That's，「那是」；距離我們比較近的東西，要說 This is，「這是」。",w:'boy',en:"That's a frog.",zh:'那是一隻青蛙。',bg:'path',sfx:'frog',cast:[['pink',50],['girl',120],['blue',200],['boy',265]],props:[['🐸',340,226,40,1]]},
- {n:9,tip:'four fifteen 是四點十五分。must 是「必須」，go home 是「回家」。',w:'boy',en:"It's four fifteen. We must go home.",zh:'四點十五分了。我們必須回家了。',bg:'rock',sfx:'tick',actClock:1,clock:[4,15],cast:[['girl',45],['pink',110],['blue',175],['boy',240]],props:[['🍪',310,182,34],['🐜',290,205,18,1],['🐜',312,207,18,1],['🐜',334,205,18,1]]},
- {n:10,tip:"What's 就是 What is。What's that? 是「那是什麼？」",w:'blue',en:"What's that?",zh:'那是什麼？',bg:'path',sfx:'rustle',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,40],['❓',200,120,30,1]]},
- {n:11,tip:"dog 是狗。It's a dog. 就是「它是一隻狗」。",w:'boy',en:"It's a dog.",zh:'是一隻狗。',bg:'path',sfx:'dog',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,46,1]]},
+ {n:7,tip:"bird 是鳥。It's a… 是「它是一個……」。",w:'girl',en:"It's a bird.",zh:'是一隻鳥。',bg:'path',sfx:'tweet',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['🐦',90,75,56,1]]},
+ {n:8,tip:"frog 是青蛙。距離我們比較遠的東西，要說 That's，「那是」；距離我們比較近的東西，要說 This is，「這是」。",w:'boy',en:"That's a frog.",zh:'那是一隻青蛙。',bg:'path',sfx:'frogJump',cast:[['pink',50],['girl',120],['blue',200],['boy',265]],props:[['🐸',340,226,40,1]]},
+ {n:9,tip:'four fifteen 是四點十五分。must 是「必須」，go home 是「回家」。',w:'boy',en:"It's four fifteen. We must go home.",zh:'四點十五分了。我們必須回家了。',bg:'rock',sfx:'antMarch',actClock:1,clock:[4,15],cast:[['girl',45],['pink',110],['blue',175],['boy',240]],props:[['🍪',310,182,34],['🐜',290,205,18,1],['🐜',312,207,18,1],['🐜',334,205,18,1]]},
+ {n:10,tip:"What's 就是 What is。What's that? 是「那是什麼？」",w:'blue',en:"What's that?",zh:'那是什麼？',bg:'path',sfx:'rustleHmm',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,40],['❓',200,120,30,1]]},
+ {n:11,tip:"dog 是狗。It's a dog. 就是「它是一隻狗」。",w:'boy',en:"It's a dog.",zh:'是一隻狗。',bg:'path',sfx:'dogWoof',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,46,1]]},
  {n:12,tip:'What 是什麼，time 是時間。What time is it? 是問「現在幾點？」',w:'girl',en:'What time is it?',zh:'現在幾點？',bg:'path',sfx:'hmm',cast:[['girl',110],['boy',210]],props:[['❓',110,150,30,1]]},
  {n:13,tip:'Oh, no! 是「糟糕！」。four fifty 是四點五十分。',w:'boy',en:"Oh, no! It's four fifty!",zh:'糟糕！四點五十分了！',bg:'path',sfx:'ohno',actClock:1,clock:[4,50],cast:[['girl',110],['boy',210]],props:[['😱',245,160,30,1]]},
- {n:14,tip:'Bye! 是「再見」，和朋友分開的時候說。',w:'girl',en:'Bye!',zh:'再見！',bg:'path',sfx:'run',cast:[['girl',90],['blue',200],['boy',320]],props:[['👋',130,170,34,1]]},
+ {n:14,tip:'Bye! 是「再見」，和朋友分開的時候說。',w:'girl',en:'Bye!',zh:'再見！',bg:'path',sfx:'byeRun',cast:[['girl',90],['blue',200],['boy',320]],props:[['👋',130,170,34,1]]},
  {n:15,tip:"Sorry 是「對不起」。I'm 就是 I am，late 是「遲到」，Mom 是媽媽。",w:'boy',en:"Sorry, I'm late, Mom.",zh:'媽媽，對不起，我遲到了。',bg:'home',sfx:'home',clock:[5,0],cast:[['blue',60],['boy',150],['mom',230]]}
 ];
 const ST={i:0,tok:0,sndUntil:0};
@@ -1081,20 +1097,33 @@ const SFX={
   bellShort(){const E=659,C=523,D=587,G=392;[E,C,D,G].forEach((f,i)=>SFX.bellNote(f,i*.6));return 3},
   bell(){const E=659,C=523,D=587,G=392;[[E,C,D,G],[G,D,E,C]].forEach((ph,j)=>ph.forEach((f,i)=>SFX.bellNote(f,j*2.6+i*.6)));return 5.6},
   clap(){FX.clap();setTimeout(()=>FX.clap(),500);tone(523,.1,.2,'triangle',.08);tone(784,.3,.3,'triangle',.08);return 1.6},
-  tick(n){n=n||6;for(let i=0;i<n;i++){noise(i*.5,.025,.55,i%2?2600:3600);tone(i%2?1500:2000,i*.5,.03,'square',.03)}return n*.5},
+  tick(n){n=n||6;for(let i=0;i<n;i++){noise(i*.5,.025,.55,i%2?2600:3600);tone(i%2?1500:2000,i*.5,.03,'triangle',.03)}return n*.5},
   /* 時鐘滴答＋布穀鳥叫四聲（四點鐘） */
   cuckoo4(){const t=SFX.tick(4);for(let i=0;i<4;i++){tone(760,t+i*.9,.3,'sine',.22,720);tone(600,t+i*.9+.34,.45,'sine',.22,570)}return t+3.8},
   birds(){[0,.18,.9,1.05,1.2,2.1,2.25].forEach((t,i)=>tone(2600+(i%3)*300,t,.09,'sine',.09,4200));return 2.6},
-  frog(){[0,.16,1.1,1.26].forEach(t=>{tone(170,t,.13,'sawtooth',.11,120);tone(340,t,.13,'square',.03,240)});return 1.8},
+  frog(){[0,.16,1.1,1.26].forEach(t=>{tone(170,t,.13,'triangle',.11,120);tone(340,t,.13,'triangle',.03,240)});return 1.8},
   rustle(){noise(0,.5,.18,3200);noise(.6,.4,.15,2600);noise(1.1,.3,.12,3600);return 1.5},
-  dog(){[0,.35,1.2].forEach(t=>{tone(520,t,.16,'sawtooth',.16,230);noise(t,.12,.25,900)});return 1.6},
+  dog(){[0,.35,1.2].forEach(t=>{tone(520,t,.16,'triangle',.16,230);noise(t,.12,.25,900)});return 1.6},
   hmm(){const t=SFX.tick(3);tone(330,t,.35,'triangle',.1,392);return t+.5},
   /* 鬧鐘響＋糟糕的音樂 */
-  ohno(){for(let i=0;i<10;i++)tone(i%2?1100:880,i*.11,.1,'square',.05);[[392,1.4,.35],[370,1.8,.35],[311,2.2,1.1]].forEach(([f,t,d])=>tone(f,t,d,'triangle',.18));return 3.5},
+  ohno(){for(let i=0;i<10;i++)tone(i%2?1100:880,i*.11,.1,'triangle',.05);[[392,1.4,.35],[370,1.8,.35],[311,2.2,1.1]].forEach(([f,t,d])=>tone(f,t,d,'triangle',.18));return 3.5},
   run(){SFX.steps(10,.2);noise(0,2,.04,600);return 2.2},
   /* 跑回家：腳步聲＋開門＋門鈴 */
-  birdfrog(){SFX.birds();const t=2.7;[0,.16,1.0,1.16].forEach(x=>{tone(170,t+x,.13,'sawtooth',.11,120);tone(340,t+x,.13,'square',.03,240)});return t+1.6},
-  home(){const t=SFX.steps(5,.22);tone(110,t,.5,'sawtooth',.05,190);tone(659,t+.6,.6,'sine',.18);tone(523,t+1.1,1,'sine',.18);return t+2.2}
+  birdfrog(){SFX.birds();const t=2.7;[0,.16,1.0,1.16].forEach(x=>{tone(170,t+x,.13,'triangle',.11,120);tone(340,t+x,.13,'triangle',.03,240)});return t+1.6},
+  home(){const t=SFX.steps(5,.22);tone(110,t,.5,'triangle',.05,190);tone(659,t+.6,.6,'sine',.18);tone(523,t+1.1,1,'sine',.18);return t+2.2},
+  giggle(){for(let i=0;i<7;i++)tone(760+i*45+(i%2)*120,i*.1,.08,'sine',.12,980+i*45);return .9},
+  boing(){tone(180,0,.45,'triangle',.18,560);return .7},
+  slideUp(){tone(300,0,.7,'sine',.16,1300);return .8},
+  sparkle(){[1568,1760,2093,2349,2637].forEach((f,i)=>tone(f,i*.08,.3,'sine',.08));return 1},
+  windCrash(){noise(0,1.2,.25,500);noise(.3,1,.2,900);tone(900,.2,.9,'sine',.12,250);setTimeout(()=>{noise(0,.3,.4,300);tone(90,0,.3,'sine',.2,50)},1300);return 2.2},
+  landGiggle(){SFX.steps(4,.25);setTimeout(SFX.giggle,1100);return 2},
+  greatClap(){SFX.clap();setTimeout(SFX.sparkle,900);return 2},
+  tweet(){SFX.birds();setTimeout(SFX.giggle,2000);return 3},
+  frogJump(){SFX.frog();setTimeout(SFX.boing,1500);return 2.3},
+  antMarch(){SFX.tick(4);for(let i=0;i<8;i++)tone(1200+(i%2)*200,2+i*.12,.05,'sine',.06);return 3.1},
+  rustleHmm(){SFX.rustle();setTimeout(()=>{tone(330,0,.35,'triangle',.1,392)},1400);return 1.9},
+  dogWoof(){SFX.dog();setTimeout(SFX.giggle,1500);return 2.5},
+  byeRun(){SFX.slideUp();setTimeout(()=>SFX.run(),700);return 2.9}
 };
 function playSfx(cb){const m0=ST.tok;let n=0;
   const wait=()=>{if(m0!==ST.tok&&cb)return;if(synth&&synth.speaking&&n++<15){try{synth.cancel()}catch(e){}later(wait,100);return}playSfxNow(cb)};wait()}
@@ -1121,7 +1150,7 @@ function storyShow(i){
   $('#sPage').textContent=`第 ${i+1} 頁 / 共 ${STORY.length} 頁`;
   $('#sScene').innerHTML=sceneSVG(pg);
   $('#sScene').onclick=()=>{if(performance.now()<ST.sndUntil)return;playSfx()};
-  $('#sText').innerHTML=`<div class="sLine one"><span class="sNo">${pg.n}</span><span class="sWho">${whoIcon(pg.w)}</span><div class="sBody"><div class="sEn2 en">${pg.en.split(' ').map(w=>`<span class="w">${w}</span>`).join(' ')}</div><div class="sZh2">${pg.zh}</div></div></div><div class="sTip">💡 ${pg.tip}</div>`;
+  $('#sText').innerHTML=`<div class="sLine one"><span class="sNo">${pg.n||"★"}</span><span class="sWho">${whoIcon(pg.w)}</span><div class="sBody"><div class="sEn2 en">${pg.en.split(' ').map(w=>`<span class="w">${w}</span>`).join(' ')}</div><div class="sZh2">${pg.zh}</div></div></div><div class="sTip">💡 ${pg.tip}</div>`;
   $$('#sText .w').forEach(sp=>sp.onclick=()=>{ST.tok++;hush();const w=sp.textContent.replace(/[.,!?]/g,'');sp.classList.add('say');say([{t:w,r:.75}],()=>sp.classList.remove('say'))});
   $('#sPrev').disabled=i===0;$('#sNext').textContent=i===STORY.length-1?'看完了':'下一頁';
   storyRead();fitCheck()}
