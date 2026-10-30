@@ -1295,6 +1295,21 @@ window.__T={start:startStation,S:()=>S,me:()=>me()};
 </style>
 <script>
 window.STORY_DATA={
+ 'xmas':{title:'Merry Christmas',pages:[
+ {n:1,w:'santa',en:'Merry Christmas!',zh:'聖誕快樂！',tip:'Christmas 是「聖誕節」，merry 是「快樂的」。Merry Christmas! 是聖誕節見面時說「聖誕快樂！」',bg:'xmas',sfx:'jingle',cast:[['kevin',170],['girl',250],['santa',330]],props:[['🛷',200,215,30]]},
+ {n:2,w:'kevin',en:"Wow! It's Father Christmas!",zh:'哇！是聖誕老公公！',tip:'Wow! 是「哇！」。Father Christmas 和 Santa Claus 都是「聖誕老人」。',bg:'xmas',sfx:'wow',cast:[['kevin',170],['girl',250],['santa',330]],props:[['😮',170,85,28,1]]},
+ {n:3,w:'santa',en:'Ho, ho, ho!',zh:'呵、呵、呵！',tip:'Ho, ho, ho! 是聖誕老人開心大笑的聲音。',bg:'xmas',sfx:'hohoho',cast:[['santa',230]],props:[['🦌',330,200,40,1],['🎁',150,200,30]]},
+ {n:4,w:'santa',en:'This is for you.',zh:'這是給你的。',tip:'This is 是「這是」，for you 是「給你的」。送東西給別人時說 This is for you.',bg:'xmas',sfx:'gift',cast:[['girl',170],['santa',300]],props:[['🎁',235,150,34,1]]},
+ {n:5,w:'girl',en:'Thank you, Santa Claus.',zh:'謝謝你，聖誕老人。',tip:'Thank you. 是「謝謝你」。Santa Claus 是「聖誕老人」。',bg:'xmas',sfx:'thanks',cast:[['girl',170],['santa',300]],props:[['🎁',170,110,28,1]]},
+ {n:6,w:'girl',en:"What's this?",zh:'這是什麼？',tip:'this 是「這個」，用在離我們比較近的東西。',bg:'xmas',sfx:'hmm',cast:[['girl',180],['kevin',300]],props:[['🧦',230,170,30,1],['❓',180,85,26,1]]},
+ {n:7,w:'kevin',en:"It's a stocking.",zh:'它是一隻聖誕襪。',tip:'stocking 是「聖誕襪」，聖誕老人會把禮物放在裡面。',bg:'xmas',sfx:'sparkle',cast:[['girl',180],['kevin',300]],props:[['🧦',240,160,38,1]]},
+ {n:8,w:'kevin',en:"What's that?",zh:'那是什麼？',tip:'that 是「那個」，用在離我們比較遠的東西。',bg:'xmas',sfx:'hmm',cast:[['kevin',150],['girl',230]],props:[['👉',190,150,26],['⛄',360,200,34,1]]},
+ {n:9,w:'girl',en:"It's a snowman.",zh:'它是一個雪人。',tip:'snow 是「雪」，man 是「人」。snowman 是「雪人」。',bg:'xmas',sfx:'pop',cast:[['kevin',150],['girl',230]],props:[['⛄',330,195,48,1]]},
+ {n:10,w:'jello',en:"Look! It's a star.",zh:'看！是一顆星星。',tip:'Look! 是「看！」。star 是「星星」，聖誕樹的最上面有一顆星星。',bg:'xmas',sfx:'sparkle',cast:[['jello',200],['boka',300]],props:[['⭐',70,90,34,1]]},
+ {n:11,w:'kevin',en:'Here you are.',zh:'給你。',tip:'Here you are. 是把東西拿給別人時說「給你」。',bg:'xmas',sfx:'gift',cast:[['kevin',170],['boka',300]],props:[['🎁',235,150,32,1]]},
+ {n:12,w:'all',en:'Christmas time. Happy time.',zh:'聖誕時光，快樂時光。',tip:'time 是「時間、時光」，happy 是「快樂的」。',bg:'xmas',sfx:'sleigh',cast:[['kevin',150],['girl',220],['jello',290],['boka',360]],props:[['🎄',70,120,30,1]]},
+ {n:13,w:'all',en:'Merry Christmas!',zh:'聖誕快樂！',tip:'大家一起說 Merry Christmas!「聖誕快樂！」',bg:'xmas',sfx:'fanfare',cast:[['kevin',150],['girl',220],['santa',300],['boka',370]],props:[['🎉',200,80,34,1]]}
+]},
 /* ---------- English 1-1 Unit 1 The Birthday Party ---------- */
 '1-1':{title:'The Birthday Party',pages:[
  {n:0,w:'girl',en:'Shh!',zh:'噓！',tip:'Shh! 是「噓！」，叫大家小聲一點。大家要偷偷幫 Boka 辦一個生日派對（birthday party）。',bg:'party',sfx:'shh',cast:[['girl',90],['jello',190],['kevin',300]],props:[['🎂',140,165,36],['🤫',90,95,30,1]]},
@@ -1388,9 +1403,15 @@ function $$s(q){return Array.prototype.slice.call(document.querySelectorAll(q))}
 /* ---------- 語音 ---------- */
 var SH={rate:1,tok:0,ptok:0,paused:false,page:0,pages:null,opt:null,sndUntil:0,vEn:null,vZh:null,seen:false};
 var synth=window.speechSynthesis||null;
+/* 只挑選「正常、好聽」的聲音；找不到就不指定，讓手機用它自己預設的聲音。
+   （iPhone 有些搞笑聲音，例如 Albert、Bubbles、Zarvox，排在清單前面會被誤選，唸起來很奇怪） */
+var GOOD_EN=/^(Samantha|Ava|Allison|Susan|Nicky|Alex|Aaron|Evan|Joelle|Noelle|Zoe|Karen|Daniel|Moira|Tessa|Serena|Google US English|Microsoft (Aria|Jenny|Guy|Zira|David|Mark|Ana))/i;
+var GOOD_ZH=/(Mei-?Jia|美佳|Google 國語|國語（臺灣）|HsiaoChen|HsiaoYu|Hanhan|Yating|曉臻|曉雨)/i;
 function pickVoices(){try{var vs=synth.getVoices()||[];
-  SH.vEn=vs.filter(function(v){return /en[-_]US/i.test(v.lang)})[0]||vs.filter(function(v){return /^en/i.test(v.lang)})[0]||null;
-  SH.vZh=vs.filter(function(v){return /zh[-_]TW/i.test(v.lang)})[0]||vs.filter(function(v){return /zh[-_](HK|Hant)/i.test(v.lang)})[0]||vs.filter(function(v){return /^zh/i.test(v.lang)})[0]||null}catch(e){}}
+  var en=vs.filter(function(v){return /^en[-_]US/i.test(v.lang)&&GOOD_EN.test(v.name)});
+  en.sort(function(a,b){return (b.localService?1:0)-(a.localService?1:0)});
+  SH.vEn=en.filter(function(v){return /^Samantha/i.test(v.name)})[0]||en[0]||null;
+  SH.vZh=vs.filter(function(v){return /^zh[-_]TW/i.test(v.lang)&&GOOD_ZH.test(v.name)})[0]||null}catch(e){SH.vEn=SH.vZh=null}}
 if(synth){pickVoices();try{synth.addEventListener('voiceschanged',pickVoices)}catch(e){}}
 function hush(){SH.tok++;try{synth&&synth.cancel()}catch(e){}}
 function say(items,done){
@@ -1469,6 +1490,9 @@ var SFX={
   fanfare:function(){[[523,0],[659,.12],[784,.24],[1047,.4],[784,.58],[1047,.7]].forEach(function(n){tone(n[0],n[1],.35,'triangle',.15)});for(var i=0;i<16;i++)noise(.9+i*.055+Math.random()*.04,.09,.5,1500+Math.random()*900);return 2},
   clap:function(){for(var i=0;i<16;i++)noise(i*.055+Math.random()*.04,.09,.55,1500+Math.random()*900);return 1.2},
   thanks:function(){notes([[659,.2],[784,.35]],'sine',.12);return .7},
+  jingle:function(){var E=659,G=784,C=523,D=587;for(var i=0;i<14;i++)noise(i*.16,.05,.18,6000);return notes([[E,.22],[E,.22],[E,.44],[E,.22],[E,.22],[E,.44],[E,.22],[G,.22],[C,.33],[D,.11],[E,.6]],'triangle',.13)},
+  hohoho:function(){[0,.4,.8].forEach(function(t){tone(150,t,.3,'sawtooth',.1,120);tone(300,t,.3,'sine',.06,240)});for(var i=0;i<8;i++)noise(1.1+i*.12,.05,.15,6000);return 2},
+  sleigh:function(){for(var i=0;i<18;i++){noise(i*.11,.05,.2,7000);tone(2200+(i%3)*300,i*.11,.06,'sine',.03)}return 2.1},
   dragon:function(){tone(160,0,.6,'sawtooth',.1,90);tone(240,.1,.5,'square',.04,120);return .9}
 };
 /* iPhone 靜音鍵開著時，音效也要聽得到 */
@@ -1487,7 +1511,7 @@ function playSfx(cb){
   setTimeout(function(){sc.classList.remove('snd');if(m===SH.ptok&&cb&&!SH.closed)cb()},Math.round(d*1000)+250)}
 
 /* ---------- 特效：彩帶、愛心、星星、雨滴、樹葉、驚嘆號……都在圖上跳出來 ---------- */
-var FXMAP={shh:['zzz'],bday:['confetti','🎉'],gift:['burst','✨'],thanks:['rise','💖'],hmm:['rise','❓'],one:['pop','1️⃣'],boing:['shock','❗'],candle:['burst','✨'],chomp:['burst','🍪'],
+var FXMAP={jingle:['snow','❄️'],hohoho:['burst','🎁'],sleigh:['dash','✨'],shh:['zzz'],bday:['confetti','🎉'],gift:['burst','✨'],thanks:['rise','💖'],hmm:['rise','❓'],one:['pop','1️⃣'],boing:['shock','❗'],candle:['burst','✨'],chomp:['burst','🍪'],
   ohno:['shock','💦'],shrink:['shrink'],worry:['rise','💧'],ok:['rise','👍'],stomach:['rise','🍔'],plate:['burst','🍔'],water:['rise','💧'],splash:['burst','💦'],sad:['fall','💧'],
   potion:['rise','✨'],count:['count'],phew:['burst','🌟'],morning:['rise','🎵'],conveyor:['rise','⚙️'],bounce:['bounce','⚽'],wow:['burst','⭐'],car:['dash','💨'],printer:['burst','✨'],
   cute:['rise','💕'],whistle:['rise','🎵'],robot:['burst','⚡'],crash:['shock','💥'],alarm:['shock','⚠️'],ring:['shock','⏰'],birds:['rise','🎵'],rain:['fall','💧'],wind:['wind','🍃'],
@@ -1509,6 +1533,7 @@ function fx(kind,ch){var g=fxLayer();if(!g)return;var sc=$s('#shScene'),p=spk(),
   if(kind==='shrink'){pt(g,'✨',p[0],p[1]-30,40,'pfPop',0);var w=$s('#shScene .who[data-who="'+SH.pages[SH.page].w+'"]');if(w){w.classList.remove('shShrink');void w.getBoundingClientRect();w.classList.add('shShrink')}return}
   if(kind==='bounce'){for(i=0;i<3;i++)pt(g,ch,120+i*80,150,34,'pfBounce',i*250);return}
   if(kind==='dash'){for(i=0;i<5;i++)pt(g,ch,p[0]-30,p[1]+20,24,'pfDash',i*200);return}
+  if(kind==='snow'){for(i=0;i<16;i++)pt(g,'❄️',20+Math.random()*360,0,14+Math.random()*12,'pfFall2',i*140);if(ch)pt(g,'🎄',p[0],p[1]-50,40,'pfPop',200);return}
   if(kind==='wind'){for(i=0;i<10;i++)pt(g,ch,-10,40+Math.random()*150,22+Math.random()*12,'pfWind',i*180);return}
 }
 function sceneFx(){var pg=SH.pages[SH.page],f=pg.fx||FXMAP[pg.sfx];if(f)fx(f[0],f[1])}
@@ -1523,8 +1548,8 @@ function blob(kind,x,y){
   if(kind==='dragon')return '<g transform="translate('+x+' '+y+')"><path d="M-30 -2 l-14 -14 l6 18Z M30 -2 l14 -14 l-6 18Z" fill="#ff8a65" stroke="'+K+'" stroke-width="2"/><ellipse cx="0" cy="4" rx="28" ry="30" fill="#e74c3c" stroke="'+K+'" stroke-width="3"/><ellipse cx="0" cy="14" rx="15" ry="16" fill="#ffd28a"/><path d="M-12 -24 l4 -10 l4 8 l4 -8 l4 8 l4 -10 l2 12Z" fill="#ffd28a" stroke="'+K+'" stroke-width="1.5"/><circle cx="-10" cy="-8" r="8" fill="#9be36b" stroke="'+K+'" stroke-width="1.5"/><circle cx="10" cy="-8" r="8" fill="#9be36b" stroke="'+K+'" stroke-width="1.5"/><circle cx="-9" cy="-7" r="3.5" fill="'+K+'"/><circle cx="11" cy="-7" r="3.5" fill="'+K+'"/><path d="M-8 6 q8 6 16 0" fill="none" stroke="'+K+'" stroke-width="2.5"/></g>';
   return '';
 }
-var EMO={kevin:'👦',girl:'👧',man:'👨',mom:'👩',baby:'👶'};
-var WHO={kevin:'Kevin',girl:'女孩',boka:'Boka',jello:'Jello',dragon:'小龍',all:'大家',man:'叔叔',mom:'媽媽'};
+var EMO={santa:'🎅',kevin:'👦',girl:'👧',man:'👨',mom:'👩',baby:'👶'};
+var WHO={santa:'聖誕老人',kevin:'Kevin',girl:'女孩',boka:'Boka',jello:'Jello',dragon:'小龍',all:'大家',man:'叔叔',mom:'媽媽'};
 function whoIcon(w){if(w==='boka'||w==='jello'||w==='dragon')return '<svg viewBox="-46 -50 92 92" style="width:1.25em;height:1.25em;vertical-align:middle">'+blob(w,0,0)+'</svg>';if(w==='all')return '🎉';return EMO[w]||'🙂'}
 function bg(kind,pg){
   var s='';
@@ -1539,6 +1564,9 @@ function bg(kind,pg){
   else if(kind==='park'){var sky=pg.weather==='cloudy'||pg.weather==='windy'?'#c9d8e6':'#bfe6ff';s='<rect width="400" height="240" fill="'+sky+'"/><rect y="172" width="400" height="68" fill="#8fcf6a"/><path d="M230 172 q40 -70 80 0" fill="none" stroke="#f2b632" stroke-width="14"/>'+(pg.weather==='sunny'||!pg.weather?'<circle cx="350" cy="40" r="22" fill="#ffd54a"/>':'')+'<text x="20" y="168" font-size="46">🌳</text>';
     if(pg.weather==='cloudy'||pg.weather==='windy')s+='<g fill="#fff" stroke="#9fb0cc" stroke-width="2"><ellipse cx="90" cy="45" rx="45" ry="20"/><ellipse cx="260" cy="35" rx="55" ry="22"/></g>';
     if(pg.weather==='windy')s+='<g stroke="#5b8bd6" stroke-width="3" fill="none" stroke-linecap="round" class="wind"><path d="M20 90 q60 -20 120 0"/><path d="M160 110 q70 -20 140 0"/><path d="M60 130 q50 -14 100 0"/></g>'}
+  else if(kind==='xmas'){s='<rect width="400" height="240" fill="#1f3b6e"/><rect y="176" width="400" height="64" fill="#f4f8ff"/><circle cx="345" cy="40" r="18" fill="#fff6c8"/>';
+    for(var q=0;q<18;q++)s+='<circle class="flake" cx="'+((q*53)%390+5)+'" cy="'+((q*37)%160+5)+'" r="'+(2+q%3)+'" fill="#fff" opacity=".85"/>';
+    s+='<path d="M40 176 L70 90 L100 176Z" fill="#2e8b57" stroke="#123" stroke-width="2"/><text x="70" y="96" font-size="18" text-anchor="middle">⭐</text><circle cx="62" cy="140" r="4" fill="#ff5a4f"/><circle cx="80" cy="155" r="4" fill="#ffd23f"/><circle cx="72" cy="122" r="4" fill="#4aa3e0"/>'}
   else if(kind==='home'){s='<rect width="400" height="240" fill="#ffd9a8"/><rect y="180" width="400" height="60" fill="#8fcf6a"/><rect x="200" y="70" width="160" height="110" fill="#fff1d6" stroke="'+K+'" stroke-width="4"/><path d="M190 74 L280 22 L370 74Z" fill="#d9533c" stroke="'+K+'" stroke-width="4"/><rect x="262" y="120" width="36" height="60" fill="#a8693f" stroke="'+K+'" stroke-width="3"/>'}
   else s='<rect width="400" height="240" fill="#bfe6ff"/><rect y="175" width="400" height="65" fill="#8fcf6a"/>';
   return s}
@@ -1577,7 +1605,7 @@ var CSS='#shRoot{position:fixed;left:0;top:0;right:0;bottom:0;z-index:9000;backg
 '#shNav{flex:none;display:flex;gap:8px;justify-content:center;padding:6px 6px calc(10px + env(safe-area-inset-bottom,0px))}'+
 '#shScene .who{transform-box:fill-box;transform-origin:50% 100%}#shScene .who.talk{animation:shHop .35s ease-in-out infinite alternate}'+
 '#shScene .act{transform-box:fill-box;transform-origin:50% 100%}#shScene.snd .act{animation:shHop .45s ease-in-out infinite alternate}'+
-'#shScene.snd .wind{animation:shWind .6s linear infinite}#shScene .drop{animation:shDrop .8s linear infinite}'+
+'#shScene.snd .wind{animation:shWind .6s linear infinite}#shScene .drop{animation:shDrop .8s linear infinite}#shScene .flake{animation:shDrop 2.4s ease-in-out infinite alternate}'+
 '@keyframes shHop{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-8px) rotate(5deg)}}'+
 '@keyframes shWind{from{transform:translateX(-10px)}to{transform:translateX(10px)}}@keyframes shDrop{from{transform:translateY(-6px)}to{transform:translateY(8px)}}'+
 '#shScene svg{animation:shIn .45s ease-out}'+
