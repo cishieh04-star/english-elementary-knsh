@@ -304,7 +304,7 @@ button:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
 .sEn2 .w.say{background:#ffd54a}
 .sZh2{font-weight:900;font-size:clamp(14px,4vmin,19px);color:#5a3b22}
 .scene .who{transform-box:fill-box;transform-origin:50% 100%}
-.scene .who.talk{animation:actHop .35s ease-in-out infinite alternate}
+.scene .who.talk>.idle{animation:actHop .35s ease-in-out infinite alternate}
 @media (orientation:landscape) and (max-height:540px){
  #story{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);grid-template-rows:auto minmax(0,1fr) auto;column-gap:10px}
  #story .sTop,#story .sNav{grid-column:1/3}
@@ -339,6 +339,69 @@ button:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
 .puff{position:fixed;font-size:40px;pointer-events:none;z-index:55;animation:puff 1s forwards}
 @keyframes puff{to{transform:translateY(-60px) scale(1.5);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<style>.sTip.sNar{background:#efe6ff;color:#3b2a6b;text-align:center;font-weight:900}.sTip.sNar.say{background:#dccbff}</style>
+<style>
+/* ===== 故事動畫 ===== */
+#sScene .who,#sScene .idle,#sScene .pp,#sScene .bal,#sScene .flg{transform-box:fill-box;transform-origin:50% 100%}
+#sScene .idle{animation:aIdle 2.4s ease-in-out infinite}
+#sScene .who.talk>.idle{animation:aTalk .35s ease-in-out infinite alternate}
+@keyframes aTalk{from{transform:translateY(0) rotate(-5deg)}to{transform:translateY(-8px) rotate(5deg)}}
+@keyframes aIdle{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.97) translateY(1px)}}
+#sScene .bal{animation:aBal 3s ease-in-out infinite}@keyframes aBal{0%,100%{transform:rotate(-5deg) translateY(0)}50%{transform:rotate(5deg) translateY(-6px)}}
+#sScene .flg{transform-origin:50% 0;animation:aFlg 1.6s ease-in-out infinite}@keyframes aFlg{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+#sScene .aEnter{animation:aEnter .9s cubic-bezier(.3,1.4,.6,1) both}@keyframes aEnter{from{transform:translateX(var(--fx));opacity:0}to{transform:none;opacity:1}}
+#sScene .aJump{animation:aJump .7s ease-out 2}@keyframes aJump{0%,100%{transform:none}40%{transform:translateY(-40px) scale(1.08)}70%{transform:translateY(0) scale(1.08,.88)}}
+#sScene .aHop{animation:aJump .6s ease-out 2}
+#sScene .aBounce{animation:aBounce .5s ease-in-out 4}@keyframes aBounce{0%,100%{transform:scale(1,1)}30%{transform:scale(1.15,.85)}60%{transform:scale(.9,1.12) translateY(-10px)}}
+#sScene .aTiptoe{animation:aTiptoe .5s ease-in-out 5}@keyframes aTiptoe{0%,100%{transform:translateX(0)}25%{transform:translate(-8px,-6px) rotate(-4deg)}75%{transform:translate(8px,-6px) rotate(4deg)}}
+#sScene .aHide{animation:aHide 2.6s ease-in-out}@keyframes aHide{0%,100%{transform:none}20%,70%{transform:translateY(30px) scale(1,.75)}85%{transform:translateY(-6px)}}
+#sScene .aStartle{animation:aStartle .9s ease-out}@keyframes aStartle{0%{transform:none}25%{transform:translateY(-30px) rotate(-10deg) scale(1.1)}50%{transform:translate(10px,0) rotate(6deg)}75%{transform:translateX(-6px)}100%{transform:none}}
+#sScene .aTilt{animation:aTilt 1s ease-in-out 2}@keyframes aTilt{0%,100%{transform:rotate(0)}40%,60%{transform:rotate(-12deg)}}
+#sScene .aSway{animation:aSway 1.4s ease-in-out 2}@keyframes aSway{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+#sScene .aProud{animation:aProud 1.6s ease-in-out}@keyframes aProud{0%,100%{transform:none}40%,70%{transform:scale(1.15) translateY(-6px)}}
+#sScene .aShake{animation:aShakeX .4s 4}@keyframes aShakeX{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#sScene .aWobble{animation:aWobble .3s 6}@keyframes aWobble{50%{transform:rotate(6deg)}}
+#sScene .aChomp{animation:aChomp .35s ease-in-out 6}@keyframes aChomp{0%,100%{transform:scale(1,1)}50%{transform:scale(1.1,.85)}}
+#sScene .aGrowBig{animation:aGrowBig 2.4s cubic-bezier(.3,1.3,.6,1) both}@keyframes aGrowBig{0%{transform:scale(.62)}20%{transform:scale(.72) rotate(-4deg)}40%{transform:scale(.8) rotate(4deg)}60%{transform:scale(.9) rotate(-3deg)}80%{transform:scale(1.04) rotate(2deg)}100%{transform:none}}
+#sScene .aShrinkBack{animation:aShrinkBack 2s cubic-bezier(.3,1.3,.6,1) both}@keyframes aShrinkBack{0%{transform:scale(1.5)}25%{transform:scale(1.3) rotate(6deg)}50%{transform:scale(1.1) rotate(-6deg)}75%{transform:scale(.95) rotate(3deg)}100%{transform:none}}
+#sScene .aRun{animation:aRun 1.2s ease-in-out both}@keyframes aRun{0%{transform:translateX(-90px)}20%,60%{transform:translateY(-6px)}40%,80%{transform:translateY(0)}100%{transform:none}}
+#sScene .aSlip{animation:aSlip 1.2s ease-in both}@keyframes aSlip{0%{transform:none}30%{transform:translateX(20px) rotate(-20deg)}60%{transform:translate(30px,10px) rotate(-80deg)}80%{transform:translate(30px,10px) rotate(-80deg)}100%{transform:none}}
+#sScene .aCry{animation:aCry .5s ease-in-out 6}@keyframes aCry{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.94) translateX(3px)}}
+#sScene .aDizzy{animation:aDizzy 1.6s ease-in-out}@keyframes aDizzy{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+#sScene .aFloatUp{animation:aFloatUp 3s ease-in-out both}@keyframes aFloatUp{0%{transform:none}30%{transform:translateY(-50px) rotate(-15deg)}60%{transform:translateY(-70px) rotate(20deg)}85%{transform:translateY(-40px) rotate(-8deg)}100%{transform:none}}
+#sScene .aLand{animation:aLand .9s cubic-bezier(.5,0,.7,1.4) both}@keyframes aLand{0%{transform:translateY(-240px) rotate(-30deg)}70%{transform:translateY(0) scale(1.15,.8)}100%{transform:none}}
+#sScene text.pp.aPop{animation:aPopP .7s ease-out both}@keyframes aPopP{0%{transform:scale(0)}60%{transform:scale(1.4)}100%{transform:scale(1)}}
+#sScene text.pp.aRise{animation:aRise 1s ease-out both}@keyframes aRise{0%{transform:translateY(40px) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+#sScene text.pp.aSpin{transform-origin:50% 50%;animation:aSpin 1.2s ease-out}@keyframes aSpin{0%{transform:scale(.3) rotate(-180deg)}100%{transform:none}}
+#sScene text.pp.aGiftShake{animation:aGift 1.3s ease-in-out both}@keyframes aGift{0%,60%{transform:none}10%,30%,50%{transform:rotate(-10deg)}20%,40%{transform:rotate(10deg)}80%{transform:translateY(-20px) scale(1.25)}100%{transform:scale(0);opacity:0}}
+#sScene text.pp.aGive{animation:aGive 1.4s ease-in-out both}@keyframes aGive{0%{transform:translateX(-60px)}30%{transform:translate(-30px,-24px)}100%{transform:none}}
+#sScene text.pp.aEaten{animation:aEaten 1.4s ease-in both}@keyframes aEaten{0%{transform:none}30%{transform:translateY(-10px) rotate(15deg)}100%{transform:scale(0) rotate(90deg);opacity:0}}
+#sScene text.pp.aWave{animation:aWaveP .35s ease-in-out 6}@keyframes aWaveP{0%,100%{transform:rotate(0)}50%{transform:rotate(18deg)}}
+#sScene text.pp.aDrop{animation:aDropP .8s cubic-bezier(.5,0,.7,1.3) both}@keyframes aDropP{0%{transform:translateY(-160px)}75%{transform:translateY(0) scale(1.2,.8)}100%{transform:none}}
+#sScene text.pp.aBall{animation:aBallP 1.6s ease-out both}@keyframes aBallP{0%{transform:translateY(-70px)}25%{transform:translateY(0) scale(1.2,.8)}45%{transform:translateY(-35px)}65%{transform:translateY(0) scale(1.1,.9)}80%{transform:translateY(-12px)}100%{transform:none}}
+#sScene text.pp.aDriveIn{animation:aDriveP 1.3s ease-out both}@keyframes aDriveP{0%{transform:translateX(200px)}70%{transform:translateX(-10px)}85%{transform:translateX(4px) translateY(-3px)}100%{transform:none}}
+#sScene text.pp.aSlideIn{animation:aSlideP 1.3s ease-out both}@keyframes aSlideP{0%{transform:translateX(-160px);opacity:0}30%{opacity:1}100%{transform:none}}
+#sScene text.pp.aFloat{animation:aFloatP 1.6s ease-in-out 2}@keyframes aFloatP{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(12px,-14px) rotate(8deg)}}
+#sScene text.pp.aBlowAway{animation:aBlowP 2.2s ease-in both}@keyframes aBlowP{0%{transform:none}100%{transform:translate(260px,-120px) rotate(540deg);opacity:0}}
+#sScene text.pp.aDrip{animation:aDripP 1s ease-in 3}@keyframes aDripP{0%{transform:translateY(-10px);opacity:0}30%{opacity:1}100%{transform:translateY(30px);opacity:0}}
+#sScene text.pp.aPoint{animation:aPointP .5s ease-in-out 4}@keyframes aPointP{50%{transform:translateX(14px)}}
+@media (prefers-reduced-motion:reduce){#sScene .idle,#sScene .bal,#sScene .flg{animation:none!important}}
+</style>
+<style>
+#sScene .amb{pointer-events:none;transform-box:fill-box;transform-origin:50% 50%}
+#sScene .amb-tw{animation:ambTw 2.2s ease-in-out infinite}#sScene .amb-tw.d2{animation-delay:-1.1s}
+@keyframes ambTw{0%,100%{opacity:.2;transform:scale(.6)}50%{opacity:1;transform:scale(1.2)}}
+#sScene .amb-fl{animation:ambFl 3.4s ease-in-out infinite}@keyframes ambFl{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+#sScene .amb-rot{animation:ambRot 4s linear infinite}#sScene .amb-rot.d2{animation-direction:reverse}@keyframes ambRot{to{transform:rotate(360deg)}}
+#sScene .amb-fly{animation:ambFly 6s ease-in-out infinite}@keyframes ambFly{0%,100%{transform:translate(0,0) rotate(-8deg)}25%{transform:translate(40px,-20px) rotate(8deg)}50%{transform:translate(80px,5px) rotate(-6deg)}75%{transform:translate(30px,15px) rotate(6deg)}}
+#sScene .amb-cross{animation:ambCross 9s linear infinite}@keyframes ambCross{0%{transform:translate(-20px,0)}50%{transform:translate(220px,-12px)}100%{transform:translate(440px,0)}}
+#sScene .amb-drift{animation:ambDrift 10s ease-in-out infinite}@keyframes ambDrift{0%,100%{transform:translateX(-30px)}50%{transform:translateX(30px)}}
+#sScene .flake{animation:flakeF 5s linear infinite}@keyframes flakeF{from{transform:translateY(-20px)}to{transform:translateY(80px)}}
+#sScene .idle{animation:aIdle2 2.2s ease-in-out infinite}
+@keyframes aIdle2{0%,100%{transform:translateY(0) rotate(0) scale(1,1)}25%{transform:translateY(-3px) rotate(-2deg)}50%{transform:translateY(0) scale(1.03,.97)}75%{transform:translateY(-3px) rotate(2deg)}}
+#sScene text.pp{animation:ppIdle 3s ease-in-out infinite}@keyframes ppIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){#sScene .amb,#sScene .idle,#sScene text.pp{animation:none!important}}
 </style>
 </head>
 <body>
@@ -401,6 +464,25 @@ button:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
 
 <div id="fitHint" class="fitHint" hidden>下面還有，請往下滑</div>
 <div id="ov" class="overlay" hidden><div class="panel" id="ovPanel"></div></div>
+<script>
+/* MIX_VOICE：中文句子裡的英文字，改用英文聲音唸（例如 Kevin、Boka、party、fifty），中文聲音唸英文常常會唸錯 */
+(function(){var ss=window.speechSynthesis;if(!ss||ss.__mix)return;var orig=ss.speak.bind(ss);ss.__mix=1;
+  var RX=/([A-Za-z][A-Za-z'’\-]*(?:[ ,.!?&]+[A-Za-z][A-Za-z'’\-]*)*[.!?]?)/;
+  ss.speak=function(u){try{
+    var t=String(u.text||''),lang=String(u.lang||'');
+    if(!/^zh/i.test(lang)||!/[A-Za-z]{2,}/.test(t)||!/[㐀-鿿]/.test(t))return orig(u);
+    var parts=t.split(RX).map(function(x){return x.trim()}).filter(function(x){return x&&!/^[，。、！？「」：；…（）\s,.!?]+$/.test(x)});
+    if(parts.length<2)return orig(u);
+    var Ctor=window.SpeechSynthesisUtterance;
+    parts.forEach(function(x,i){var en=/[A-Za-z]/.test(x)&&!/[㐀-鿿]/.test(x);var p=new Ctor(x);
+      p.lang=en?'en-US':lang;p.rate=en?Math.max(.5,Math.min(1.4,(u.rate||1)*.9)):(u.rate||1);p.pitch=u.pitch||1;p.volume=u.volume==null?1:u.volume;
+      if(!en&&u.voice)p.voice=u.voice;
+      if(i===0&&u.onstart)p.onstart=u.onstart;
+      if(i===parts.length-1){p.onend=u.onend;p.onerror=u.onerror}else p.onerror=function(e){u.onerror&&u.onerror(e)};
+      orig(p)});
+  }catch(e){return orig(u)}};
+})();
+</script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -703,8 +785,11 @@ function makeTrace(host,ch,opt,onDone){
     if(!skip){await wait(400);anim.innerHTML=''}
     [...badges.children].forEach(b=>b.style.opacity=1);demoOn=false}
   /* 照筆順一筆一筆描：只有「現在這一筆」會算，從頭描到尾、描到八成五就換下一筆（手指放開時八成也算），中間漏一小段或手指偏一點都沒關係 */
-  const cpts=cl.map(arr=>arr.map(([x,y])=>[ox+x*k,oy+y*k,false])),hw=SW*k/2,RC=hw*1.9;
-  let curS=0,gestGain=0,missN=0;
+  const cpts=cl.map(arr=>arr.map(([x,y])=>[ox+x*k,oy+y*k,false])),hw=SW*k/2,RC=hw*1.6;
+  let curS=0,gestGain=0,missN=0,onLen=0,offLen=0;
+  const near=(x,y)=>{if(curS>=cpts.length)return 0;let m=1e9;for(const q of cpts[curS]){const d=(q[0]-x)**2+(q[1]-y)**2;if(d<m)m=d}return Math.sqrt(m)};
+  /* 描字標準（不太嚴格、也不太寬鬆）：描到七成五就算，起筆收筆要描到，亂塗不算 */
+  const messy=()=>offLen>60&&offLen>onLen*.8;
   const rate=si=>cpts[si].filter(p=>p[2]).length/cpts[si].length;
   function showCur(){curLayer.innerHTML=curS<D.length?`<path class="scur" d="${D[curS]}"/>`:'';[...badges.children].forEach((b,i)=>{b.classList.toggle('now',i===curS);b.classList.toggle('past',i<curS)})}
   showCur();
@@ -719,17 +804,18 @@ function makeTrace(host,ch,opt,onDone){
     tf(ctx);ctx.strokeStyle=col;ctx.lineWidth=SW;ctx.lineCap='round';ctx.lineJoin='round';paths.forEach(p=>ctx.stroke(p));
     const s=snap();later(()=>onDone(s),250)}
   function check(lifted){if(finished)return;const r=rate(curS);
-    bar.firstChild.style.width=Math.min(100,(curS+Math.min(1,r/.85))/D.length*100)+'%';
-    const cp=cpts[curS],L=cp.length,endOk=cp.slice(0,3).some(p=>p[2])&&cp.slice(L-3).some(p=>p[2]);if(endOk&&(r>=.85||(lifted&&r>=.8))){curS++;if(curS>=D.length){complete();return}FX.pop();showCur()}}
+    bar.firstChild.style.width=Math.min(100,(curS+Math.min(1,r/.75))/D.length*100)+'%';
+    const cp=cpts[curS],L=cp.length,e=Math.max(3,Math.round(L*.12)),endOk=cp.slice(0,e).some(p=>p[2])&&cp.slice(L-e).some(p=>p[2]);if(endOk&&!messy()&&(r>=.75||(lifted&&r>=.7))){curS++;onLen=offLen=0;if(curS>=D.length){complete();return}FX.pop();showCur()}}
   function draw(a,b){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.strokeStyle=col;ctx.lineWidth=hw*2.3;ctx.lineCap='round';ctx.lineJoin='round';ctx.globalCompositeOperation='source-atop';ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.globalCompositeOperation='source-over';
-    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(2*k)));for(let i=0;i<=n;i++)markC(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n);check(false)}
+    const d=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(d/(2*k)));for(let i=0;i<=n;i++){const x=a[0]+(b[0]-a[0])*i/n,y=a[1]+(b[1]-a[1])*i/n;markC(x,y);if(i)(near(x,y)<=RC*1.4?onLen+=d/n:offLen+=d/n)}check(false)}
   const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};
   cv.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});cv.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
   cv.onpointerdown=e=>{e.preventDefault();gestureUnlock();if(finished||SP.paused)return;if(demoOn)stopDemo();down=true;gestGain=0;last=pos(e);draw(last,last);if(cv.setPointerCapture)try{cv.setPointerCapture(e.pointerId)}catch(_){}};
   cv.onpointermove=e=>{if(!down||finished)return;const p=pos(e);draw(last,p);last=p};
   cv.onpointerup=cv.onpointercancel=()=>{if(down&&!finished){down=false;check(true);
+    if(!finished&&messy()){cpts[curS].forEach(p=>p[2]=false);onLen=offLen=0;gestGain=1;missN=0;bar.firstChild.style.width=(curS/D.length*100)+'%';say([{t:'沿著虛線，慢慢描',zh:1}])}
     if(!finished&&gestGain===0&&++missN>=2){missN=0;say([{t:`先描第${HZ[curS+1]}筆`,zh:1}])}else if(gestGain>0)missN=0}down=false};
-  redo.onclick=()=>{if(finished)return;cpts.forEach(q=>q.forEach(p=>p[2]=false));curS=0;missN=0;showCur();bar.firstChild.style.width='0';guide()};
+  redo.onclick=()=>{if(finished)return;cpts.forEach(q=>q.forEach(p=>p[2]=false));curS=0;missN=0;onLen=offLen=0;showCur();bar.firstChild.style.width='0';guide()};
   again.onclick=()=>{if(finished||demoOn)return;demo()};
   cv._cl=cpts;
   demo();
@@ -821,6 +907,7 @@ function timeOpts(h,m){const set=[[h,m]];const k=t=>t[0]+':'+t[1];
 /* ================= 10 關 ================= */
 const LV=[
 /* 1 */ {name:'趣味故事屋',icon:'📖',story:1,gen:()=>[],show(){}},
+/* 💡 */ {name:'故事小教室',icon:'💡',story:1,teach:1,opt:1,gen:()=>[],show(){}},
 /* 2 */ {name:'時間小教室',icon:'⏰',gen:()=>[{teach:1},...shuffle([1,2,3,4,5,6,7,8,9,10,11,12]).slice(0,4).map(h=>({h}))],show(q){
   if(q.teach){runCards([
     {html:`<span class="zh">先複習 1 到 12 的英文</span><div class="numGrid" id="ng">${HW.slice(1).map((w,i)=>`<span><b>${i+1}</b>${w}</span>`).join('')}</div>`,
@@ -976,7 +1063,7 @@ function cardQ(q,onRight){
 
 /* ================= 流程 ================= */
 function startLevel(i){
-  if(LV[i].story){G.run++;hush();setTracing(false);G.lv=i;SP.voice=SP.homeVoice;updVoice();startStory(true);return}
+  if(LV[i].story){G.run++;hush();setTracing(false);G.lv=i;SP.voice=SP.homeVoice;updVoice();startStory(true,LV[i].teach);return}
   G.run++;hush();setTracing(false);G.mode='solo';G.lv=i;G.qs=LV[i].gen();G.qi=0;SP.voice=SP.homeVoice;updVoice();
   show('game',{back:'回闖關地圖',pause:1,stars:1});$('#board').hidden=true;$('#dots').hidden=false;
   $('#lvTitle').textContent=`第 ${i+1} 關　${LV[i].icon} ${LV[i].name}`;nextQ()}
@@ -988,7 +1075,7 @@ function nextQ(){
   if(G.mode==='group'){drawBoard();cardQ(G.qs[G.qi])}else LV[G.lv].show(G.qs[G.qi]);
   fitCheck()}
 /* 下一關：從剛玩完的那一關往後找還沒過的關；後面都過了，才回頭找前面沒過的關 */
-const nextIdx=()=>{const s=G.lastDone>=0?G.lastDone+1:0;for(let k=0;k<LV.length;k++){const i=(s+k)%LV.length;if(!G.cleared[i])return i}return -1};
+const nextIdx=()=>{const s=G.lastDone>=0?G.lastDone+1:0;for(let k=0;k<LV.length;k++){const i=(s+k)%LV.length;if(!G.cleared[i]&&!LV[i].opt)return i}return -1};
 function levelClear(){
   hush();G.cleared[G.lv]=1;G.lastDone=G.lv;const i=G.lv,nx=nextIdx(),last=nx<0;
   const fin=()=>{FX.fanfare();setTimeout(FX.coo,900);fireworks(last?8:4);
@@ -1011,7 +1098,7 @@ function goHome(){G.run++;hush();G.onReplay=null;G.mapTick=null;setTracing(false
   if(SP.homeVoice)say([{t:'歡迎來到布穀鳥時鐘屋！這一課要學會用英文說時間。寫上你的名字，選一個好朋友，再按開始闖關。第一關是趣味故事屋，先來聽一個有趣的故事喔！',zh:1}])}
 function showMap(auto){
   G.run++;hush();setTracing(false);G.mode='solo';show('map',{back:'回首頁',stars:1});
-  const portrait=innerWidth<innerHeight;const fa=$('#facade');fa.style.setProperty('--mc',portrait?2:6);fa.classList.toggle('wide',!portrait);
+  const portrait=innerWidth<innerHeight;const fa=$('#facade');fa.style.setProperty('--mc',portrait?2:7);fa.classList.toggle('wide',!portrait);
   $('#roof').innerHTML=`<svg viewBox="0 0 600 90" preserveAspectRatio="none"><path d="M10 88 L300 4 L590 88Z" fill="#d9533c" stroke="${K}" stroke-width="5" stroke-linejoin="round"/></svg>
     <div style="position:absolute;left:50%;top:6%;height:88%;transform:translateX(-50%)"><svg viewBox="0 0 120 100" style="height:100%;width:auto">${clockG(4,0,60,52,44,{light:1})}${birdG(96,22,.55)}</svg></div>`;
   const nx=nextIdx(),who=G.name||'小勇士';
@@ -1021,7 +1108,7 @@ function showMap(auto){
   if(nx<0){gb.textContent='全部過關！再玩一次';gb.onclick=()=>{G.cleared={};G.lastDone=-1;showMap(true)}}
   else{gb.textContent=`開始第 ${nx+1} 關`;gb.onclick=()=>{hush();startLevel(nx)};
     if(auto){let c=3;const lab=()=>gb.textContent=`${c} 秒後開始第 ${nx+1} 關`;const tick=()=>{c--;if(c<=0){startLevel(nx);return}lab();later(tick,1000)};G.mapTick=()=>{G.mapTick=null;lab();later(tick,1000)}}}
-  G.promptItems=[{t:auto?`${who}，這是闖關地圖。時鐘屋有十二扇窗，一扇窗就是一關。馬上開始囉！`:'這是闖關地圖。點一下要玩的窗戶，或是按上面的回首頁。',zh:1}];
+  G.promptItems=[{t:auto?`${who}，這是闖關地圖。時鐘屋有十三扇窗，一扇窗就是一關。馬上開始囉！`:'這是闖關地圖。點一下要玩的窗戶，或是按上面的回首頁。',zh:1}];
   if(!auto)G.mapTick=null;G.onReplay=()=>say(G.promptItems,()=>{if(G.mapTick)later(G.mapTick,300)});G.onReplay();fitCheck()}
 
 /* ================= 暫停、上方按鈕 ================= */
@@ -1060,34 +1147,40 @@ function blobG(kind,x,y){const blue=kind==='blue',c=blue?'#4aa3e0':'#f7a8c8',r=b
   <circle cx="-17" cy="6" r="4" fill="#ff8a8a" opacity=".6"/><circle cx="17" cy="6" r="4" fill="#ff8a8a" opacity=".6"/></g>`}
 const WHO={boy:'👦',girl:'👧',man:'👨',mom:'👩',blue:'藍色小怪獸',pink:'粉紅小怪獸'};
 function whoIcon(w){if(w==='blue'||w==='pink')return `<svg viewBox="-36 -50 72 86" style="width:1.15em;height:1.35em;vertical-align:middle">${blobG(w,0,0)}</svg>`;return WHO[w]}
+/* 背景小動畫：一直在動的小東西 */
+var AMB={party:[['✨',60,45,14,'tw'],['✨',330,35,12,'tw',1],['🎈',385,150,22,'fl']],factory:[['⚙️',28,205,26,'rot'],['⚙️',378,30,22,'rot',1],['✨',200,40,12,'tw']],
+  bedroom:[['⭐',30,30,14,'tw'],['🦋',250,60,16,'fly']],park:[['🦋',70,95,18,'fly'],['🐦',0,40,18,'cross'],['☁️',300,45,26,'drift']],home:[['🐦',0,40,18,'cross'],['🦋',150,150,16,'fly']],
+  xmas:[['✨',120,40,14,'tw'],['✨',260,60,12,'tw',1]],school:[['☁️',80,30,26,'drift'],['🐦',0,60,16,'cross']],path:[['🦋',200,120,16,'fly'],['☁️',120,30,26,'drift']],rock:[['☁️',150,30,26,'drift'],['🦋',60,120,16,'fly']]};
+function ambSVG(kind){return (AMB[kind]||[]).map(function(a){return '<text class="amb amb-'+a[4]+(a[5]?' d2':'')+'" x="'+a[1]+'" y="'+a[2]+'" font-size="'+a[3]+'" text-anchor="middle">'+a[0]+'</text>'}).join('')}
 function sceneSVG(pg){
-  let s=bgSVG(pg.bg,pg);
-  (pg.props||[]).forEach(p=>{s+=`<text class="${p[4]?'act':''}" x="${p[1]}" y="${p[2]}" font-size="${p[3]||40}" text-anchor="middle">${p[0]}</text>`});
+  let s=bgSVG(pg.bg,pg)+ambSVG(pg.bg);
+  (pg.props||[]).forEach((p,pi)=>{s+=`<text data-p="p${pi}" class="pp ${p[4]?'act':''}" x="${p[1]}" y="${p[2]}" font-size="${p[3]||40}" text-anchor="middle">${p[0]}</text>`});
   (pg.cast||[]).forEach(c=>{const [w,x]=c;
     if(w===pg.w)s+=`<g><path d="M${x-16} 120 h32 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 h-10 l-6 9 l-6 -9 h-10 a8 8 0 0 1 -8 -8 v-18 a8 8 0 0 1 8 -8Z" fill="#fff" stroke="${K}" stroke-width="3"/><text x="${x}" y="144" font-size="18" font-weight="900" text-anchor="middle" fill="#d9533c">${pg.n||"★"}</text></g>`;
-    s+=`<g class="who" data-who="${w}">`+((w==='blue'||w==='pink')?blobG(w,x,192):`<text x="${x}" y="226" font-size="54" text-anchor="middle">${WHO[w]}</text>`)+'</g>'});
+    s+=`<g class="who" data-who="${w}" data-x="${x}"><g class="idle" style="animation-delay:${-(x%7)*.3}s">`+((w==='blue'||w==='pink')?blobG(w,x,192):`<text x="${x}" y="226" font-size="54" text-anchor="middle">${WHO[w]}</text>`)+'</g></g>'});
   if(pg.clock)s+=`<g class="${pg.actClock?'actC':''}"><rect x="290" y="6" width="104" height="134" rx="16" fill="#fff8ea" stroke="${K}" stroke-width="4"/>${clockG(pg.clock[0],pg.clock[1],342,56,46,{light:1})}${digiG(pg.clock[0],pg.clock[1],342,106,.8)}</g>`;
   return `<svg viewBox="0 0 400 240">${s}</svg>`}
 /* 課本第 30～33 頁，故事 1～15 句 */
 /* 課本第 30～33 頁：一句英文、一張圖 */
-const STORY=[
- {n:0,tip:'Ahh! 是嚇一跳時的叫聲。大風（the big wind）把大家吹得好遠，咚！一起掉回學校的操場了！',w:'boy',en:'Ahh!',zh:'啊！',bg:'school',sfx:'windCrash',cast:[['girl',90],['boy',170],['pink',250],['blue',330]],props:[['🌪️',200,70,40,1],['🧢',60,110,26,1]]},
- {n:1,tip:"We're 就是 We are，意思是「我們是」。back 是「回到原來的地方」。",w:'boy',en:"We're back.",zh:'我們回來了。',bg:'school',sfx:'landGiggle',cast:[['boy',80],['girl',150],['pink',230],['blue',305]]},
- {n:2,tip:'Great! 是稱讚別人的話，意思是「太好了、太棒了」。',w:'girl',en:'Great!',zh:'太好了！',bg:'school',sfx:'greatClap',cast:[['boy',80],['girl',150],['pink',230],['blue',305]],props:[['👍',190,150,36,1]]},
- {n:3,tip:'Listen! 是「聽！」，要大家注意聽。',w:'blue',en:'Listen!',zh:'聽！',bg:'school',sfx:'bell',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1],['👂',250,175,26,1]]},
- {n:4,tip:"It's 就是 It is，「它是」。school 是學校，bell 是鐘、鐘聲。",w:'girl',en:"It's the school bell.",zh:'是學校的鐘聲。',bg:'school',sfx:'bellShort',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1]]},
- {n:5,tip:"o'clock 是「剛好幾點鐘」，four o'clock 就是四點鐘。Time to go home. 是「該回家了」。",w:'boy',en:"Oh, it's four o'clock. Time to go home.",zh:'噢，四點鐘了。該回家了。',bg:'school',sfx:'cuckoo4',actClock:1,clock:[4,0],cast:[['boy',70],['girl',135],['blue',210],['pink',275]]},
- {n:6,tip:'Look! 是「看！」，要大家看過來。',w:'pink',en:'Look!',zh:'看！',bg:'path',sfx:'birds',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['👉',95,170,26],['🐦',70,80,40,1]]},
- {n:7,tip:"bird 是鳥。It's a… 是「它是一個……」。",w:'girl',en:"It's a bird.",zh:'是一隻鳥。',bg:'path',sfx:'tweet',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['🐦',90,75,56,1]]},
- {n:8,tip:"frog 是青蛙。距離我們比較遠的東西，要說 That's，「那是」；距離我們比較近的東西，要說 This is，「這是」。",w:'boy',en:"That's a frog.",zh:'那是一隻青蛙。',bg:'path',sfx:'frogJump',cast:[['pink',50],['girl',120],['blue',200],['boy',265]],props:[['🐸',340,226,40,1]]},
- {n:9,tip:'four fifteen 是四點十五分。must 是「必須」，go home 是「回家」。',w:'boy',en:"It's four fifteen. We must go home.",zh:'四點十五分了。我們必須回家了。',bg:'rock',sfx:'antMarch',actClock:1,clock:[4,15],cast:[['girl',45],['pink',110],['blue',175],['boy',240]],props:[['🍪',310,182,34],['🐜',290,205,18,1],['🐜',312,207,18,1],['🐜',334,205,18,1]]},
- {n:10,tip:"What's 就是 What is。What's that? 是「那是什麼？」",w:'blue',en:"What's that?",zh:'那是什麼？',bg:'path',sfx:'rustleHmm',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,40],['❓',200,120,30,1]]},
- {n:11,tip:"dog 是狗。It's a dog. 就是「它是一隻狗」。",w:'boy',en:"It's a dog.",zh:'是一隻狗。',bg:'path',sfx:'dogWoof',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,46,1]]},
- {n:12,tip:'What 是什麼，time 是時間。What time is it? 是問「現在幾點？」',w:'girl',en:'What time is it?',zh:'現在幾點？',bg:'path',sfx:'hmm',cast:[['girl',110],['boy',210]],props:[['❓',110,150,30,1]]},
- {n:13,tip:'Oh, no! 是「糟糕！」。four fifty 是四點五十分。',w:'boy',en:"Oh, no! It's four fifty!",zh:'糟糕！四點五十分了！',bg:'path',sfx:'ohno',actClock:1,clock:[4,50],cast:[['girl',110],['boy',210]],props:[['😱',245,160,30,1]]},
- {n:14,tip:'Bye! 是「再見」，和朋友分開的時候說。',w:'girl',en:'Bye!',zh:'再見！',bg:'path',sfx:'byeRun',cast:[['girl',90],['blue',200],['boy',320]],props:[['👋',130,170,34,1]]},
- {n:15,tip:"Sorry 是「對不起」。I'm 就是 I am，late 是「遲到」，Mom 是媽媽。",w:'boy',en:"Sorry, I'm late, Mom.",zh:'媽媽，對不起，我遲到了。',bg:'home',sfx:'home',clock:[5,0],cast:[['blue',60],['boy',150],['mom',230]]}
+const STORY_ALL=[
+ {n:0,noTip:1,nar:'大風把大家吹得好遠好遠。咚！大家一起掉回學校的操場。',act:[['girl','aLand'],['boy','aLand',150],['pink','aLand',300],['blue','aLand',450],['p0','aSpin'],['p1','aBlowAway']],w:'boy',en:'Ahh!',zh:'啊！',bg:'school',sfx:'windCrash',cast:[['girl',90],['boy',170],['pink',250],['blue',330]],props:[['🌪️',200,70,40,1],['🧢',60,110,26,1]]},
+ {n:1,nar:'大家拍拍身上的灰塵，站了起來。',tip:"We're 就是 We are，意思是「我們是」。back 是「回到原來的地方」。",act:[['boy','aBounce'],['girl','aHop',200],['pink','aBounce',300],['blue','aBounce',400]],w:'boy',en:"We're back.",zh:'我們回來了。',bg:'school',sfx:'landGiggle',cast:[['boy',80],['girl',150],['pink',230],['blue',305]]},
+ {n:2,nar:'女孩好開心。',tip:'Great! 是稱讚別人的話，意思是「太好了、太棒了」。',act:[['girl','aJump'],['p0','aPop']],w:'girl',en:'Great!',zh:'太好了！',bg:'school',sfx:'greatClap',cast:[['boy',80],['girl',150],['pink',230],['blue',305]],props:[['👍',190,150,36,1]]},
+ {n:3,nar:'這時候，學校的鐘響了。',tip:'Listen! 是「聽！」，要大家注意聽。',act:[['blue','aTilt'],['p0','aFloat'],['p1','aFloat',300],['p2','aPop',600]],w:'blue',en:'Listen!',zh:'聽！',bg:'school',sfx:'bell',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1],['👂',250,175,26,1]]},
+ {n:4,nar:'女孩一聽就知道了。',tip:"It's 就是 It is，「它是」。school 是學校，bell 是鐘、鐘聲。",act:[['girl','aBounce'],['p0','aFloat'],['p1','aFloat',300]],w:'girl',en:"It's the school bell.",zh:'是學校的鐘聲。',bg:'school',sfx:'bellShort',actBell:1,cast:[['boy',70],['girl',135],['blue',215],['pink',290]],props:[['🎵',190,55,30,1],['🎶',240,45,28,1]]},
+ {n:5,nar:'布穀鳥時鐘叫了四聲。',tip:"o'clock 是「剛好幾點鐘」，four o'clock 就是四點鐘。Time to go home. 是「該回家了」。",act:[['boy','aStartle'],['blue','aSway',300],['pink','aSway',500]],w:'boy',en:"Oh, it's four o'clock. Time to go home.",zh:'噢，四點鐘了。該回家了。',bg:'school',sfx:'cuckoo4',actClock:1,clock:[4,0],cast:[['boy',70],['girl',135],['blue',210],['pink',275]]},
+ {n:6,nar:'回家的路上，粉紅小怪獸看到樹上有東西。',tip:'Look! 是「看！」，要大家看過來。',act:[['pink','aHop'],['p0','aPoint'],['p1','aPop',400]],w:'pink',en:'Look!',zh:'看！',bg:'path',sfx:'birds',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['👉',95,170,26],['🐦',70,80,40,1]]},
+ {n:7,nar:'是一隻小鳥在唱歌。',tip:"bird 是鳥。It's a… 是「它是一個……」。",act:[['p0','aFloat'],['girl','aBounce']],w:'girl',en:"It's a bird.",zh:'是一隻鳥。',bg:'path',sfx:'tweet',cast:[['pink',60],['girl',130],['blue',215],['boy',290]],props:[['🐦',90,75,56,1]]},
+ {n:8,nar:'遠遠的水池邊，跳出一隻青蛙。',tip:"frog 是青蛙。距離我們比較遠的東西，要說 That's，「那是」；距離我們比較近的東西，要說 This is，「這是」。",act:[['p0','aBall'],['boy','aTilt',400]],w:'boy',en:"That's a frog.",zh:'那是一隻青蛙。',bg:'path',sfx:'frogJump',cast:[['pink',50],['girl',120],['blue',200],['boy',265]],props:[['🐸',340,226,40,1]]},
+ {n:9,nar:'大家停下來看螞蟻搬餅乾，時間一直過去。',tip:'four fifteen 是四點十五分。must 是「必須」，go home 是「回家」。',act:[['p1','aSlideIn'],['p2','aSlideIn',200],['p3','aSlideIn',400],['boy','aTilt',600]],w:'boy',en:"It's four fifteen. We must go home.",zh:'四點十五分了。我們必須回家了。',bg:'rock',sfx:'antMarch',actClock:1,clock:[4,15],cast:[['girl',45],['pink',110],['blue',175],['boy',240]],props:[['🍪',310,182,34],['🐜',290,205,18,1],['🐜',312,207,18,1],['🐜',334,205,18,1]]},
+ {n:10,nar:'一位叔叔帶著狗走過來。',tip:"What's 就是 What is。What's that? 是「那是什麼？」",act:[['man','aRun'],['p0','aSlideIn'],['blue','aTilt',700],['p1','aPop',700]],w:'blue',en:"What's that?",zh:'那是什麼？',bg:'path',sfx:'rustleHmm',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,40],['❓',200,120,30,1]]},
+ {n:11,nar:'原來是一隻小狗。',tip:"dog 是狗。It's a dog. 就是「它是一隻狗」。",act:[['p0','aBall'],['boy','aBounce',300]],w:'boy',en:"It's a dog.",zh:'是一隻狗。',bg:'path',sfx:'dogWoof',cast:[['man',50],['blue',200],['boy',265],['girl',330]],props:[['🐕',115,226,46,1]]},
+ {n:12,nar:'玩著玩著，天色慢慢變暗了。',tip:'What 是什麼，time 是時間。What time is it? 是問「現在幾點？」',act:[['girl','aTilt'],['p0','aPop']],w:'girl',en:'What time is it?',zh:'現在幾點？',bg:'path',sfx:'hmm',cast:[['girl',110],['boy',210]],props:[['❓',110,150,30,1]]},
+ {n:13,nar:'男孩一看時鐘，嚇了一大跳。',tip:'Oh, no! 是「糟糕！」。four fifty 是四點五十分。',act:[['boy','aStartle'],['p0','aPop',300],['girl','aShake',400]],w:'boy',en:"Oh, no! It's four fifty!",zh:'糟糕！四點五十分了！',bg:'path',sfx:'ohno',actClock:1,clock:[4,50],cast:[['girl',110],['boy',210]],props:[['😱',245,160,30,1]]},
+ {n:14,nar:'大家趕快說再見，跑回家。',tip:'Bye! 是「再見」，和朋友分開的時候說。',act:[['p0','aWave'],['girl','aHop'],['blue','aBounce',200],['boy','aRun',600]],w:'girl',en:'Bye!',zh:'再見！',bg:'path',sfx:'byeRun',cast:[['girl',90],['blue',200],['boy',320]],props:[['👋',130,170,34,1]]},
+ {n:15,nar:'男孩跑回家，媽媽已經在門口等他了。',tip:"Sorry 是「對不起」。I'm 就是 I am，late 是「遲到」，Mom 是媽媽。",act:[['boy','aTilt'],['mom','aSway',300],['blue','aHop',500]],w:'boy',en:"Sorry, I'm late, Mom.",zh:'媽媽，對不起，我遲到了。',bg:'home',sfx:'home',clock:[5,0],cast:[['blue',60],['boy',150],['mom',230]]}
 ];
+let STORY=STORY_ALL;
 const ST={i:0,tok:0,sndUntil:0};
 /* ================= 故事音效（用 WebAudio 現場合成，不用下載音檔） ================= */
 const SFX={
@@ -1125,42 +1218,105 @@ const SFX={
   dogWoof(){SFX.dog();setTimeout(SFX.giggle,1500);return 2.5},
   byeRun(){SFX.slideUp();setTimeout(()=>SFX.run(),700);return 2.9}
 };
-function playSfx(cb){const m0=ST.tok;let n=0;
-  const wait=()=>{if(m0!==ST.tok&&cb)return;if(synth&&synth.speaking&&n++<15){try{synth.cancel()}catch(e){}later(wait,100);return}playSfxNow(cb)};wait()}
-function playSfxNow(cb){const k=STORY[ST.i].sfx;if(!k||!SFX[k]||!ac()){cb&&cb();return}
+function playSfx(cb,cap){const m0=ST.tok;let n=0;
+  const wait=()=>{if(m0!==ST.tok&&cb)return;if(synth&&synth.speaking&&n++<15){try{synth.cancel()}catch(e){}later(wait,100);return}playSfxNow(cb,cap)};wait()}
+function playSfxNow(cb,cap){const k=STORY[ST.i].sfx;doActs();if(!k||!SFX[k]||!ac()){cb&&cb();return}
   const sc=$('#sScene');sc.classList.remove('snd');void sc.offsetWidth;sc.classList.add('snd');
   const d=SFX[k]();ST.sndUntil=performance.now()+d*1000;const m=ST.tok;
-  later(()=>{sc.classList.remove('snd');if(m===ST.tok&&cb)cb()},Math.round(d*1000)+250)}
+  let wt=Math.round(d*1000)+250;if(cap)wt=Math.min(wt,cap);later(()=>{if(m===ST.tok&&cb)cb()},wt);later(()=>sc.classList.remove('snd'),Math.round(d*1000)+250)}
 
 /* 解說裡的英文用英文聲音唸，中文用中文聲音唸 */
 function tipItems(tip){const box=()=>$('#sText .sTip');
   const parts=tip.split(/([A-Za-z][A-Za-z'’ ,.!?…]*[A-Za-z.!?…]|[A-Za-z])/).map(x=>x.trim()).filter(x=>x&&!/^[，。、「」：；…（）\s]+$/.test(x));
   return parts.map((x,i)=>{const en=/[A-Za-z]/.test(x);const it=en?{t:x.replace(/…/g,''),r:.85,gap:120}:{t:x,mean:1,gap:120};
     if(i===0)it.on=()=>{const b=box();b&&b.classList.add('say')};if(i===parts.length-1){it.off=()=>{const b=box();b&&b.classList.remove('say')};it.gap=500}return it})}
+/* 動作音效：角色、道具一動，就有對應的聲音 */
+const lnoise=(t0,d,v,f)=>noise(t0,d,v*1.2,f);
+var ACTSND={
+  aJump:function(){tone(260,0,.22,'triangle',.13,720)},aHop:function(){tone(320,0,.18,'triangle',.11,760)},
+  aBounce:function(){tone(200,0,.15,'sine',.12,420);tone(220,.5,.15,'sine',.1,460)},
+  aStartle:function(){tone(500,0,.28,'sine',.13,1400)},aTilt:function(){tone(330,0,.3,'triangle',.08,420)},
+  aTiptoe:function(){for(var i=0;i<5;i++)tone(900+(i%2)*120,i*.25,.06,'sine',.06)},
+  aHide:function(){tone(700,0,.45,'sine',.08,300)},aProud:function(){tone(523,0,.12,'triangle',.1);tone(784,.12,.22,'triangle',.1)},
+  aShake:function(){for(var i=0;i<4;i++)tone(220+(i%2)*40,i*.1,.08,'square',.035)},
+  aWobble:function(){for(var i=0;i<6;i++)tone(380+(i%2)*70,i*.1,.09,'sine',.06)},
+  aChomp:function(){for(var i=0;i<5;i++){noise(i*.35,.07,.6,700);noise(i*.35+.05,.05,.4,1800)}},
+  aGrowBig:function(){tone(140,0,1.8,'sawtooth',.05,620);tone(280,0,1.8,'sine',.06,1240)},
+  aShrinkBack:function(){tone(1000,0,1.4,'sine',.1,260)},
+  aRun:function(){for(var i=0;i<7;i++){noise(i*.15,.05,.45,300);tone(80,i*.15,.06,'sine',.1)}},
+  aSlip:function(){tone(800,0,.5,'sine',.12,150);noise(.5,.25,.6,400);tone(90,.5,.25,'sine',.18,50)},
+  aCry:function(){for(var i=0;i<3;i++)tone(540-i*30,i*.5,.4,'sine',.09,450-i*30)},
+  aDizzy:function(){for(var i=0;i<7;i++)tone(1500+(i%2)*300,i*.13,.08,'sine',.06)},
+  aFloatUp:function(){lnoise(0,1.6,.4,700);tone(400,0,1.6,'sine',.06,1000)},
+  aLand:function(){tone(700,0,.35,'sine',.08,200);tone(110,.4,.25,'sine',.22,50);noise(.4,.18,.6,300)},
+  aPop:function(){tone(500,0,.1,'sine',.15,1500)},aRise:function(){tone(400,0,.45,'sine',.1,1100)},
+  aSpin:function(){[1568,1760,2093,2637].forEach(function(f,i){tone(f,i*.07,.22,'sine',.07)})},
+  aGiftShake:function(){for(var i=0;i<6;i++)noise(i*.12,.05,.5,4200);tone(988,1,.25,'sine',.12);tone(1319,1.1,.4,'sine',.12)},
+  aGive:function(){noise(0,.35,.35,2500)},aEaten:function(){noise(0,.08,.6,2600);noise(.14,.08,.5,1800);noise(.3,.08,.4,1400)},
+  aWave:function(){tone(1200,0,.1,'sine',.07);tone(1500,.13,.12,'sine',.07)},
+  aDrop:function(){tone(700,0,.45,'sine',.1,200);tone(90,.5,.3,'sine',.24,50);noise(.5,.22,.7,300)},
+  aBall:function(){tone(250,.35,.12,'sine',.18,140);tone(240,.65,.1,'sine',.15,130);tone(230,.95,.08,'sine',.11,120)},
+  aDriveIn:function(){tone(90,0,1,'sawtooth',.05,230);tone(520,1,.12,'triangle',.09);tone(520,1.18,.16,'triangle',.09)},
+  aSlideIn:function(){noise(0,.8,.25,1200)},aFloat:function(){tone(700,0,.6,'sine',.05,950)},
+  aBlowAway:function(){lnoise(0,1.6,.45,900);tone(600,0,1.2,'sine',.05,1500)},
+  aDrip:function(){tone(1300,0,.08,'sine',.09,1900);tone(1200,1,.08,'sine',.08,1800)},
+  aPoint:function(){tone(880,0,.08,'triangle',.07);tone(1100,.1,.08,'triangle',.07)}
+};
+var sndLast={};
+function actSnd(k){try{if(!ACTSND[k]||!ac())return;var now=Date.now();if(sndLast[k]&&now-sndLast[k]<180)return;sndLast[k]=now;ACTSND[k]()}catch(e){}}
+/* 動畫：這一頁的角色、道具照劇本動起來 */
+function doActs(){const pg=STORY[ST.i],m=ST.tok;(pg.act||[]).forEach(a=>{
+  const el=/^p\d$/.test(a[0])?$(`#sScene [data-p="${a[0]}"]`):$(`#sScene .who[data-who="${a[0]}"]`);if(!el)return;
+  setTimeout(()=>{if(m!==ST.tok)return;el.classList.remove('aEnter',a[1]);void el.getBoundingClientRect();el.classList.add(a[1]);actSnd(a[1])},a[2]||0)})}
+/* 進場：上一頁沒有的角色，從旁邊跑進來 */
+function enterCast(i){const prev=i>0?(STORY[i-1].cast||[]).map(c=>c[0]):[];if((STORY[i].cast||[]).some(c=>prev.indexOf(c[0])<0))try{if(ac()){noise(0,.45,.3,1400);tone(300,0,.4,'sine',.05,700)}}catch(e){}
+  $$('#sScene .who').forEach((g,k)=>{const w=g.getAttribute('data-who');if(prev.indexOf(w)>=0)return;
+    g.style.setProperty('--fx',(+g.getAttribute('data-x')<200?-260:260)+'px');g.style.animationDelay=(k*.12)+'s';g.classList.add('aEnter');
+    g.addEventListener('animationend',function f(){g.classList.remove('aEnter');g.style.animationDelay='';g.removeEventListener('animationend',f)})})}
 function storyRead(){
-  const pg=STORY[ST.i],m=++ST.tok,row=$('#sText .sLine');
+  const pg=STORY[ST.i],m=++ST.tok,row=$('#sText .sLine'),teach=ST.teach;
   const talk=on=>$$('#sScene .who').forEach(g=>g.classList.toggle('talk',on&&g.getAttribute('data-who')===pg.w));
-  const items=[];
-  if(ST.i===0&&!G.seen.story){G.seen.story=1;items.push({t:'歡迎來到趣味故事屋，我們來聽故事。',zh:1,gap:400})}
-  items.push({t:pg.en,r:.8,gap:600,on:()=>{row.classList.add('say');talk(true)},off:()=>talk(false)},{t:pg.zh,mean:1,gap:600,off:()=>row.classList.remove('say')},...tipItems(pg.tip));
-  const go=()=>say(items,()=>later(()=>{if(m!==ST.tok||G.screen!=='story')return;storyGo(1)},1300));
-  playSfx(go)}
+  const narHL=on=>{const b=$('#sText .sNar');b&&b.classList.toggle('say',on)};
+  const first=[],key=teach?'storyT':'story';
+  if(teach&&ST.i===0&&!G.seen[key]){G.seen[key]=1;first.push({t:teach?'歡迎來到故事小教室，我們來學故事裡的英文。':'歡迎來到趣味故事屋，我們來聽故事。',zh:1,gap:400})}
+  const line=[{t:pg.en,r:.8,gap:600,on:()=>{row.classList.add('say');talk(true)},off:()=>talk(false)},{t:pg.zh,mean:1,gap:500,off:()=>row.classList.remove('say')}];
+  const next=()=>later(()=>{if(m!==ST.tok||G.screen!=='story')return;storyGo(1)},teach?1300:500);
+  if(teach){doActs();const nar=pg.nar?[{t:pg.nar,mean:1,gap:300}]:[];say([...first,...nar,...line,...tipItems(pg.tip)],next);return}
+  /* 說故事：音效＋動畫 → 角色說英文 → 中文翻譯，一頁接一頁，中間不插說明 */
+  playSfx(()=>{if(m!==ST.tok)return;say(line,next)},1800)}
 function storyShow(i){
   G.run++;hush();ST.i=i;const pg=STORY[i];
   $('#sPage').textContent=`第 ${i+1} 頁 / 共 ${STORY.length} 頁`;
-  $('#sScene').innerHTML=sceneSVG(pg);
+  $('#sScene').innerHTML=sceneSVG(pg);enterCast(i);
   $('#sScene').onclick=()=>{if(performance.now()<ST.sndUntil)return;playSfx()};
-  $('#sText').innerHTML=`<div class="sLine one"><span class="sNo">${pg.n||"★"}</span><span class="sWho">${whoIcon(pg.w)}</span><div class="sBody"><div class="sEn2 en">${pg.en.split(' ').map(w=>`<span class="w">${w}</span>`).join(' ')}</div><div class="sZh2">${pg.zh}</div></div></div><div class="sTip">💡 ${pg.tip}</div>`;
+  $('#sText').innerHTML=`<div class="sLine one"><span class="sNo">${pg.n||"★"}</span><span class="sWho">${whoIcon(pg.w)}</span><div class="sBody"><div class="sEn2 en">${pg.en.split(' ').map(w=>`<span class="w">${w}</span>`).join(' ')}</div><div class="sZh2">${pg.zh}</div></div></div>${ST.teach?(pg.nar?`<div class="sTip sNar">📖 ${pg.nar}</div>`:'')+`<div class="sTip">💡 ${pg.tip}</div>`:''}`;
   $$('#sText .w').forEach(sp=>sp.onclick=()=>{ST.tok++;hush();const w=sp.textContent.replace(/[.,!?]/g,'');sp.classList.add('say');say([{t:w,r:.75}],()=>sp.classList.remove('say'))});
   $('#sPrev').disabled=i===0;$('#sNext').textContent=i===STORY.length-1?'看完了':'下一頁';
   storyRead();fitCheck()}
 function storyGo(d){const n=ST.i+d;if(n<0)return;if(n>=STORY.length){storyEnd();return}storyShow(n)}
-function storyEnd(){if(G.fromMap){G.run++;hush();levelClear();return}
+function storyEnd(){if(G.fromMap){G.run++;hush();if(ST.teach){levelClear();return}storyDone();return}
   G.run++;hush();FX.fanfare();fireworks(3);const ov=$('#ov'),pn=$('#ovPanel');ov.hidden=false;
   pn.innerHTML=`<div class="big">故事看完了！</div><div style="width:120px;margin:4px auto">${cuckooHouse(5,0,true)}</div><p class="en" style="font-size:20px">Sorry, I'm late, Mom.</p><div class="row"><button class="wb green" id="seMap">去闖關</button><button class="wb gold" id="seAgain">再看一次</button><button class="tb back" id="seHome">回首頁</button></div>`;
   say([{t:'故事看完了！你可以去闖關，或是再看一次。',zh:1}]);
   $('#seMap').onclick=()=>goMapBtn();$('#seAgain').onclick=()=>{ov.hidden=true;storyShow(0)};$('#seHome').onclick=goHome}
-function startStory(fromMap){G.mode='solo';G.fromMap=!!fromMap;show('story',{back:fromMap?'回闖關地圖':'回首頁',pause:1,stars:1});$('.sTop span').textContent=fromMap?`第 ${G.lv+1} 關　📖 趣味故事屋`:'📖 趣味故事屋';storyShow(0)}
+/* 故事聽完：不自動進小教室，讓小朋友自己選 */
+function storyDone(){
+  const i=G.lv;G.cleared[i]=1;G.lastDone=i;FX.fanfare();fireworks(3);
+  const ti=LV.findIndex(l=>l.teach),gi=nextIdx(),ov=$('#ov'),pn=$('#ovPanel');ov.hidden=false;
+  pn.innerHTML=`<div class="big">故事聽完了！</div><div style="width:120px;margin:4px auto">${cuckooHouse(5,0,true)}</div><p>你想做什麼？</p>
+   <div class="row" style="flex-direction:column;align-items:stretch">${gi>=0?`<button class="wb green" id="sdGame">${LV[gi].icon} 去玩遊戲</button>`:''}<button class="wb gold" id="sdTeach">💡 故事小教室</button><button class="wb gold" id="sdStory">📖 再聽一次故事</button><button class="tb back" id="sdMap">回闖關地圖</button></div>`;
+  const hl=(id,on)=>{const e=$(id);if(e)e.style.outline=on?'5px solid #ff8a00':''};
+  const opts=[[gi>=0?'#sdGame':null,'去玩遊戲'],['#sdTeach','故事小教室'],['#sdStory','再聽一次故事'],['#sdMap','回闖關地圖']].filter(o=>o[0]);
+  say([{t:'故事聽完了！你想做什麼？',zh:1,gap:500},...opts.map(o=>({t:o[1],zh:1,gap:500,on:()=>hl(o[0],1),off:()=>hl(o[0],0)}))]);
+  const close=()=>{ov.hidden=true;hush()};
+  if($('#sdGame'))$('#sdGame').onclick=()=>{close();startLevel(gi)};
+  $('#sdTeach').onclick=()=>{close();startLevel(ti)};
+  $('#sdStory').onclick=()=>{close();startLevel(i)};
+  $('#sdMap').onclick=()=>{close();showMap(false)};
+}
+function startStory(fromMap,teach){G.mode='solo';G.fromMap=!!fromMap;ST.teach=!!teach;STORY=teach?STORY_ALL.filter(p=>p.tip&&!p.noTip):STORY_ALL;
+  show('story',{back:fromMap?'回闖關地圖':'回首頁',pause:1,stars:1});
+  $('.sTop span').textContent=fromMap?`第 ${G.lv+1} 關　${teach?'💡 故事小教室':'📖 趣味故事屋'}`:'📖 趣味故事屋';storyShow(0)}
 $('#sPrev').onclick=()=>storyGo(-1);$('#sNext').onclick=()=>storyGo(1);$('#sAgain').onclick=()=>{hush();storyShow(ST.i)};
 
 /* ================= 小組競賽 ================= */
