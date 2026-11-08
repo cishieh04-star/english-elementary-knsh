@@ -908,6 +908,9 @@ function timeOpts(h,m){const set=[[h,m]];const k=t=>t[0]+':'+t[1];
 const LV=[
 /* 1 */ {name:'趣味故事屋',icon:'📖',story:1,gen:()=>[],show(){}},
 /* 💡 */ {name:'故事小教室',icon:'💡',story:1,teach:1,opt:1,gen:()=>[],show(){}},
+/* 3 */ {name:'手寫數字單字',icon:'✍️',gen:()=>{const a=shuffle(NUMS);return a.slice(0,2)},show(q){
+  traceWord(q,G.qi===0?'這一關要用手指寫英文單字':'',()=>{G.qi++;nextQ()})}},
+
 /* 2 */ {name:'時間小教室',icon:'⏰',gen:()=>[{teach:1},...shuffle([1,2,3,4,5,6,7,8,9,10,11,12]).slice(0,4).map(h=>({h}))],show(q){
   if(q.teach){runCards([
     {html:`<span class="zh">先複習 1 到 12 的英文</span><div class="numGrid" id="ng">${HW.slice(1).map((w,i)=>`<span><b>${i+1}</b>${w}</span>`).join('')}</div>`,
@@ -949,9 +952,6 @@ const LV=[
   $$('.candy').forEach(b=>b.onclick=()=>{if(!b.dataset.ok){bad(b);return}if(G.locked)return;
     const n=+b.dataset.n,tn=n>12&&n<20,jar=tn?$('#jTeen .in'):$('#jTy .in');(tn?JAR.teen:JAR.ty).push(n);jar.insertAdjacentHTML('beforeend',`<i>${n}</i>`);b.style.visibility='hidden';FX.pop();good(jar.parentNode,null,1400)});
   begin([instrItem('L2','聽英文數字，點一下對的糖果。','點一下對的糖果。')],[{t:q.w,gap:900},{t:q.w}])}},
-
-/* 3 */ {name:'手寫數字單字',icon:'✍️',gen:()=>{const a=shuffle(NUMS);return a.slice(0,2)},show(q){
-  traceWord(q,G.qi===0?'這一關要用手指寫英文單字':'',()=>{G.qi++;nextQ()})}},
 
 /* 4 */ {name:'長針小教室',icon:'🕰️',gen:()=>[{teach:1},...shuffle(MINS).slice(0,5).map(m=>({h:rh(),m}))],show(q){
   if(q.teach){runCards([

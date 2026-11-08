@@ -906,11 +906,11 @@ function showHome(){resetScreen();setTitle('天氣闖關大冒險',true);
 /* ========== 闖關地圖 ========== */
 const STAGES=[
   {name:'趣味故事屋',ic:'📖',run:()=>startStory(0)},
-  {name:'認識天氣單字',ic:'📖',run:()=>stLearn(1)},
-  {name:()=>'看圖點'+SKINS[state.skin].thing,ic:()=>({sky:'🎈',sea:'🫧',space:'🪐'}[state.skin]),run:()=>stBalloon(2)},
-  {name:'聽音選單字',ic:'👂',run:()=>stPick(3)},
-  {name:'字母拼拼看',ic:'🔤',run:()=>stSpell(4)},
-  {name:'描單字',ic:'✏️',run:()=>stTraceWord(5)},
+  {name:'描單字',ic:'✏️',run:()=>stTraceWord(1)},
+  {name:'認識天氣單字',ic:'📖',run:()=>stLearn(2)},
+  {name:()=>'看圖點'+SKINS[state.skin].thing,ic:()=>({sky:'🎈',sea:'🫧',space:'🪐'}[state.skin]),run:()=>stBalloon(3)},
+  {name:'聽音選單字',ic:'👂',run:()=>stPick(4)},
+  {name:'字母拼拼看',ic:'🔤',run:()=>stSpell(5)},
   {name:'天氣小主播',ic:'📺',run:()=>stReporter(6)},
   {name:'句子排排看',ic:'🧩',run:()=>stSentence(7)},
   {name:'e 和 e_e 發音',ic:'🔤',run:()=>stPhon(8)},
