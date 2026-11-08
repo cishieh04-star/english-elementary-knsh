@@ -521,7 +521,7 @@ G.name=store.get('g4u4name')||'';G.buddy=+(store.get('g4u4buddy')||0)||0;
 const synth=window.speechSynthesis;
 const SP={rate:1,voice:true,homeVoice:true,tok:0,paused:false};
 /* 字母名稱用固定拼法，手機不會唸出 capital，也不會把 F、H、W 唸錯 */
-const LNM={A:'A',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee','-':'dash',"'":'apostrophe'};
+const LNM={A:'ay',B:'bee',C:'see',D:'dee',E:'ee',F:'eff',G:'gee',H:'aitch',I:'eye',J:'jay',K:'kay',L:'el',M:'em',N:'en',O:'oh',P:'pee',Q:'cue',R:'ar',S:'ess',T:'tee',U:'you',V:'vee',W:'double you',X:'ex',Y:'why',Z:'zee','-':'dash',"'":'apostrophe'};
 const LN=c=>LNM[c.toUpperCase()]||c;
 let unlockAt=-1e9,unlocked=false;
 /* 手指放開（或點一下）的那一瞬間把聲音打開；iPhone 只認這一下 */
